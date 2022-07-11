@@ -1,0 +1,11 @@
+{
+    "versions": [
+        {
+            "name": "@namespace/top_level",
+            "version": "0.0.1",
+            "cksum": "topLevel_0_0_1",
+            "ontology_iri": "http://field33.com/ontologies/@namespace/top_level/",
+            "deps": []
+        }
+    ]
+}

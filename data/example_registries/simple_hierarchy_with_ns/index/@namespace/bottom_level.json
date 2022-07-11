@@ -1,0 +1,16 @@
+{
+    "versions": [
+        {
+            "name": "@namespace/bottom_level",
+            "version": "0.0.1",
+            "cksum": "bottomLevel_0_0_1",
+            "ontology_iri": "http://field33.com/ontologies/@namespace/bottom_level/",
+            "deps": [
+                {
+                    "name": "@namespace/mid_level",
+                    "req": "=0.0.1"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,26 @@
+[package]
+name = "plow_cli"
+description = "Plow package management command line applications."
+version = "0.1.0"
+license = "MIT OR Apache-2.0"
+authors = ["Maximilian Goisser <max@field33.com>", "Ali Somay <ali@field33.com>"]
+keywords = ["plow", "package_management", "cli"]
+repository = "https://github.com/field33/plow/"
+edition = "2021"
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "plow"
+path = "src/main.rs"
+
+[dependencies]
+plow_linter = { path = "../plow_linter", version = "0.1.0" }
+plow_ontology = { path = "../plow_ontology", version = "0.1.0" }
+dialoguer = "0.10"
+clap = "3"
+nom = "7"
+harriet = "0.1"
+anyhow = { version = "1", features = ["backtrace"] }
+
+
+

@@ -1,0 +1,447 @@
+@prefix : <http://field33.com/ontologies/@fld33_domain/software_development/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix registry: <http://field33.com/ontologies/REGISTRY/> .
+@base <http://field33.com/ontologies/@fld33_domain/software_development/> .
+
+<http://field33.com/ontologies/@fld33_domain/software_development/> rdf:type owl:Ontology ;
+                                                                     owl:imports <http://field33.com/ontologies/@fld33/methodology/> ,
+                                                                                 <http://field33.com/ontologies/@fld33/process/> ,
+                                                                                 <http://field33.com/ontologies/@fld33/relations_0_1_0/> ,
+                                                                                 <http://field33.com/ontologies/@fld33_domain/software_development_metric/> ,
+                                                                                 <http://field33.com/ontologies/@fld33_domain/software_team_metric/> ;
+                                                                     registry:canonicalPrefix "software_development" ;
+                                                                     registry:dependency "@fld33/methodology =0.1.6" ,
+                                                                                         "@fld33/process =0.1.1" ,
+                                                                                         "@fld33/relations_0_1_0 =0.1.6" ,
+                                                                                         "@fld33_domain/software_development_metric =0.1.3" ,
+                                                                                         "@fld33_domain/software_team_metric =0.1.2" ;
+                                                                     registry:ontologyFormatVersion "v1" ;
+                                                                     registry:packageName "@fld33_domain/software_development" ;
+                                                                     registry:packageVersion "0.1.15" .
+
+#################################################################
+#    Annotation properties
+#################################################################
+
+###  http://field33.com/ontologies/REGISTRY/canonicalPrefix
+registry:canonicalPrefix rdf:type owl:AnnotationProperty .
+
+
+###  http://field33.com/ontologies/REGISTRY/dependency
+registry:dependency rdf:type owl:AnnotationProperty .
+
+
+###  http://field33.com/ontologies/REGISTRY/ontologyFormatVersion
+registry:ontologyFormatVersion rdf:type owl:AnnotationProperty .
+
+
+###  http://field33.com/ontologies/REGISTRY/packageName
+registry:packageName rdf:type owl:AnnotationProperty .
+
+
+###  http://field33.com/ontologies/REGISTRY/packageVersion
+registry:packageVersion rdf:type owl:AnnotationProperty .
+
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/BugFeatureRatioCountOf
+:BugFeatureRatioCountOf rdf:type owl:ObjectProperty ;
+                        rdfs:subPropertyOf :CountOf ;
+                        rdfs:domain <http://field33.com/ontologies/@fld33_domain/software_development_metric/BugFeatureRatio> ;
+                        rdfs:range [ rdf:type owl:Class ;
+                                     owl:unionOf ( :BugTicket
+                                                   :FeatureTicket
+                                                 )
+                                   ] ;
+                        rdfs:label "Count of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/BugTicketBelongTo
+:BugTicketBelongTo rdf:type owl:ObjectProperty ;
+                   rdfs:subPropertyOf <http://field33.com/ontologies/@fld33/relations_0_1_0/BelongTo> ;
+                   rdfs:domain :BugTicket ;
+                   rdfs:range :Bug ;
+                   rdfs:label "Belong to"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/BugTicketPartOf
+:BugTicketPartOf rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf <http://field33.com/ontologies/@fld33/relations_0_1_0/partOf> ;
+                 rdfs:domain :BugTicket ;
+                 rdfs:range :EpicTicket ;
+                 rdfs:label "Part of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/ContinousDeliveryPartOf
+:ContinousDeliveryPartOf rdf:type owl:ObjectProperty ;
+                         rdfs:subPropertyOf <http://field33.com/ontologies/@fld33/relations_0_1_0/partOf> ;
+                         rdfs:domain :ContinousDelivery ;
+                         rdfs:range :ContinousDeliveryPipeline ;
+                         rdfs:label "Part of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/CountOf
+:CountOf rdf:type owl:ObjectProperty ;
+         rdfs:label "Count of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/DeliveryOf
+:DeliveryOf rdf:type owl:ObjectProperty ;
+            rdfs:label "DeliveryOf"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/DevelopmentOf
+:DevelopmentOf rdf:type owl:ObjectProperty ;
+               rdfs:subPropertyOf <http://field33.com/ontologies/@fld33/relations_0_1_0/BuildingOf> ;
+               rdfs:label "Development Of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/FeatureTicketBelongTo
+:FeatureTicketBelongTo rdf:type owl:ObjectProperty ;
+                       rdfs:subPropertyOf <http://field33.com/ontologies/@fld33/relations_0_1_0/BelongTo> ;
+                       rdfs:domain :FeatureTicket ;
+                       rdfs:range :SoftwareFeature ;
+                       rdfs:label "Belong to"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/FeatureTicketPartOf
+:FeatureTicketPartOf rdf:type owl:ObjectProperty ;
+                     rdfs:subPropertyOf <http://field33.com/ontologies/@fld33/relations_0_1_0/partOf> ;
+                     rdfs:domain :FeatureTicket ;
+                     rdfs:range :EpicTicket ;
+                     rdfs:label "Part of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/IncrementHas
+:IncrementHas rdf:type owl:ObjectProperty ;
+              rdfs:subPropertyOf <http://field33.com/ontologies/@fld33/relations_0_1_0/Has> ;
+              rdfs:domain :Increment ;
+              rdfs:range :QualityStandard ;
+              rdfs:label "Has"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/IncrementalDevelopmentOf
+:IncrementalDevelopmentOf rdf:type owl:ObjectProperty ;
+                          rdfs:subPropertyOf :DevelopmentOf ;
+                          rdfs:label "Incremental Development Of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/OperatingOf
+:OperatingOf rdf:type owl:ObjectProperty ;
+             rdfs:label "Operating of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/ProcessHasQualityStandard
+:ProcessHasQualityStandard rdf:type owl:ObjectProperty ;
+                           rdfs:subPropertyOf <http://field33.com/ontologies/@fld33/relations_0_1_0/Has> ;
+                           rdfs:domain <http://field33.com/ontologies/@fld33/process/Process> ;
+                           rdfs:range :QualityStandard ;
+                           rdfs:label "Has"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/SubTaskTicketPartOf
+:SubTaskTicketPartOf rdf:type owl:ObjectProperty ;
+                     rdfs:subPropertyOf <http://field33.com/ontologies/@fld33/relations_0_1_0/partOf> ;
+                     rdfs:domain :SubTaskTicket ;
+                     rdfs:range :TaskTicket ;
+                     rdfs:label "Part of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/TaskTicketPartOf
+:TaskTicketPartOf rdf:type owl:ObjectProperty ;
+                  rdfs:subPropertyOf <http://field33.com/ontologies/@fld33/relations_0_1_0/partOf> ;
+                  rdfs:domain :TaskTicket ;
+                  rdfs:label "Part of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/TaskTicketPartOfEpic
+:TaskTicketPartOfEpic rdf:type owl:ObjectProperty ;
+                      rdfs:subPropertyOf :TaskTicketPartOf ;
+                      rdfs:domain :TaskTicket ;
+                      rdfs:range :EpicTicket ;
+                      rdfs:label "Part of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/TaskTicketPartOfFeature
+:TaskTicketPartOfFeature rdf:type owl:ObjectProperty ;
+                         rdfs:subPropertyOf :TaskTicketPartOf ;
+                         rdfs:domain :TaskTicket ;
+                         rdfs:range :FeatureTicket ;
+                         rdfs:label "Part of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/TestingOf
+:TestingOf rdf:type owl:ObjectProperty ;
+           rdfs:label "Testing of"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/TicketPartOf
+:TicketPartOf rdf:type owl:ObjectProperty ;
+              rdfs:subPropertyOf <http://field33.com/ontologies/@fld33/relations_0_1_0/partOf> ;
+              rdfs:domain :Ticket ;
+              rdfs:range :Backlog ;
+              rdfs:label "Part of"@en .
+
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://field33.com/ontologies/@fld33/process/Process
+<http://field33.com/ontologies/@fld33/process/Process> rdfs:subClassOf [ rdf:type owl:Restriction ;
+                                                                         owl:onProperty :ProcessHasQualityStandard ;
+                                                                         owl:someValuesFrom :QualityStandard
+                                                                       ] .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/AgileSoftwareDevelopment
+:AgileSoftwareDevelopment rdf:type owl:Class ;
+                          rdfs:subClassOf :SoftwareDevelopment ;
+                          rdfs:label "Agile Software Development"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/Alpha
+:Alpha rdf:type owl:Class ;
+       rdfs:subClassOf :SoftwareDevelopmentMaturity ;
+       rdfs:label "Alpha"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/BDD
+:BDD rdf:type owl:Class ;
+     owl:equivalentClass :BehaviorDrivenSoftwareDevelopment ;
+     rdfs:subClassOf :AgileSoftwareDevelopment ;
+     rdfs:label "BDD"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/Backlog
+:Backlog rdf:type owl:Class ;
+         rdfs:label "Backlog"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/BacklogRefinement
+:BacklogRefinement rdf:type owl:Class ;
+                   rdfs:subClassOf <http://field33.com/ontologies/@fld33/process/Activity> ;
+                   rdfs:label "Backlog Refinement"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/BatchSize
+:BatchSize rdf:type owl:Class ;
+           rdfs:subClassOf <http://field33.com/ontologies/@fld33/methodology/Measure> ;
+           rdfs:label "Batch Size"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/BehaviorDrivenSoftwareDevelopment
+:BehaviorDrivenSoftwareDevelopment rdf:type owl:Class ;
+                                   rdfs:subClassOf :AgileSoftwareDevelopment ;
+                                   rdfs:label "Behavior-Driven Software Development"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/Beta
+:Beta rdf:type owl:Class ;
+      rdfs:subClassOf :SoftwareDevelopmentMaturity ;
+      rdfs:label "Beta"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/Bug
+:Bug rdf:type owl:Class ;
+     rdfs:label "Bug"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/BugTicket
+:BugTicket rdf:type owl:Class ;
+           rdfs:subClassOf :Ticket ;
+           rdfs:label "Bug Ticket"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/ContinousDelivery
+:ContinousDelivery rdf:type owl:Class ;
+                   rdfs:subClassOf <http://field33.com/ontologies/@fld33/process/Process> ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty :ContinousDeliveryPartOf ;
+                                     owl:someValuesFrom :ContinousDeliveryPipeline
+                                   ] ;
+                   rdfs:label "Continous Delivery"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/ContinousDeliveryPipeline
+:ContinousDeliveryPipeline rdf:type owl:Class ;
+                           rdfs:comment "The Continuous Delivery Pipeline (CDP) represents the workflows, activities, and automation needed to shepherd a new piece of functionality from ideation to an on-demand release of value to the end user."@en ;
+                           rdfs:label "Continous Delivery Pipeline"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/ContinousDeployment
+:ContinousDeployment rdf:type owl:Class ;
+                     rdfs:subClassOf :ContinousDelivery ;
+                     rdfs:comment "Continuous Deployment (CD) is the process that takes validated Features in a staging environment and deploys them into the production environment, where they are readied for release."@en ;
+                     rdfs:label "Continous Deployment"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/ContinousExploration
+:ContinousExploration rdf:type owl:Class ;
+                      rdfs:subClassOf :ContinousDelivery ;
+                      rdfs:comment "Continuous Exploration (CE) is the process that drives innovation and fosters alignment on what should be built by continually exploring market and customer needs, and defining a Vision, Roadmap, and set of Features for a Solution that addresses those needs."@en ;
+                      rdfs:label "Continous Exploration"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/ContinousIntegration
+:ContinousIntegration rdf:type owl:Class ;
+                      rdfs:subClassOf :ContinousDelivery ;
+                      rdfs:comment "Continuous Integration (CI) is the process of taking features from the Program Backlog and developing, testing, integrating, and validating them in a staging environment where they are ready for deployment and release."@en ;
+                      rdfs:label "Continous Integration"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/Deployment
+:Deployment rdf:type owl:Class ;
+            rdfs:subClassOf <http://field33.com/ontologies/@fld33/process/Process> ;
+            rdfs:label "Deployment"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/EpicTicket
+:EpicTicket rdf:type owl:Class ;
+            rdfs:subClassOf :Ticket ;
+            rdfs:label "Epic Ticket"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/FeatureTicket
+:FeatureTicket rdf:type owl:Class ;
+               rdfs:subClassOf :Ticket ;
+               rdfs:label "Feature Ticket"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/Increment
+:Increment rdf:type owl:Class ;
+           rdfs:subClassOf [ rdf:type owl:Restriction ;
+                             owl:onProperty :IncrementHas ;
+                             owl:someValuesFrom :QualityStandard
+                           ] ;
+           rdfs:label "Increment"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/MBSE
+:MBSE rdf:type owl:Class ;
+      owl:equivalentClass :ModelBasedSystemEngineering ;
+      rdfs:subClassOf <http://field33.com/ontologies/@fld33/methodology/Practice> ;
+      rdfs:label "MBSE"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/ModelBasedSystemEngineering
+:ModelBasedSystemEngineering rdf:type owl:Class ;
+                             rdfs:subClassOf <http://field33.com/ontologies/@fld33/methodology/Practice> ;
+                             rdfs:comment "Model-Based Systems Engineering (MBSE) is the practice of developing a set of related system models that help define, design, and document a system under development. These models provide an efficient way to explore, update, and communicate system aspects to stakeholders, while significantly reducing or eliminating dependence on traditional documents."@en ;
+                             rdfs:label "Model-Based System Engineering"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/QualityStandard
+:QualityStandard rdf:type owl:Class ;
+                 rdfs:subClassOf <http://field33.com/ontologies/@fld33/methodology/Quality> ;
+                 rdfs:label "Quality Standard"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/Refactoring
+:Refactoring rdf:type owl:Class ;
+             rdfs:subClassOf <http://field33.com/ontologies/@fld33/process/Process> ;
+             rdfs:label "Refactoring"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/ReleaseCandidate
+:ReleaseCandidate rdf:type owl:Class ;
+                  rdfs:subClassOf :SoftwareDevelopmentMaturity ;
+                  rdfs:label "Release Candidate"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/ReleasePeriod
+:ReleasePeriod rdf:type owl:Class ;
+               rdfs:subClassOf <http://field33.com/ontologies/@fld33/methodology/Period> ;
+               rdfs:label "Release Period"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/SoftwareDevelopment
+:SoftwareDevelopment rdf:type owl:Class ;
+                     rdfs:subClassOf <http://field33.com/ontologies/@fld33/process/Process> ;
+                     rdfs:label "Software Development"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/SoftwareDevelopmentMaturity
+:SoftwareDevelopmentMaturity rdf:type owl:Class ;
+                             rdfs:subClassOf <http://field33.com/ontologies/@fld33/methodology/Maturity> ;
+                             rdfs:label "Software Development Maturity"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/SoftwareFeature
+:SoftwareFeature rdf:type owl:Class ;
+                 rdfs:label "Software Feature"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/SoftwareReleaseLifeCycle
+:SoftwareReleaseLifeCycle rdf:type owl:Class ;
+                          rdfs:subClassOf <http://field33.com/ontologies/@fld33/process/Process> ;
+                          rdfs:label "Software Release Life Cycle"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/SoftwareVersion
+:SoftwareVersion rdf:type owl:Class ;
+                 rdfs:label "Software Version"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/SoftwareVersioning
+:SoftwareVersioning rdf:type owl:Class ;
+                    rdfs:subClassOf <http://field33.com/ontologies/@fld33/process/Process> ;
+                    rdfs:label "Software Versioning"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/StableRelease
+:StableRelease rdf:type owl:Class ;
+               rdfs:subClassOf :SoftwareDevelopmentMaturity ;
+               rdfs:label "Stable Release"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/SubTaskTicket
+:SubTaskTicket rdf:type owl:Class ;
+               rdfs:subClassOf :TaskTicket ;
+               rdfs:label "Sub-Task Ticket"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/TDD
+:TDD rdf:type owl:Class ;
+     owl:equivalentClass :TestDrivenSoftwareDevelopment ;
+     rdfs:subClassOf :SoftwareDevelopment ;
+     rdfs:label "TDD"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/TaskTicket
+:TaskTicket rdf:type owl:Class ;
+            rdfs:subClassOf :Ticket ;
+            rdfs:label "Task Ticket"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/TechnicalDebt
+:TechnicalDebt rdf:type owl:Class ;
+               rdfs:subClassOf <http://field33.com/ontologies/@fld33/methodology/Measure> ;
+               rdfs:label "Technical Debt"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/TestDrivenSoftwareDevelopment
+:TestDrivenSoftwareDevelopment rdf:type owl:Class ;
+                               rdfs:subClassOf :SoftwareDevelopment ;
+                               rdfs:label "Test-Driven Software Development"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/TestingDevelopmentPeriod
+:TestingDevelopmentPeriod rdf:type owl:Class ;
+                          rdfs:subClassOf <http://field33.com/ontologies/@fld33/methodology/Period> ;
+                          rdfs:label "Testing Development Period"@en .
+
+
+###  http://field33.com/ontologies/@fld33_domain/software_development/Ticket
+:Ticket rdf:type owl:Class ;
+        rdfs:label "Ticket"@en .
+
+
+###  Generated by the OWL API (version 4.5.9.2019-02-01T07:24:44Z) https://github.com/owlcs/owlapi

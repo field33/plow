@@ -1,0 +1,11 @@
+[workspace]
+members = [
+  "plow_cli",
+  "plow_gui",
+  "plow_linter",
+  "plow_package_management",
+  "plow_graphify",
+  "plow_ontology",
+
+  "plow_backend_reference"
+]

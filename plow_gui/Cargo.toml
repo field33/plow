@@ -1,0 +1,28 @@
+[package]
+name = "plow_gui"
+description = "A simple GUI application for the Plow ontology package manager."
+version = "0.1.0"
+license = "MIT OR Apache-2.0"
+keywords = ["plow", "owl", "gui"]
+authors = ["Maximilian Goisser <max@field33.com>", "Ali Somay <ali@field33.com>"]
+repository = "https://github.com/field33/plow/"
+edition = "2021"
+
+[dependencies]
+plow_ontology = { path = "../plow_ontology", version = "0.1.0" }
+plow_package_management = { path = "../plow_package_management", version = "0.1.0" }
+plow_linter = { path = "../plow_linter", version = "0.1.0" }
+harriet = "0.1"
+nom = "7"
+anyhow = { version = "1.0.42", features = ["backtrace"] }
+rfd = "0.9"
+iced = { version = "0.3", features = ["async-std"] }
+iced_native = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1"
+async-std = "1.0"
+notify = "5.0.0-pre.13"
+dirs = "4.0.0"
+open = "3"
+# Required, as 1.0.0-alpha.9 fails to build
+value-bag = "=1.0.0-alpha.6"
