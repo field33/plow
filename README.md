@@ -29,10 +29,10 @@ cargo install plow_cli
 
 - [`plow_cli`](./plow_cli) [<img alt="crates.io" src="https://img.shields.io/crates/v/plow_cli.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/plow_cli) - CLI
 - [`plow_gui`](./plow_gui) [<img alt="crates.io" src="https://img.shields.io/crates/v/plow_gui.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/plow_gui) - GUI
-- [`plow_linter`](./plow_linter) [<img alt="crates.io" src="https://img.shields.io/crates/v/plow_gui.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/plow_gui) - Linter library (included in CLI/GUI)
-- [`plow_package_management`](./plow_package_management) [<img alt="crates.io" src="https://img.shields.io/crates/v/plow_gui.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/plow_gui) - Core logic of the package management
-- [`plow_ontology`](./plow_ontology) [<img alt="crates.io" src="https://img.shields.io/crates/v/plow_gui.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/plow_gui) - Representation of an ontology package and related helpers
-- [`plow_graphify`](./plow_graphify) [<img alt="crates.io" src="https://img.shields.io/crates/v/plow_gui.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/plow_gui) - Bridge to parse ontologies based on [harriet](https://github.com/field33/harriet)
+- [`plow_linter`](./plow_linter) [<img alt="crates.io" src="https://img.shields.io/crates/v/plow_linter.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/plow_linter) - Linter library (included in CLI/GUI)
+- [`plow_package_management`](./plow_package_management) [<img alt="crates.io" src="https://img.shields.io/crates/v/plow_package_management.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/plow_package_management) - Core logic of the package management
+- [`plow_ontology`](./plow_ontology) [<img alt="crates.io" src="https://img.shields.io/crates/v/plow_ontology.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/plow_ontology) - Representation of an ontology package and related helpers
+- [`plow_graphify`](./plow_graphify) [<img alt="crates.io" src="https://img.shields.io/crates/v/plow_graphify.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/plow_graphify) - Bridge to parse ontologies based on [harriet](https://github.com/field33/harriet)
 - [`plow_backend_reference`](./plow_backend_reference) - Reference implementation of the registry service
 
 ## Reference implementation and [registry.field33.com](http://registry.field33.com)
