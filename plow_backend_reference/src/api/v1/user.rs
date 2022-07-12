@@ -1,9 +1,7 @@
-use actix_http::StatusCode;
 use super::response;
-use crate::{
-    AppState,
-};
-use actix_web::{get, web, HttpResponse, Responder, HttpResponseBuilder};
+use crate::AppState;
+use actix_http::StatusCode;
+use actix_web::{get, web, HttpResponseBuilder, Responder};
 
 use futures::lock::Mutex;
 
@@ -29,10 +27,10 @@ use futures::lock::Mutex;
 ///  }
 ///  ```
 #[get("/details")]
-pub async fn get_user_details(
-    data: web::Data<Mutex<AppState>>,
-) -> impl Responder {
-    let response =
-         response::Success::new(Some(response::Data::UserDetails { tier: "free".to_string(), role: "user".to_string() }));
-         return HttpResponseBuilder::new(StatusCode::OK).json(response);
+pub async fn get_user_details(_data: web::Data<Mutex<AppState>>) -> impl Responder {
+    let response = response::Success::new(Some(response::Data::UserDetails {
+        tier: "free".to_string(),
+        role: "user".to_string(),
+    }));
+    return HttpResponseBuilder::new(StatusCode::OK).json(response);
 }

@@ -2,15 +2,54 @@
 mod types;
 
 use super::response;
-use crate::{
-    api::v1::field::{
-        types::FieldSearchForm,
-    },
-    AppState,
-};
-use actix_web::{get, post, web, Responder};
+use crate::{api::v1::field::types::FieldSearchForm, AppState};
+use actix_http::StatusCode;
+use actix_web::{get, post, web, HttpResponseBuilder, Responder};
 
+use crate::api::v1::response::types::{Category, FieldSummary};
 use futures::lock::Mutex;
+
+fn categories() -> Vec<Category> {
+    vec![
+        Category {
+            name: "upper".to_string(),
+            description: "Upper ontologies".to_string(),
+        },
+        Category {
+            name: "domain".to_string(),
+            description: "Domain ontologies".to_string(),
+        },
+    ]
+}
+
+fn fields() -> Vec<FieldSummary> {
+    vec![FieldSummary {
+        id: "test".to_string(),
+        namespace: "test".to_string(),
+        name: "test".to_string(),
+        version: "0.1.0".to_string(),
+        categories: vec![categories()[0].clone()],
+        submitted_at: "".to_string(),
+        submitter_id: "".to_string(),
+        submitter_name: "".to_string(),
+    }]
+}
+
+fn field_details() -> Vec<response::Data<'static>> {
+    vec![response::Data::FieldDetails {
+        title: "test",
+        short_description: "test",
+        description: "test",
+        license_spdx: "MIT",
+        homepage: "http://example.com",
+        documentation: "http://example.com",
+        repository: "http://example.com",
+        keywords: vec![],
+        versions: vec![fields()[0].clone()],
+        dependencies: vec![],
+        dependents: vec![],
+    }]
+}
 
 /// Gets all field categories in an alphabetically sorted way.
 ///
@@ -33,9 +72,9 @@ use futures::lock::Mutex;
 ///  }
 ///  ```
 #[get("/categories")]
-pub async fn get_all_categories(data: web::Data<Mutex<AppState>>) -> impl Responder {
-    unimplemented!();
-    response::with_error_message("Unimplemented")
+pub async fn get_all_categories(_data: web::Data<Mutex<AppState>>) -> impl Responder {
+    let response = response::Success::new(Some(response::Data::Categories(categories())));
+    return HttpResponseBuilder::new(StatusCode::OK).json(response);
 }
 
 /// Deliver all fields which belongs to the user, descending sort.
@@ -72,11 +111,11 @@ pub async fn get_all_categories(data: web::Data<Mutex<AppState>>) -> impl Respon
 ///  ```
 #[get("/list/{auth_id}")]
 pub async fn get_fields_which_belong_to_a_user(
-    path: web::Path<(String,)>,
-    data: web::Data<Mutex<AppState>>,
+    _path: web::Path<(String,)>,
+    _data: web::Data<Mutex<AppState>>,
 ) -> impl Responder {
-    unimplemented!();
-    response::with_error_message("Unimplemented")
+    let response = response::Success::new(Some(response::Data::FieldSummaries(fields())));
+    return HttpResponseBuilder::new(StatusCode::OK).json(response);
 }
 
 /// Get details of a field by its id.
@@ -148,11 +187,11 @@ pub async fn get_fields_which_belong_to_a_user(
 ///  ```
 #[get("/details/{field_id}")]
 pub async fn get_field_details_with_field_id(
-    path: web::Path<(String,)>,
-    data: web::Data<Mutex<AppState>>,
+    _path: web::Path<(String,)>,
+    _data: web::Data<Mutex<AppState>>,
 ) -> impl Responder {
-    unimplemented!();
-    response::with_error_message("Unimplemented")
+    let response = response::Success::new(Some(field_details()[0].clone()));
+    HttpResponseBuilder::new(StatusCode::OK).json(response)
 }
 
 /// Lists new and recent fields optionally specifying a range of dates.
@@ -166,11 +205,14 @@ pub async fn get_field_details_with_field_id(
 /// If timestamps are not provided, the default is to return the last 24 hours for both.
 #[get("/list/time_scoped")]
 pub async fn list_new_and_recent_time_scoped(
-    query_parameters: web::Query<std::collections::HashMap<String, String>>,
-    data: web::Data<Mutex<AppState>>,
+    _query_parameters: web::Query<std::collections::HashMap<String, String>>,
+    _data: web::Data<Mutex<AppState>>,
 ) -> impl Responder {
-    unimplemented!();
-    response::with_error_message("Unimplemented")
+    let response = response::Success::new(Some(response::Data::NewAndRecentFields {
+        new_fields: fields(),
+        recent_fields: fields(),
+    }));
+    HttpResponseBuilder::new(StatusCode::OK).json(response)
 }
 
 /// Lists new and recent fields.
@@ -187,14 +229,16 @@ pub async fn list_new_and_recent_time_scoped(
 ///   - `/v1/field/list`
 ///
 /// If a number is not provided then the last 5 fields will be returned.
-#[allow(clippy::too_many_lines)]
 #[get("/list")]
 pub async fn list_new_and_recent_n_fields(
-    query_parameters: web::Query<std::collections::HashMap<String, String>>,
-    data: web::Data<Mutex<AppState>>,
+    _query_parameters: web::Query<std::collections::HashMap<String, String>>,
+    _data: web::Data<Mutex<AppState>>,
 ) -> impl Responder {
-    unimplemented!();
-    response::with_error_message("Unimplemented")
+    let response = response::Success::new(Some(response::Data::NewAndRecentFields {
+        new_fields: fields(),
+        recent_fields: fields(),
+    }));
+    HttpResponseBuilder::new(StatusCode::OK).json(response)
 }
 
 /// Searches fields by their name.
@@ -203,9 +247,9 @@ pub async fn list_new_and_recent_n_fields(
 ///   - `/v1/field/search?name=<anything>`
 #[post("/search")]
 pub async fn search(
-    search: web::Form<FieldSearchForm>,
-    data: web::Data<Mutex<AppState>>,
+    _search: web::Form<FieldSearchForm>,
+    _data: web::Data<Mutex<AppState>>,
 ) -> impl Responder {
-    unimplemented!();
-    response::with_error_message("Unimplemented")
+    let response = response::Success::new(Some(response::Data::FieldSummaries(fields())));
+    return HttpResponseBuilder::new(StatusCode::OK).json(response);
 }

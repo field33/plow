@@ -1,16 +1,24 @@
 pub mod types;
 
 use super::response;
-use crate::{
-    api::v1::token::{
-        types::TokenGenerationForm,
-    },
-    AppState,
-};
-use actix_web::{delete, get, post, web, HttpResponse, HttpResponseBuilder, Responder};
+use crate::{api::v1::token::types::TokenGenerationForm, AppState};
+use actix_web::{delete, get, post, web, HttpResponseBuilder, Responder};
 
+use crate::api::v1::response::types::ApiTokenSummary;
 use futures::lock::Mutex;
 use reqwest::StatusCode;
+
+const FIXED_TOKEN: &str = "token123";
+
+fn fixed_api_token_summary() -> ApiTokenSummary {
+    ApiTokenSummary {
+        id: 0,
+        name: "Fixed token".to_string(),
+        expires: -1,
+        created_at: "2020-01-01T00:00:00.000Z".to_string(),
+        last_used_at: None,
+    }
+}
 
 /// Generates an api token for an app client.
 ///
@@ -47,11 +55,15 @@ use reqwest::StatusCode;
 ///  ```
 #[post("/generate")]
 pub async fn generate_api_token(
-    requested_token: web::Form<TokenGenerationForm>,
-    data: web::Data<Mutex<AppState>>,
+    _requested_token: web::Form<TokenGenerationForm>,
+    _data: web::Data<Mutex<AppState>>,
 ) -> impl Responder {
-    unimplemented!();
-    response::with_error_message("Unimplemented")
+    HttpResponseBuilder::new(StatusCode::OK).json(response::Success::new(Some(
+        response::Data::GeneratedApiToken {
+            tokens: vec![fixed_api_token_summary()],
+            generated_token: base64::encode(FIXED_TOKEN),
+        },
+    )))
 }
 
 /// Gets a list of tokens which belong to a user.
@@ -81,11 +93,11 @@ pub async fn generate_api_token(
 ///  }
 ///  ```
 #[get("/list")]
-pub async fn get_token_summaries(
-    data: web::Data<Mutex<AppState>>,
-) -> impl Responder {
-    unimplemented!();
-    response::with_error_message("Unimplemented")
+pub async fn get_token_summaries(_data: web::Data<Mutex<AppState>>) -> impl Responder {
+    let response = response::Success::new(Some(response::Data::ApiTokens(vec![
+        fixed_api_token_summary(),
+    ])));
+    HttpResponseBuilder::new(StatusCode::OK).json(response)
 }
 
 /// Deletes a token by it's id.
@@ -107,9 +119,10 @@ pub async fn get_token_summaries(
 ///  ```
 #[delete("/{token_id}")]
 pub async fn delete_api_token_by_its_id(
-    path: web::Path<(String,)>,
-    data: web::Data<Mutex<AppState>>,
+    _path: web::Path<(String,)>,
+    _data: web::Data<Mutex<AppState>>,
 ) -> impl Responder {
-    unimplemented!();
-    response::with_error_message("Unimplemented")
+    HttpResponseBuilder::new(StatusCode::OK).json(response::Success::new(Some(
+        response::Data::ApiTokens(vec![]),
+    )))
 }

@@ -96,7 +96,7 @@ pub enum StatusInfo {
 /// `data` field of the response.
 ///
 /// Following [`JSend`](https://github.com/omniti-labs/jsend) spec
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum Data<'data> {
     FailureMessage(&'data str),

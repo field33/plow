@@ -1,10 +1,9 @@
 #![allow(clippy::unused_async)]
 
 use super::response;
-use crate::{
-    AppState,
-};
-use actix_web::{get, web, HttpResponse, Responder};
+use crate::AppState;
+use actix_http::StatusCode;
+use actix_web::{get, web, HttpResponseBuilder, Responder};
 use futures::lock::Mutex;
 
 /// Gets a signed url for intended artifact for public download functionality.
@@ -28,9 +27,11 @@ use futures::lock::Mutex;
 ///  ```
 #[get("/signed-url/{artifact_name}")]
 pub async fn get_signed_url(
-    path: web::Path<(String,)>,
-    data: web::Data<Mutex<AppState>>,
+    _path: web::Path<(String,)>,
+    _data: web::Data<Mutex<AppState>>,
 ) -> impl Responder {
-    unimplemented!();
-    response::with_error_message("Unimplemented")
+    let response = response::Success::new(Some(response::Data::ResourceUrl {
+        url: "http://example.com",
+    }));
+    HttpResponseBuilder::new(StatusCode::OK).json(response)
 }

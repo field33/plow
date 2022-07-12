@@ -21,34 +21,24 @@ serde_json = "1"
 actix-web = "4"
 env_logger = "0.9"
 actix-cors = "0.6"
-actix-web-httpauth = "0.6"
 derive_more = "0.99"
-jsonwebtoken = "8"
 reqwest = { version = "0.11", features = ["json", "stream"] }
 actix-http = "3"
 futures = "0.3"
 futures-util = "0.3"
-gcp_auth = "0.7"
 sha2 = "0.10"
 chrono = "0.4"
-urlencoding = "2"
 base64 = "0.13"
 hex = "0.4"
 tokio = "1.18"
 dotenv = "0.15"
 spdx = "0.8"
-camino = "1"
 dirs = "4"
 rand = "0.8"
 async-recursion = "1.0.0"
-lipsum = "0.8"
 lazy_static = "1.4.0"
 harriet = "0.1"
 toml = "0.5.8"
-git2 = "0.14"
-# Required, as 1.0.0-alpha.9 fails to build
-value-bag = "=1.0.0-alpha.6"
-
 
 [dependencies.sea-orm]
 version = "^0.8"
@@ -62,21 +52,6 @@ features = [
 url = "2"
 fs_extra = "1"
 dotenv = "0.15"
-
-[package.metadata.raze.crates.ring.'*']
-data = "glob([\"**/*.der\"])"
-data_attr = "glob([\"**/*.der\"])"
-compile_data_attr = "glob([\"**/*.der\"])"
-
-[package.metadata.raze.crates.webpki.'*']
-data = "glob([\"**/*.der\"])"
-data_attr = "glob([\"**/*.der\"])"
-compile_data_attr = "glob([\"**/*.der\"])"
-
-[package.metadata.raze.crates.lipsum.'*']
-data = "glob([\"**/*.txt\"])"
-data_attr = "glob([\"**/*.txt\"])"
-compile_data_attr = "glob([\"**/*.txt\"])"
 
 
 
