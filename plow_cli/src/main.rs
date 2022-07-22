@@ -61,17 +61,23 @@
 
 ///! A premature version of a future cli for `ontology_tools`.
 ///! It only collects ideas now and will be architected and re-written in the future.
+mod config;
+mod login;
+
 use anyhow::{anyhow, bail, Result};
 use clap::{App, Arg};
+use config::create_configuration_directory_if_not_exists;
 use dialoguer::console::Emoji;
 use dialoguer::Input;
 use harriet::TurtleDocument;
 use nom::error::VerboseError;
-use plow_ontology::{initialize_ontology, validate_ontology_name};
 use plow_linter::lint::LintResult;
+use plow_ontology::{initialize_ontology, validate_ontology_name};
 // This is currently fine for this stage of this binary.
 #[allow(clippy::wildcard_imports)]
 use plow_linter::lints::*;
+
+use crate::login::{get_api_token, save_credentials_replace_existing};
 
 pub static SUCCESS: Emoji = Emoji("✅  ", "SUCCESS");
 pub static WARNING: Emoji = Emoji("⚠️  ", "MAYBE");
@@ -97,7 +103,23 @@ pub fn main() -> Result<()> {
                 .help("Lints a given ttl file.")
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("login")
+                .value_name("TOKEN")
+                .long("login")
+                .help("Registers an api token for the CLI to use.")
+                .takes_value(true),
+        )
         .get_matches();
+
+    if matches.is_present("login") {
+        create_configuration_directory_if_not_exists()?;
+        if let Some(token) = matches.get_one::<String>("login") {
+            save_credentials_replace_existing(token)?;
+            bail!("Success message.");
+        }
+        bail!("Token needed.");
+    }
 
     if matches.is_present("lint") {
         if let Some(file_path) = matches.value_of("lint") {

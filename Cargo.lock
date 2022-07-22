@@ -777,6 +777,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "camino"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "869119e97797867fd90f5e22af7d0bd274bd4635ebb9eb68c04f3f513ae6c412"
+
+[[package]]
 name = "cc"
 version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3620,12 +3626,17 @@ name = "plow_cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "camino",
  "clap",
  "dialoguer",
+ "dirs",
  "harriet",
  "nom",
  "plow_linter",
  "plow_ontology 0.1.1",
+ "serde",
+ "serde_json",
+ "toml",
 ]
 
 [[package]]
