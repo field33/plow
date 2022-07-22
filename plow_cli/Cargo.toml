@@ -21,6 +21,8 @@ clap = "3"
 nom = "7"
 harriet = "0.1"
 anyhow = { version = "1", features = ["backtrace"] }
-
-
-
+dirs = "4"
+camino = "1"
+toml = "0.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
