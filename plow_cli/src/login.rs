@@ -37,7 +37,7 @@ pub fn save_credentials_replace_existing(token: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn get_api_token() -> Result<String> {
+pub fn get_saved_api_token() -> Result<String> {
     let config_dir = super::config::get_config_dir()?;
     let credentials_file_contents = std::fs::read_to_string(config_dir.join("credentials"))?;
     let credentials = toml::from_str::<CredentialsFile>(&credentials_file_contents)?;

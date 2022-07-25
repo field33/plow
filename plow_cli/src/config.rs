@@ -15,6 +15,9 @@ pub fn get_config_dir() -> Result<std::path::PathBuf> {
     Ok(homedir.join(".plow"))
 }
 
+// TODO: Revisit initial structure
+// config.toml file?
+// credentials.toml file instead of credentials?
 pub fn create_configuration_directory_if_not_exists() -> Result<camino::Utf8PathBuf> {
     let config_dir = get_config_dir()?;
     if !config_dir.exists() {
