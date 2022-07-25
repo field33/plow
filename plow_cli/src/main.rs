@@ -63,9 +63,10 @@
 ///! It only collects ideas now and will be architected and re-written in the future.
 mod config;
 mod login;
+mod submit;
 
 use anyhow::{anyhow, bail, Result};
-use clap::{App, Arg};
+use clap::{arg, App, Arg, Command};
 use config::create_configuration_directory_if_not_exists;
 use dialoguer::console::Emoji;
 use dialoguer::Input;
@@ -77,14 +78,14 @@ use plow_ontology::{initialize_ontology, validate_ontology_name};
 #[allow(clippy::wildcard_imports)]
 use plow_linter::lints::*;
 
-use crate::login::{get_api_token, save_credentials_replace_existing};
+use crate::login::{get_saved_api_token, save_credentials_replace_existing};
+use colored::*;
 
 pub static SUCCESS: Emoji = Emoji("✅  ", "SUCCESS");
 pub static WARNING: Emoji = Emoji("⚠️  ", "MAYBE");
 pub static FAILURE: Emoji = Emoji("❌  ", "FAILURE");
 
 // TODO: Make a scope and a development plan for this project, it is currently just a sketch.
-
 pub fn main() -> Result<()> {
     let matches = App::new("Ontology Tools CLI")
         .version("0.1.0")
@@ -95,41 +96,74 @@ pub fn main() -> Result<()> {
                 .long("init")
                 .help("Initializes an ontology."),
         )
-        .arg(
-            Arg::with_name("lint")
-                .short('l')
-                .value_name("PATH")
-                .long("lint")
-                .help("Lints a given ttl file.")
-                .takes_value(true),
+        .subcommand(
+            Command::new("lint")
+                .about("Lints a field.")
+                .arg(arg!([FIELD_PATH])),
         )
-        .arg(
-            Arg::with_name("login")
-                .value_name("TOKEN")
-                .long("login")
-                .help("Registers an api token for the CLI to use.")
-                .takes_value(true),
+        .subcommand(
+            Command::new("login")
+                .about("Registers an api token for the CLI to use.")
+                .arg(arg!([API_TOKEN])),
+        )
+        .subcommand(
+            Command::new("submit")
+                .about("Submits an ontology to plow registry.")
+                .arg(
+                    Arg::with_name("registry")
+                        .short('r')
+                        .value_name("REGISTRY_PATH")
+                        .long("registry")
+                        .help("Specifies the target registry to submit.")
+                        .takes_value(true),
+                )
+                .arg(arg!([FIELD_PATH])),
         )
         .get_matches();
 
-    if matches.is_present("login") {
-        create_configuration_directory_if_not_exists()?;
-        if let Some(token) = matches.get_one::<String>("login") {
-            save_credentials_replace_existing(token)?;
-            bail!("Success message.");
-        }
-        bail!("Token needed.");
-    }
-
-    if matches.is_present("lint") {
-        if let Some(file_path) = matches.value_of("lint") {
-            lint_file(file_path)?;
-        } else {
-            bail!("Please give a file path to a ttl file to lint.");
-        }
-    }
     if matches.is_present("init") {
         initialize()?;
+    }
+
+    match matches.subcommand() {
+        Some(("login", sub_matches)) => {
+            create_configuration_directory_if_not_exists()?;
+            if let Some(token) = sub_matches.get_one::<String>("API_TOKEN") {
+                save_credentials_replace_existing(token)?;
+                println!(
+                    "\t{} successful. Saved API token to ~/.plow/credentials.toml",
+                    "Login".green(),
+                );
+                return Ok(());
+            }
+            println!("\t{}", "Command is not complete".red(),);
+            println!(
+                "\t{} please provide a valid API token to save",
+                "Advice".yellow(),
+            );
+            return Ok(());
+        }
+        Some(("lint", sub_matches)) => {
+            if let Some(file_path) = sub_matches.get_one::<String>("FIELD_PATH") {
+                lint_file(file_path)?;
+            } else {
+                bail!("Please give a file path to a ttl file to lint.");
+            }
+        }
+        Some(("submit", sub_matches)) => {
+            // TODO: Implement this.
+            if let Some(file_path) = sub_matches.get_one::<String>("FIELD_PATH") {
+                // lint_file(file_path)?;
+                if sub_matches.is_present("registry") {
+                    let registry_path = sub_matches.get_one::<String>("registry");
+                    bail!("All good.");
+                }
+                bail!("Please give a registry path to submit to.");
+            }
+            bail!("Please give a file path to a ttl file to lint.");
+        }
+
+        _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
     }
 
     Ok(())
@@ -162,16 +196,16 @@ fn lint_file(ontology_file_path: &str) -> Result<()> {
         let res = lint.lint(&document);
         match res {
             Success(message) => {
-                println!("{SUCCESS}{message}");
+                println!("{}", message.green());
             }
             Warning(messages) => {
                 for message in messages {
-                    println!("{WARNING}{message}");
+                    println!("{}", message.yellow());
                 }
             }
             Failure(messages) => {
                 for message in messages {
-                    println!("{FAILURE}{message}");
+                    println!("{}", message.red());
                 }
                 contains_err = true;
             }
