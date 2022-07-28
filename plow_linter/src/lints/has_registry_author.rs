@@ -49,8 +49,7 @@ impl Lint for HasRegistryAuthor {
                 }
 
                 let lint_prefix = RELATED_FIELD.to_owned();
-                // We know that `annotations` has at least one member here.
-                #[allow(clippy::unwrap_used)]
+
                 let lint_results = annotations.iter().map(|annotation| {
                     annotation.object().as_literal().map_or_else(
                         || lint_failure!(format!("{lint_prefix} is not a literal.")),
