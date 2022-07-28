@@ -48,6 +48,9 @@ pub mod has_registry_package_version;
 pub mod root_prefix_matches_pattern;
 pub mod valid_rdfs_labels;
 pub mod valid_registry_dependencies;
+pub mod valid_registry_documentation;
+pub mod valid_registry_homepage;
+pub mod valid_registry_repository;
 
 pub use base_matches_root_prefix::BaseMatchesRootPrefix;
 pub use contains_owl_prefixes::ContainsOWLPrefixes;
@@ -65,6 +68,9 @@ pub use has_registry_package_version::HasRegistryPackageVersion;
 pub use root_prefix_matches_pattern::RootPrefixMatchesPattern;
 pub use valid_rdfs_labels::ValidRdfsLabels;
 pub use valid_registry_dependencies::ValidRegistryDependencies;
+pub use valid_registry_documentation::ValidRegistryDocumentation;
+pub use valid_registry_homepage::ValidRegistryHomepage;
+pub use valid_registry_repository::ValidRegistryRepository;
 
 #[derive(Debug, Default, Clone)]
 pub struct AddPrefixes {
@@ -139,6 +145,9 @@ pub fn required_plow_registry_lints() -> Vec<Box<dyn Lint>> {
         Box::new(HasRegistryLicenseSPDX::default()) as Box<dyn Lint>,
         Box::new(HasRegistryLicense::default()) as Box<dyn Lint>,
         Box::new(ValidRegistryDependencies::default()) as Box<dyn Lint>,
+        Box::new(ValidRegistryHomepage::default()) as Box<dyn Lint>,
+        Box::new(ValidRegistryRepository::default()) as Box<dyn Lint>,
+        Box::new(ValidRegistryDocumentation::default()) as Box<dyn Lint>,
     ]
 }
 

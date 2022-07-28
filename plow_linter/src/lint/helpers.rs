@@ -1,4 +1,5 @@
 use crate::lint::{lint_failure, LintResult};
+use addr::parse_dns_name;
 use anyhow::Result;
 use plow_package_management::resolve::Dependency;
 use plow_package_management::version::SemanticVersion;
@@ -7,6 +8,18 @@ use rustrict::CensorStr;
 use semver::Version;
 use std::{cell::RefCell, collections::HashSet, rc::Rc};
 use thiserror::Error;
+
+pub fn catch_single_annotations_which_may_exist(
+    annotations: &HashSet<&Rc<dyn Statement>>,
+    related_field: &str,
+) -> Option<LintResult> {
+    if annotations.len() > 1 {
+        return Some(lint_failure!(&format!(
+            "More than 1 {related_field} annotations found."
+        )));
+    }
+    None
+}
 
 /// An internal helper which catches the absence of single annotations which must exist.
 pub fn catch_single_annotations_which_must_exist(
@@ -62,6 +75,21 @@ pub fn fail_if_contains_inappropriate_word(
         )));
     }
     None
+}
+
+pub fn fail_if_domain_name_is_invalid(
+    literal: &Rc<dyn Literal>,
+    related_field: &str,
+) -> Option<LintResult> {
+    let raw_literal = literal.lexical_form();
+    parse_dns_name(raw_literal).map_or_else(
+        |_| {
+            Some(lint_failure!(&format!(
+                "The value of {related_field} is not a valid domain name."
+            )))
+        },
+        |_| None,
+    )
 }
 
 #[derive(Error, Debug)]
