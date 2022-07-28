@@ -14,7 +14,7 @@ registry:packageName "@field33/valid" ;
 
 // Checks that registry:licenseSPDX field's correct format is 50 chars long and email is validated.
 #[test]
-fn lint_registry_category_exists_and_valid() {
+fn lint_registry_license_spdx_exists_and_valid() {
     // Only alphanumeric characters and underscored are allowed.
     let ttl_document_with_registry_author_a =
         format!("{REGISTRY_LICENSE_SPDX_BASE} registry:licenseSPDX \"MIT\" .");
@@ -44,7 +44,7 @@ fn lint_registry_category_exists_and_valid() {
 }
 
 #[test]
-fn lint_registry_category_does_not_exist_or_empty() {
+fn lint_registry_license_spdx_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(REGISTRY_LICENSE_SPDX_BASE).is_err());
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_LICENSE_SPDX_BASE} registry:licenseSPDX \"\" ."

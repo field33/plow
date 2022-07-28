@@ -16,7 +16,7 @@ use std::str::FromStr;
 
 const RELATED_FIELD: &str = "`registry:keyword`";
 const MAX_KEYWORDS: usize = 5;
-const MAX_CHARACTERS_IN_A_KEYWORD: usize = 50;
+const KEYWORD_MAX_ALLOWED_CHAR_COUNT: usize = 50;
 
 /// Ensures that a value for `registry:keyword` is specified as annotation on the ontology.
 #[derive(Debug, Default)]
@@ -83,10 +83,8 @@ impl Lint for HasRegistryKeyword {
                                    ));
                                 }
                                 checked_literals.push(keyword_raw);
-                                if keyword_raw.chars().count() > MAX_CHARACTERS_IN_A_KEYWORD {
-                                    return lint_failure!(format!(
-                                        "{lint_prefix} does contain a category ({keyword_raw}) which is not available."
-                                    ));
+                                if keyword_raw.chars().count() > KEYWORD_MAX_ALLOWED_CHAR_COUNT {
+                                    return lint_failure!(format!("{lint_prefix} allows a maximum of {KEYWORD_MAX_ALLOWED_CHAR_COUNT} characters."));
                                 }
                                 lint_success!(format!("{lint_prefix} is valid."))
                             },

@@ -1,6 +1,5 @@
 use crate::lint::{lint_failure, LintResult};
 use anyhow::Result;
-use censor::*;
 use plow_package_management::resolve::Dependency;
 use plow_package_management::version::SemanticVersion;
 use rdftk_core::model::{literal::Literal, statement::Statement};
@@ -56,9 +55,8 @@ pub fn fail_if_contains_inappropriate_word(
     literal: &Rc<dyn Literal>,
     related_field: &str,
 ) -> Option<LintResult> {
-    let censor = Censor::Standard;
     let raw_literal = literal.lexical_form();
-    if raw_literal.is_inappropriate() || censor.check(raw_literal) {
+    if raw_literal.is_inappropriate() {
         return Some(lint_failure!(&format!(
             "The value of {related_field} contains one or more inappropriate words which are not allowed in Plow registry."
         )));

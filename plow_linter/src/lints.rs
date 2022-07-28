@@ -41,6 +41,7 @@ pub mod has_ontology_format_version;
 pub mod has_registry_author;
 pub mod has_registry_category;
 pub mod has_registry_keyword;
+pub mod has_registry_license;
 pub mod has_registry_license_spdx;
 pub mod has_registry_package_name;
 pub mod has_registry_package_version;
@@ -57,6 +58,7 @@ pub use has_ontology_format_version::HasOntologyFormatVersion;
 pub use has_registry_author::HasRegistryAuthor;
 pub use has_registry_category::HasRegistryCategory;
 pub use has_registry_keyword::HasRegistryKeyword;
+pub use has_registry_license::HasRegistryLicense;
 pub use has_registry_license_spdx::HasRegistryLicenseSPDX;
 pub use has_registry_package_name::HasRegistryPackageName;
 pub use has_registry_package_version::HasRegistryPackageVersion;
@@ -135,6 +137,7 @@ pub fn required_plow_registry_lints() -> Vec<Box<dyn Lint>> {
         Box::new(HasRegistryCategory::default()) as Box<dyn Lint>,
         Box::new(HasRegistryKeyword::default()) as Box<dyn Lint>,
         Box::new(HasRegistryLicenseSPDX::default()) as Box<dyn Lint>,
+        Box::new(HasRegistryLicense::default()) as Box<dyn Lint>,
         Box::new(ValidRegistryDependencies::default()) as Box<dyn Lint>,
     ]
 }

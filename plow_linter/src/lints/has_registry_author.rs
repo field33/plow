@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use std::str::FromStr;
 
 const RELATED_FIELD: &str = "`registry:author`";
-const AUTHOR_NAME_MAX_ALLOWED_CHAR_LENGTH: usize = 50;
+const AUTHOR_NAME_MAX_ALLOWED_CHAR_COUNT: usize = 50;
 /// Ensures that a value for `registry:author` is specified as annotation on the ontology.
 #[derive(Debug, Default)]
 pub struct HasRegistryAuthor;
@@ -69,9 +69,9 @@ impl Lint for HasRegistryAuthor {
                                        return lint_failure!(format!("The name field in {lint_prefix} can not contain neither '<' nor '>' characters."));
                                     }
                                     if trimmed_maybe_name.chars().count()
-                                        > (AUTHOR_NAME_MAX_ALLOWED_CHAR_LENGTH + 1)
+                                        > (AUTHOR_NAME_MAX_ALLOWED_CHAR_COUNT + 1)
                                     {
-                                        return lint_failure!(format!("The name field in {lint_prefix} allows a maximum of 50 characters."));
+                                        return lint_failure!(format!("The name field in {lint_prefix} allows a maximum of {AUTHOR_NAME_MAX_ALLOWED_CHAR_COUNT} characters."));
                                     }
                                     name_and_email_raw.get(1).map_or_else(|| lint_failure!(format!("{lint_prefix} is not in its right form. Example of a right form: \"An Author's Name <email@oftheauthor.com>\".")), |maybe_email| {
                                         let maybe_email = maybe_email.split('>').collect::<Vec<_>>();
