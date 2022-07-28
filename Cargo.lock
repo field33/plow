@@ -1448,6 +1448,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f107b87b6afc2a64fd13cac55fe06d6c8859f12d4b14cbcdd2c67d0976781be"
 
 [[package]]
+name = "email_address"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8684b7c9cb4857dfa1e5b9629ef584ba618c9b93bae60f58cb23f4f271d0468e"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "embed-resource"
 version = "1.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3711,6 +3720,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "aquamarine",
+ "email_address",
  "harriet",
  "nom",
  "plow_graphify",

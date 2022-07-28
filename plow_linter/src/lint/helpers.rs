@@ -25,6 +25,19 @@ pub fn catch_single_annotations_which_must_exist(
     None
 }
 
+/// An internal helper which catches the absence of single annotations which must exist.
+pub fn catch_single_or_multiple_annotations_which_must_exist(
+    annotations: &HashSet<&Rc<dyn Statement>>,
+    related_field: &str,
+) -> Option<LintResult> {
+    if annotations.is_empty() {
+        return Some(lint_failure!(&format!(
+            "No `{related_field}` annotations found."
+        )));
+    }
+    None
+}
+
 #[derive(Error, Debug)]
 pub enum NamespaceAndNameLintError {
     #[error(

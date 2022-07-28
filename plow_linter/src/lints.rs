@@ -38,6 +38,7 @@ pub mod contains_registry_prefix;
 pub mod has_canonical_prefix;
 pub mod has_ontology_declaration;
 pub mod has_ontology_format_version;
+pub mod has_registry_author;
 pub mod has_registry_package_name;
 pub mod has_registry_package_version;
 pub mod root_prefix_matches_pattern;
@@ -50,6 +51,7 @@ pub use contains_registry_prefix::ContainsRegistryPrefix;
 pub use has_canonical_prefix::HasCanonicalPrefix;
 pub use has_ontology_declaration::HasOntologyDeclaration;
 pub use has_ontology_format_version::HasOntologyFormatVersion;
+pub use has_registry_author::HasRegistryAuthor;
 pub use has_registry_package_name::HasRegistryPackageName;
 pub use has_registry_package_version::HasRegistryPackageVersion;
 pub use root_prefix_matches_pattern::RootPrefixMatchesPattern;
@@ -109,6 +111,22 @@ pub fn required_package_management_lints() -> Vec<Box<dyn Lint>> {
         Box::new(HasRegistryPackageVersion::default()) as Box<dyn Lint>,
         Box::new(ValidRegistryDependencies::default()) as Box<dyn Lint>,
         Box::new(ValidRdfsLabels::default()) as Box<dyn Lint>,
+    ]
+}
+
+#[allow(clippy::as_conversions)]
+pub fn required_plow_registry_lints() -> Vec<Box<dyn Lint>> {
+    vec![
+        Box::new(BaseMatchesRootPrefix::default()) as Box<dyn Lint>,
+        Box::new(ContainsOWLPrefixes::default()) as Box<dyn Lint>,
+        Box::new(ContainsRegistryPrefix::default()) as Box<dyn Lint>,
+        Box::new(HasOntologyDeclaration::default()) as Box<dyn Lint>,
+        Box::new(HasOntologyFormatVersion::default()) as Box<dyn Lint>,
+        //
+        Box::new(HasRegistryPackageName::default()) as Box<dyn Lint>,
+        Box::new(HasRegistryPackageVersion::default()) as Box<dyn Lint>,
+        Box::new(HasRegistryAuthor::default()) as Box<dyn Lint>,
+        Box::new(ValidRegistryDependencies::default()) as Box<dyn Lint>,
     ]
 }
 
