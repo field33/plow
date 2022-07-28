@@ -26,4 +26,5 @@ aquamarine = "0.1"
 email_address = "0.2"
 censor = "0.2"
 rustrict = "0.4"
+spdx = "0.8"
 
