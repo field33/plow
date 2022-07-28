@@ -1,7 +1,8 @@
 pub const REGISTRY_PREFIX: &str = "registry";
 pub const REGISTRY_PREFIX_IRI: &str = "http://field33.com/ontologies/REGISTRY/";
 pub const REGISTRY_AUTHOR: &str = "http://field33.com/ontologies/REGISTRY/author";
-pub const REGISTRY_CATEGORIES: &str = "http://field33.com/ontologies/REGISTRY/categories";
+pub const REGISTRY_CATEGORY: &str = "http://field33.com/ontologies/REGISTRY/category";
+pub const REGISTRY_KEYWORD: &str = "http://field33.com/ontologies/REGISTRY/keyword";
 pub const REGISTRY_PACKAGE_NAME: &str = "http://field33.com/ontologies/REGISTRY/packageName";
 pub const REGISTRY_PACKAGE_VERSION: &str = "http://field33.com/ontologies/REGISTRY/packageVersion";
 pub const REGISTRY_ONTOLOGY_FORMAT_VERSION: &str =

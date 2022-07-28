@@ -1,8 +1,10 @@
 use crate::lint::{lint_failure, LintResult};
 use anyhow::Result;
+use censor::*;
 use plow_package_management::resolve::Dependency;
 use plow_package_management::version::SemanticVersion;
-use rdftk_core::model::statement::Statement;
+use rdftk_core::model::{literal::Literal, statement::Statement};
+use rustrict::CensorStr;
 use semver::Version;
 use std::{cell::RefCell, collections::HashSet, rc::Rc};
 use thiserror::Error;
@@ -32,7 +34,33 @@ pub fn catch_single_or_multiple_annotations_which_must_exist(
 ) -> Option<LintResult> {
     if annotations.is_empty() {
         return Some(lint_failure!(&format!(
-            "No `{related_field}` annotations found."
+            "No {related_field} annotations found."
+        )));
+    }
+    None
+}
+
+pub fn fail_if_has_language_tag(
+    literal: &Rc<dyn Literal>,
+    related_field: &str,
+) -> Option<LintResult> {
+    if literal.has_language() {
+        return Some(lint_failure!(&format!(
+            "{related_field} does not accept language tags."
+        )));
+    }
+    None
+}
+
+pub fn fail_if_contains_inappropriate_word(
+    literal: &Rc<dyn Literal>,
+    related_field: &str,
+) -> Option<LintResult> {
+    let censor = Censor::Standard;
+    let raw_literal = literal.lexical_form();
+    if raw_literal.is_inappropriate() || censor.check(raw_literal) {
+        return Some(lint_failure!(&format!(
+            "The value of {related_field} contains one or more inappropriate words which are not allowed in Plow registry."
         )));
     }
     None

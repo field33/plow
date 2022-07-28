@@ -53,6 +53,8 @@ fn lint_registry_author_exists_and_valid() {
     );
     let ttl_document_with_registry_author_p =
         format!("{REGISTRY_AUTHOR_BASE} registry:author \"Ali Somay <ali@field33.com>\"; registry:author \"Freddy Mercury <fred@field33.com>\" .");
+    let ttl_document_with_registry_author_r =
+        format!("{REGISTRY_AUTHOR_BASE} registry:author \"Fucking Dick <suck@crap.com>\" .");
 
     let document_a = TurtleDocument::parse_full(&ttl_document_with_registry_author_a).unwrap();
     let document_b = TurtleDocument::parse_full(&ttl_document_with_registry_author_b).unwrap();
@@ -69,6 +71,7 @@ fn lint_registry_author_exists_and_valid() {
     let document_n = TurtleDocument::parse_full(&ttl_document_with_registry_author_n).unwrap();
     let document_o = TurtleDocument::parse_full(&ttl_document_with_registry_author_o).unwrap();
     let document_p = TurtleDocument::parse_full(&ttl_document_with_registry_author_p).unwrap();
+    let document_r = TurtleDocument::parse_full(&ttl_document_with_registry_author_r).unwrap();
 
     let lint = HasRegistryAuthor::default();
     let result_a = lint.lint(&document_a);
@@ -86,6 +89,7 @@ fn lint_registry_author_exists_and_valid() {
     let result_n = lint.lint(&document_n);
     let result_o = lint.lint(&document_o);
     let result_p = lint.lint(&document_p);
+    let result_r = lint.lint(&document_r);
 
     assert!(result_a.is_success());
     assert!(result_b.is_success());
@@ -102,6 +106,7 @@ fn lint_registry_author_exists_and_valid() {
     assert!(result_n.is_failure());
     assert!(result_o.is_failure());
     assert!(result_p.is_success());
+    assert!(result_r.is_failure());
 }
 
 #[test]

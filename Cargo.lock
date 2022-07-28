@@ -809,6 +809,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "censor"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5563d2728feef9a6186acdd148bccbe850dad63c5ba55a3b3355abc9137cb3eb"
+dependencies = [
+ "once_cell",
+]
+
+[[package]]
 name = "cfg-expr"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1400,6 +1409,12 @@ checksum = "ac1b7517328c04c2aa68422fc60a41b92208182142ed04a25879c26c8f878794"
 dependencies = [
  "libloading 0.7.3",
 ]
+
+[[package]]
+name = "doc-comment"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "dodrio"
@@ -3720,6 +3735,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "aquamarine",
+ "censor",
  "email_address",
  "harriet",
  "nom",
@@ -3729,6 +3745,7 @@ dependencies = [
  "rdftk_core",
  "rdftk_iri",
  "regex",
+ "rustrict",
  "semver 1.0.12",
  "serde",
  "serde_json",
@@ -4177,6 +4194,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
 dependencies = [
  "semver 1.0.12",
+]
+
+[[package]]
+name = "rustrict"
+version = "0.4.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "18a21511165c8e35416e7d5ad7214d806fcbe29db180fa3f568f1eee246a5f58"
+dependencies = [
+ "bitflags",
+ "doc-comment",
+ "itertools 0.10.3",
+ "lazy_static",
+ "rustc-hash",
+ "strsim 0.10.0",
+ "unicode-normalization",
+ "unicode_categories",
 ]
 
 [[package]]

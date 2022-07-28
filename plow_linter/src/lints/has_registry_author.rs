@@ -1,6 +1,6 @@
 use crate::lint::{
     common_error_literals::{NO_ROOT_PREFIX, RDF_GRAPH_PARSE_ERROR},
-    helpers::catch_single_or_multiple_annotations_which_must_exist,
+    helpers::{catch_single_or_multiple_annotations_which_must_exist, fail_if_contains_inappropriate_word},
     lint_failure, lint_success, Lint, LintResult,
 };
 use harriet::TurtleDocument;
@@ -54,6 +54,9 @@ impl Lint for HasRegistryAuthor {
                     annotation.object().as_literal().map_or_else(
                         || lint_failure!(format!("{lint_prefix} is not a literal.")),
                         |literal| {
+                            if let Some(failure) = fail_if_contains_inappropriate_word(literal,&lint_prefix ) {
+                                return failure;
+                            }
                             let author_literal = literal.lexical_form();
                             let name_and_email_raw = author_literal.split('<').collect::<Vec<_>>();
 
