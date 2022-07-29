@@ -12,7 +12,9 @@ use std::collections::HashSet;
 use std::str::FromStr;
 
 const RELATED_FIELD: &str = "`registry:category`";
+/// Maximum allowed categories.
 const MAX_CATEGORIES: usize = 5;
+/// Available categories to choose from.
 const CATEGORY_ALLOW_LIST: [&str; 30] = [
     "Benchmark",
     "Design",
@@ -53,9 +55,46 @@ impl Lint for HasRegistryCategory {
     fn short_description(&self) -> &str {
         "Check that the ontology is annotated with a value for `registry:category`"
     }
-    /// Lints for the existence of `registry:category` and its correct format
-    /// (should be `@namespace/package_name` , with both the namespace and package name
-    /// only being alphanumeric characters + underscore)
+    /// Lints for the existence of `registry:category` and its validity.
+    /// Available categories are defined by plow. 
+    /// Maximum 5 categories are allowed.
+    /// Categories shouldn't contain language tags.
+    /// 
+    /// Here is a list: 
+    /// ```rust
+    /// const CATEGORY_ALLOW_LIST: [&str; 30] = [
+    /// "Benchmark",
+    /// "Design",
+    /// "Enterprise",
+    /// "Framework",
+    /// "Innovation",
+    /// "Meta Model",
+    /// "Methodology",
+    /// "Metric",
+    /// "Organization",
+    /// "People",
+    /// "Portfolio",
+    /// "Process",
+    /// "Product",
+    /// "Project Management",
+    /// "Software Architecture",
+    /// "Software Development",
+    /// "Software Implementation",
+    /// "Software Infrastructure",
+    /// "Strategy",
+    /// "Transformation",
+    /// "Upper Ontology",
+    /// "Customer Ontology",
+    /// "Scrum",
+    /// "Relation",
+    /// "Communication",
+    /// "Core",
+    /// "Graph Visualization",
+    /// "Change Tracking",
+    /// "Graph Style",
+    /// "Interoperability",
+    /// ];
+    /// ``` 
     fn lint(&self, document: &TurtleDocument) -> LintResult {
         let rdf_factory = rdftk_core::simple::statement::statement_factory();
         if let Ok(rdf_graph) = document_to_graph(document) {

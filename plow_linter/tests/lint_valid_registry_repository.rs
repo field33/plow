@@ -16,22 +16,22 @@ registry:packageName "@field33/valid" ;
 #[test]
 fn lint_registry_repository_exists_and_valid() {
     // Only alphanumeric characters and underscored are allowed.
-    let ttl_document_with_registry_author_a =
+    let ttl_document_with_registry_repository_a =
         format!("{REGISTRY_REPOSITORY_BASE} registry:repository \"beloved_field.com\" .");
-    let ttl_document_with_registry_author_b = format!(
+    let ttl_document_with_registry_repository_b = format!(
         "{REGISTRY_REPOSITORY_BASE} registry:repository \"https://www.beloved-field.io\" ."
     );
-    let ttl_document_with_registry_author_c =
+    let ttl_document_with_registry_repository_c =
         format!("{REGISTRY_REPOSITORY_BASE} registry:repository \"https://www.beloved-field.io\", \"http://www.another-beloved-field.io\" .");
 
     // Limit is 63 chars in length.
-    let ttl_document_with_registry_author_d =
+    let ttl_document_with_registry_repository_d =
         format!("{REGISTRY_REPOSITORY_BASE} registry:repository \"https://_i-am-a-very-long-long-string-of-text-that-should-not-be-allowed.example.com\" .");
 
-    let document_a = TurtleDocument::parse_full(&ttl_document_with_registry_author_a).unwrap();
-    let document_b = TurtleDocument::parse_full(&ttl_document_with_registry_author_b).unwrap();
-    let document_c = TurtleDocument::parse_full(&ttl_document_with_registry_author_c).unwrap();
-    let document_d = TurtleDocument::parse_full(&ttl_document_with_registry_author_d).unwrap();
+    let document_a = TurtleDocument::parse_full(&ttl_document_with_registry_repository_a).unwrap();
+    let document_b = TurtleDocument::parse_full(&ttl_document_with_registry_repository_b).unwrap();
+    let document_c = TurtleDocument::parse_full(&ttl_document_with_registry_repository_c).unwrap();
+    let document_d = TurtleDocument::parse_full(&ttl_document_with_registry_repository_d).unwrap();
 
     let lint = ValidRegistryRepository::default();
     let result_a = lint.lint(&document_a);

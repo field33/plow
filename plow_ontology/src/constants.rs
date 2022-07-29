@@ -19,6 +19,7 @@ pub const REGISTRY_DEPENDENCY: &str = "http://field33.com/ontologies/REGISTRY/de
 pub const REGISTRY_CANONICAL_PREFIX: &str =
     "http://field33.com/ontologies/REGISTRY/canonicalPrefix";
 
+pub const RDFS_COMMENT: &str = "http://www.w3.org/2000/01/rdf-schema#comment";
 pub const RDFS_LABEL: &str = "http://www.w3.org/2000/01/rdf-schema#label";
 pub const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 pub const OWL_ONTOLOGY: &str = "http://www.w3.org/2002/07/owl#Ontology";

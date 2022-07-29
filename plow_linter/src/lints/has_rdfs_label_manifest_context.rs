@@ -1,30 +1,34 @@
 use crate::lint::{
     common_error_literals::{NO_ROOT_PREFIX, RDF_GRAPH_PARSE_ERROR},
-    helpers::{catch_single_annotations_which_must_exist, fail_if_contains_inappropriate_word},
+    helpers::{
+        catch_single_annotations_which_must_exist, fail_if_contains_inappropriate_word,
+        literal_has_language_tag_and_it_is_english,
+    },
     lint_failure, lint_success, Lint, LintResult,
 };
 use harriet::TurtleDocument;
 use plow_graphify::document_to_graph;
-use plow_ontology::constants::REGISTRY_LICENSE;
+use plow_ontology::constants::RDFS_LABEL;
 use plow_package_management::metadata::get_root_prefix;
 use rdftk_iri::IRI as RDFTK_IRI;
 use std::collections::HashSet;
 use std::str::FromStr;
 
-const RELATED_FIELD: &str = "`registry:license`";
-/// A sane character count for a `registry:license` field.
-const LICENSE_MAX_ALLOWED_CHAR_COUNT: usize = 100;
-/// Ensures that a value for `registry:license` is specified as annotation on the ontology.
+const RELATED_FIELD: &str = "`rdfs:label`";
+/// A sane character count for a title.
+const RDFS_LABEL_MANIFEST_CONTEXT_MAX_ALLOWED_CHAR_COUNT: usize = 60;
+/// Ensures that a value for `rdfs:label` is specified as annotation on the ontology.
 #[derive(Debug, Default)]
-pub struct HasRegistryLicense;
+pub struct HasRdfsLabelManifestContext;
 
-impl Lint for HasRegistryLicense {
+impl Lint for HasRdfsLabelManifestContext {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:license`"
+        "Check that the ontology is annotated with a value for `rdfs:label`"
     }
-    /// Lints for the existence of `registry:license` and its validity.
-    /// Check <https://spdx.org/licenses> for a list of available licenses.
-    /// Maximum 100 characters are allowed for a license.
+    /// Lints for the existence of `rdfs:label` and its validity.
+    /// The meaning of this tag is the title of the ontology.
+    /// Max character count is set to 60.
+    /// This annotation requires a language tag present and profanity filter is applied for content tagged with am English language tag.
     fn lint(&self, document: &TurtleDocument) -> LintResult {
         let rdf_factory = rdftk_core::simple::statement::statement_factory();
         if let Ok(rdf_graph) = document_to_graph(document) {
@@ -39,36 +43,40 @@ impl Lint for HasRegistryLicense {
                             == &rdf_factory
                                 .named_subject(RDFTK_IRI::from_str(root_prefix).unwrap().into())
                             && statement.predicate()
-                                == &RDFTK_IRI::from_str(REGISTRY_LICENSE).unwrap().into()
+                                == &RDFTK_IRI::from_str(RDFS_LABEL).unwrap().into()
                     })
                     .collect::<HashSet<_>>();
 
-                // TODO: Ask opinions about allowing multiple license annotations.
-                // Currently only a single one is allowed.
                 if let Some(failure) =
                     catch_single_annotations_which_must_exist(&annotations, RELATED_FIELD)
                 {
                     return failure;
                 }
 
-                // We know that `annotations` has at least one member here.
+                // Only take the first comment, as we only want to lint the first one.
+                // The others we ignore because their meaning is different.
                 #[allow(clippy::unwrap_used)]
                 let annotation = annotations.iter().next().unwrap();
                 let lint_prefix = format!("The value of {RELATED_FIELD},");
                 let result = annotation.object().as_literal().map_or_else(
                     || lint_failure!(format!("{lint_prefix} is not a literal.")),
                     |literal| {
-                  
-                        let license_raw = literal.lexical_form().trim();
-                        if license_raw.chars().count() > LICENSE_MAX_ALLOWED_CHAR_COUNT {
-                            return lint_failure!(format!("{lint_prefix} allows a maximum of {LICENSE_MAX_ALLOWED_CHAR_COUNT} characters."));
+                        let title_raw = literal.lexical_form().trim();
+                        if title_raw.chars().count() > RDFS_LABEL_MANIFEST_CONTEXT_MAX_ALLOWED_CHAR_COUNT {
+                            return lint_failure!(format!("{lint_prefix} allows a maximum of {RDFS_LABEL_MANIFEST_CONTEXT_MAX_ALLOWED_CHAR_COUNT} characters."));
                         }
-                        if let Some(failure) =
-                            fail_if_contains_inappropriate_word(literal, &lint_prefix)
-                        {
-                            return failure;
+                        if literal_has_language_tag_and_it_is_english(literal) {
+                            if let Some(failure) =
+                                fail_if_contains_inappropriate_word(literal, &lint_prefix)
+                            {
+                                return failure;
+                            }
                         }
-                        // TODO: What extra validation could be done here?
+                        if !literal.has_language() {
+                            return lint_failure!(format!(
+                                "{lint_prefix} should be tagged with a language tag."
+                            ));
+                        }
                         lint_success!(format!("{lint_prefix} is valid."))
                     },
                 );

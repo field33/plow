@@ -16,35 +16,35 @@ registry:packageName "@field33/valid" ;
 #[test]
 fn lint_registry_keyword_exists_and_valid() {
     // Only alphanumeric characters and underscored are allowed.
-    let ttl_document_with_registry_author_a =
+    let ttl_document_with_registry_keyword_a =
         format!("{REGISTRY_KEYWORD_BASE} registry:keyword \"A keyword\" .");
-    let ttl_document_with_registry_author_b =
+    let ttl_document_with_registry_keyword_b =
         format!("{REGISTRY_KEYWORD_BASE} registry:keyword \"Multiple\", \"Keywords\" .");
-    let ttl_document_with_registry_author_c =
+    let ttl_document_with_registry_keyword_c =
         format!("{REGISTRY_KEYWORD_BASE} registry:keyword \"Exactly\", \"Maximum\", \"Allowed\", \"Number Of\", \"Keywords\" .");
-    let ttl_document_with_registry_author_d =
+    let ttl_document_with_registry_keyword_d =
         format!("{REGISTRY_KEYWORD_BASE} registry:keyword \"More\", \"Than\" , \"Allowed\", \"Number\" , \"Of\", \"Keywords\" .");
     // Duplicate annotations are filtered or not handled in parsing level.
     // So this test would be a success.
-    let ttl_document_with_registry_author_e =
+    let ttl_document_with_registry_keyword_e =
         format!("{REGISTRY_KEYWORD_BASE} registry:keyword \"Duplicate\", \"Duplicate\" , \"Keywords\" , \"Keywords\" , \"Keywords\" .");
-    let ttl_document_with_registry_author_f =
+    let ttl_document_with_registry_keyword_f =
         format!("{REGISTRY_KEYWORD_BASE} registry:keyword \"Some\", \"Fucking\" , \"Shit\" , \"Keywords\" .");
-    let ttl_document_with_registry_author_g = format!(
+    let ttl_document_with_registry_keyword_g = format!(
         "{REGISTRY_KEYWORD_BASE} registry:keyword \"Language\"@en, \"Tag Containing Keywords\" ."
     );
-    let ttl_document_with_registry_author_h = format!(
+    let ttl_document_with_registry_keyword_h = format!(
         "{REGISTRY_KEYWORD_BASE} registry:keyword \"An absurdly long keyword which exceeds the character limit and should not be allowed because it is too much overhead on indexing and does not make sense to call it a keyword in the first place\", \"Tag Containing Keywords\" ."
     );
 
-    let document_a = TurtleDocument::parse_full(&ttl_document_with_registry_author_a).unwrap();
-    let document_b = TurtleDocument::parse_full(&ttl_document_with_registry_author_b).unwrap();
-    let document_c = TurtleDocument::parse_full(&ttl_document_with_registry_author_c).unwrap();
-    let document_d = TurtleDocument::parse_full(&ttl_document_with_registry_author_d).unwrap();
-    let document_e = TurtleDocument::parse_full(&ttl_document_with_registry_author_e).unwrap();
-    let document_f = TurtleDocument::parse_full(&ttl_document_with_registry_author_f).unwrap();
-    let document_g = TurtleDocument::parse_full(&ttl_document_with_registry_author_g).unwrap();
-    let document_h = TurtleDocument::parse_full(&ttl_document_with_registry_author_h).unwrap();
+    let document_a = TurtleDocument::parse_full(&ttl_document_with_registry_keyword_a).unwrap();
+    let document_b = TurtleDocument::parse_full(&ttl_document_with_registry_keyword_b).unwrap();
+    let document_c = TurtleDocument::parse_full(&ttl_document_with_registry_keyword_c).unwrap();
+    let document_d = TurtleDocument::parse_full(&ttl_document_with_registry_keyword_d).unwrap();
+    let document_e = TurtleDocument::parse_full(&ttl_document_with_registry_keyword_e).unwrap();
+    let document_f = TurtleDocument::parse_full(&ttl_document_with_registry_keyword_f).unwrap();
+    let document_g = TurtleDocument::parse_full(&ttl_document_with_registry_keyword_g).unwrap();
+    let document_h = TurtleDocument::parse_full(&ttl_document_with_registry_keyword_h).unwrap();
 
     let lint = HasRegistryKeyword::default();
     let result_a = lint.lint(&document_a);

@@ -12,6 +12,7 @@ use std::collections::HashSet;
 use std::str::FromStr;
 
 const RELATED_FIELD: &str = "`registry:licenseSPDX`";
+/// A sane character count for a `registry:licenseSPDX` field.
 const SPDX_LICENSE_MAX_ALLOWED_CHAR_COUNT: usize = 100;
 /// Ensures that a value for `registry:licenseSPDX` is specified as annotation on the ontology.
 #[derive(Debug, Default)]
@@ -21,9 +22,9 @@ impl Lint for HasRegistryLicenseSPDX {
     fn short_description(&self) -> &str {
         "Check that the ontology is annotated with a value for `registry:licenseSPDX`"
     }
-    /// Lints for the existence of `registry:licenseSPDX` and its correct format
-    /// (should be `@namespace/package_name` , with both the namespace and package name
-    /// only being alphanumeric characters + underscore)
+    /// Lints for the existence of `registry:licenseSPDX` and its validity.
+    /// Check <https://spdx.org/licenses> for a list of available licenses.
+    /// Maximum 100 characters are allowed for a license.
     fn lint(&self, document: &TurtleDocument) -> LintResult {
         let rdf_factory = rdftk_core::simple::statement::statement_factory();
         if let Ok(rdf_graph) = document_to_graph(document) {
@@ -49,8 +50,6 @@ impl Lint for HasRegistryLicenseSPDX {
                 {
                     return failure;
                 }
-
-                // Creative Commons Attribution Non Commercial Share Alike 2.0 England and Wales
 
                 // We know that `annotations` has at least one member here.
                 #[allow(clippy::unwrap_used)]

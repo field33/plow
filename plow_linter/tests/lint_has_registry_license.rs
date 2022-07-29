@@ -16,26 +16,26 @@ registry:packageName "@field33/valid" ;
 #[test]
 fn lint_registry_license_exists_and_valid() {
     // Only alphanumeric characters and underscored are allowed.
-    let ttl_document_with_registry_author_a =
+    let ttl_document_with_registry_license_a =
         format!("{REGISTRY_LICENSE_BASE} registry:license \"Computer Associates Trusted Open Source License 1.1\" .");
-    let ttl_document_with_registry_author_b =
+    let ttl_document_with_registry_license_b =
         format!("{REGISTRY_LICENSE_BASE} registry:license \"Creative Commons Attribution Non Commercial Share Alike 2.0 England and Wales\" .");
-    let ttl_document_with_registry_author_c =
+    let ttl_document_with_registry_license_c =
         format!("{REGISTRY_LICENSE_BASE} registry:license \"Creative Commons Attribution Non Commercial Share Alike 2.0 England and Wales, and if this license description would exceed 100 characters like it is now it would be a failure\" .");
-    let ttl_document_with_registry_author_d =
+    let ttl_document_with_registry_license_d =
         format!("{REGISTRY_LICENSE_BASE} registry:license \"CERN Open Hardware Licence Version 2 - Strongly Reciprocal Crappy Suck\" .");
-    let ttl_document_with_registry_author_e = format!(
+    let ttl_document_with_registry_license_e = format!(
         "{REGISTRY_LICENSE_BASE} registry:license \"copyleft-next 0.3.0\", \"Crossword License\" ."
     );
-    let ttl_document_with_registry_author_f =
+    let ttl_document_with_registry_license_f =
         format!("{REGISTRY_LICENSE_BASE} registry:license \"A Made Up License-3.0\" .");
 
-    let document_a = TurtleDocument::parse_full(&ttl_document_with_registry_author_a).unwrap();
-    let document_b = TurtleDocument::parse_full(&ttl_document_with_registry_author_b).unwrap();
-    let document_c = TurtleDocument::parse_full(&ttl_document_with_registry_author_c).unwrap();
-    let document_d = TurtleDocument::parse_full(&ttl_document_with_registry_author_d).unwrap();
-    let document_e = TurtleDocument::parse_full(&ttl_document_with_registry_author_e).unwrap();
-    let document_f = TurtleDocument::parse_full(&ttl_document_with_registry_author_f).unwrap();
+    let document_a = TurtleDocument::parse_full(&ttl_document_with_registry_license_a).unwrap();
+    let document_b = TurtleDocument::parse_full(&ttl_document_with_registry_license_b).unwrap();
+    let document_c = TurtleDocument::parse_full(&ttl_document_with_registry_license_c).unwrap();
+    let document_d = TurtleDocument::parse_full(&ttl_document_with_registry_license_d).unwrap();
+    let document_e = TurtleDocument::parse_full(&ttl_document_with_registry_license_e).unwrap();
+    let document_f = TurtleDocument::parse_full(&ttl_document_with_registry_license_f).unwrap();
 
     let lint = HasRegistryLicense::default();
     let result_a = lint.lint(&document_a);

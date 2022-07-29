@@ -1,7 +1,7 @@
 use crate::lint::common_error_literals::{NO_ROOT_PREFIX, RDF_GRAPH_PARSE_ERROR};
 use crate::lint::{lint_failure, lint_success, Lint, LintResult};
-use plow_graphify::document_to_graph;
 use harriet::TurtleDocument;
+use plow_graphify::document_to_graph;
 use plow_ontology::constants::{OWL_ONTOLOGY, RDF_TYPE};
 use plow_package_management::metadata::get_root_prefix;
 use rdftk_iri::IRI as RDFTK_IRI;
@@ -11,14 +11,13 @@ use std::str::FromStr;
 #[derive(Debug, Default)]
 pub struct HasOntologyDeclaration;
 
-/// Checks whether an ontology has been declared in the document.
-///
-/// Currently relies on the `:` prefix to be defined in the file.
 impl Lint for HasOntologyDeclaration {
     fn short_description(&self) -> &str {
         "Check that a ontology is declared in the file (matching the \":\" @prefix)"
     }
 
+    /// Checks whether an ontology has been declared in the document.
+    /// Currently relies on the `:` prefix to be defined in the file.
     fn lint(&self, document: &TurtleDocument) -> LintResult {
         let rdf_factory = rdftk_core::simple::statement::statement_factory();
         if let Ok(rdf_graph) = document_to_graph(document) {

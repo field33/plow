@@ -8,7 +8,8 @@ const RDFS_LABEL_BASE: &str = concat!(
 registry:ontologyFormatVersion "v1" ;
 registry:packageName "@test/test" ;
 registry:canonicalPrefix "test" ;
-registry:packageVersion "2.3.4" .
+registry:packageVersion "2.3.4" ;
+rdfs:label "This is an invalid label which misses a language tag and it is over 60 characters but it belongs to the manifest part thus we ignore it in this lint. There is another lint which checks for these." .
 <http://field33.com/ontologies/@test/test/>
 registry:dependency
 "@some/dependency =0.1.0" ,

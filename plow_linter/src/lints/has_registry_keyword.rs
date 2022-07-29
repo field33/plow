@@ -15,7 +15,9 @@ use std::collections::HashSet;
 use std::str::FromStr;
 
 const RELATED_FIELD: &str = "`registry:keyword`";
+/// Maximum count of keywords.
 const MAX_KEYWORDS: usize = 5;
+/// A sane character count for a single keyword.
 const KEYWORD_MAX_ALLOWED_CHAR_COUNT: usize = 50;
 
 /// Ensures that a value for `registry:keyword` is specified as annotation on the ontology.
@@ -26,9 +28,11 @@ impl Lint for HasRegistryKeyword {
     fn short_description(&self) -> &str {
         "Check that the ontology is annotated with a value for `registry:keyword`"
     }
-    /// Lints for the existence of `registry:keyword` and its correct format
-    /// (should be `@namespace/package_name` , with both the namespace and package name
-    /// only being alphanumeric characters + underscore)
+    /// Lints for the existence of `registry:keyword` and its validity.
+    /// Keywords could be chosen freely.
+    /// Maximum 5 keywords are allowed.
+    /// Keywords shouldn't contain language tags.
+    /// Maximum 50 characters are allowed for a keyword.
     fn lint(&self, document: &TurtleDocument) -> LintResult {
         let rdf_factory = rdftk_core::simple::statement::statement_factory();
         if let Ok(rdf_graph) = document_to_graph(document) {

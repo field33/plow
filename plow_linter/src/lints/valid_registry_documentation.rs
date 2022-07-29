@@ -20,9 +20,8 @@ impl Lint for ValidRegistryDocumentation {
     fn short_description(&self) -> &str {
         "Check that the ontology is annotated with a value for `registry:documentation`"
     }
-    /// Lints for the existence of `registry:documentation` and its correct format
-    /// (should be `@namespace/package_name` , with both the namespace and package name
-    /// only being alphanumeric characters + underscore)
+    /// Lints for the validity of `registry:documentation`.
+    /// Domain validation is applied.
     fn lint(&self, document: &TurtleDocument) -> LintResult {
         let rdf_factory = rdftk_core::simple::statement::statement_factory();
         if let Ok(rdf_graph) = document_to_graph(document) {

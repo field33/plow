@@ -1,8 +1,8 @@
 use crate::lint::common_error_literals::{NO_ROOT_PREFIX, RDF_GRAPH_PARSE_ERROR};
 use crate::lint::helpers::catch_single_annotations_which_must_exist;
 use crate::lint::{lint_failure, lint_success, Lint, LintResult};
-use plow_graphify::document_to_graph;
 use harriet::TurtleDocument;
+use plow_graphify::document_to_graph;
 use plow_ontology::constants::REGISTRY_CANONICAL_PREFIX;
 use plow_package_management::metadata::get_root_prefix;
 use rdftk_iri::IRI as RDFTK_IRI;
@@ -18,6 +18,7 @@ impl Lint for HasCanonicalPrefix {
         "Check that the ontology is annotated with a value for `registry:canonicalPrefix`"
     }
 
+    /// Check that the ontology is annotated with a value for `registry:canonicalPrefix`
     fn lint(&self, document: &TurtleDocument) -> LintResult {
         let rdf_factory = rdftk_core::simple::statement::statement_factory();
         if let Ok(rdf_graph) = document_to_graph(document) {

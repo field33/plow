@@ -16,6 +16,7 @@ impl Lint for ContainsOWLPrefixes {
         "Check if ontology contains all important OWL prefixes"
     }
 
+    /// Check if ontology contains all important OWL prefixes
     fn lint(&self, document: &TurtleDocument) -> LintResult {
         let mut owl_prefixes = vec![
             ("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),

@@ -12,6 +12,7 @@ use std::collections::HashSet;
 use std::str::FromStr;
 
 const RELATED_FIELD: &str = "`registry:author`";
+/// A sane character count for a persons name, it is a guess so might be updated later.
 const AUTHOR_NAME_MAX_ALLOWED_CHAR_COUNT: usize = 50;
 /// Ensures that a value for `registry:author` is specified as annotation on the ontology.
 #[derive(Debug, Default)]
@@ -21,9 +22,8 @@ impl Lint for HasRegistryAuthor {
     fn short_description(&self) -> &str {
         "Check that the ontology is annotated with a value for `registry:author`"
     }
-    /// Lints for the existence of `registry:packageName` and its correct format
-    /// (should be `@namespace/package_name` , with both the namespace and package name
-    /// only being alphanumeric characters + underscore)
+    /// Lints for the existence of `registry:author` and its validity.
+    /// Max character count is set to 50.
     fn lint(&self, document: &TurtleDocument) -> LintResult {
         let rdf_factory = rdftk_core::simple::statement::statement_factory();
         if let Ok(rdf_graph) = document_to_graph(document) {

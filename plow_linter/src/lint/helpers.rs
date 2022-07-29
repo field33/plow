@@ -3,12 +3,16 @@ use addr::parse_dns_name;
 use anyhow::Result;
 use plow_package_management::resolve::Dependency;
 use plow_package_management::version::SemanticVersion;
-use rdftk_core::model::{literal::Literal, statement::Statement};
+use rdftk_core::model::{
+    literal::{LanguageTag, Literal},
+    statement::Statement,
+};
 use rustrict::CensorStr;
 use semver::Version;
 use std::{cell::RefCell, collections::HashSet, rc::Rc};
 use thiserror::Error;
 
+/// An internal helper which catches multiple of the same annotations which are not allowed.
 pub fn catch_single_annotations_which_may_exist(
     annotations: &HashSet<&Rc<dyn Statement>>,
     related_field: &str,
@@ -52,6 +56,15 @@ pub fn catch_single_or_multiple_annotations_which_must_exist(
     None
 }
 
+/// An internal helper which checks a literal for an english language tag.
+pub fn literal_has_language_tag_and_it_is_english(literal: &Rc<dyn Literal>) -> bool {
+    if let Some(LanguageTag::Tag(tag)) = literal.language() {
+        return tag.language() == "en";
+    }
+    false
+}
+
+/// An internal helper which returns a lint failure if the literal contains a language tag.
 pub fn fail_if_has_language_tag(
     literal: &Rc<dyn Literal>,
     related_field: &str,
@@ -64,6 +77,7 @@ pub fn fail_if_has_language_tag(
     None
 }
 
+/// An internal helper which applies profanity filter to a literal.
 pub fn fail_if_contains_inappropriate_word(
     literal: &Rc<dyn Literal>,
     related_field: &str,
@@ -77,6 +91,7 @@ pub fn fail_if_contains_inappropriate_word(
     None
 }
 
+/// An internal helper which applies domain validation to a literal.
 pub fn fail_if_domain_name_is_invalid(
     literal: &Rc<dyn Literal>,
     related_field: &str,
