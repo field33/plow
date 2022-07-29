@@ -23,6 +23,8 @@ fn lint_registry_repository_exists_and_valid() {
     );
     let ttl_document_with_registry_author_c =
         format!("{REGISTRY_REPOSITORY_BASE} registry:repository \"https://www.beloved-field.io\", \"http://www.another-beloved-field.io\" .");
+
+    // Limit is 63 chars in length.
     let ttl_document_with_registry_author_d =
         format!("{REGISTRY_REPOSITORY_BASE} registry:repository \"https://_i-am-a-very-long-long-string-of-text-that-should-not-be-allowed.example.com\" .");
 

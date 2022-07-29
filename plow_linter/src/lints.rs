@@ -45,6 +45,7 @@ pub mod has_registry_license;
 pub mod has_registry_license_spdx;
 pub mod has_registry_package_name;
 pub mod has_registry_package_version;
+pub mod has_registry_short_description;
 pub mod root_prefix_matches_pattern;
 pub mod valid_rdfs_labels;
 pub mod valid_registry_dependencies;
@@ -65,6 +66,7 @@ pub use has_registry_license::HasRegistryLicense;
 pub use has_registry_license_spdx::HasRegistryLicenseSPDX;
 pub use has_registry_package_name::HasRegistryPackageName;
 pub use has_registry_package_version::HasRegistryPackageVersion;
+pub use has_registry_short_description::HasRegistryShortDescription;
 pub use root_prefix_matches_pattern::RootPrefixMatchesPattern;
 pub use valid_rdfs_labels::ValidRdfsLabels;
 pub use valid_registry_dependencies::ValidRegistryDependencies;
@@ -148,6 +150,7 @@ pub fn required_plow_registry_lints() -> Vec<Box<dyn Lint>> {
         Box::new(ValidRegistryHomepage::default()) as Box<dyn Lint>,
         Box::new(ValidRegistryRepository::default()) as Box<dyn Lint>,
         Box::new(ValidRegistryDocumentation::default()) as Box<dyn Lint>,
+        Box::new(HasRegistryShortDescription::default()) as Box<dyn Lint>,
     ]
 }
 

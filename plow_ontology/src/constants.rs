@@ -5,6 +5,8 @@ pub const REGISTRY_CATEGORY: &str = "http://field33.com/ontologies/REGISTRY/cate
 pub const REGISTRY_KEYWORD: &str = "http://field33.com/ontologies/REGISTRY/keyword";
 pub const REGISTRY_LICENSE: &str = "http://field33.com/ontologies/REGISTRY/license";
 pub const REGISTRY_LICENSE_SPDX: &str = "http://field33.com/ontologies/REGISTRY/licenseSPDX";
+pub const REGISTRY_SHORT_DESCRIPTION: &str =
+    "http://field33.com/ontologies/REGISTRY/shortDescription";
 pub const REGISTRY_PACKAGE_NAME: &str = "http://field33.com/ontologies/REGISTRY/packageName";
 pub const REGISTRY_HOMEPAGE: &str = "http://field33.com/ontologies/REGISTRY/homepage";
 pub const REGISTRY_REPOSITORY: &str = "http://field33.com/ontologies/REGISTRY/repository";
