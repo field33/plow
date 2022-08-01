@@ -34,3 +34,8 @@ plow_linter = { path = "../plow_linter" }
 plow_ontology = { path = "../plow_ontology" }
 pubgrub = "0.2"
 semver = "1"
+
+
+# [patch.crates-io]
+# plow_ontology = { path = "../plow_ontology" }
+# plow_graphify = { path = "../plow_graphify" }

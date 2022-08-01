@@ -1,16 +1,16 @@
 [package]
 name = "plow_linter"
 description = "A linter to lint Plow ttl documents (interpreted as ontologies)."
-version = "0.1.0"
+version = "0.1.1"
 license = "MIT OR Apache-2.0"
 authors = ["Maximilian Goisser <max@field33.com>", "Ali Somay <ali@field33.com>"]
 repository = "https://github.com/field33/plow/"
 edition = "2021"
 
 [dependencies]
-plow_ontology = { path = "../plow_ontology", version = "0.1.0" }
-plow_graphify = { path = "../plow_graphify", version = "0.1.0" }
-plow_package_management = { path = "../plow_package_management", version = "0.1.0" }
+plow_ontology = "0.1"
+plow_graphify = "0.1"
+plow_package_management = "0.1"
 anyhow = { version = "1", features = ["backtrace"] }
 thiserror = "1"
 harriet = "0.1"
@@ -28,3 +28,7 @@ rustrict = "0.4"
 spdx = "0.8"
 addr = "0.15"
 
+# [patch.crates-io]
+# plow_graphify = { path = "../plow_graphify" }
+# plow_ontology = { path = "../plow_ontology" }
+# plow_package_management = { path = "../plow_package_management" }
