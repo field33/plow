@@ -56,6 +56,7 @@ pub fn catch_single_or_multiple_annotations_which_must_exist(
     None
 }
 
+#[allow(dead_code)]
 /// An internal helper which checks a literal for an english language tag.
 pub fn literal_has_language_tag_and_it_is_english(literal: &Rc<dyn Literal>) -> bool {
     if let Some(LanguageTag::Tag(tag)) = literal.language() {

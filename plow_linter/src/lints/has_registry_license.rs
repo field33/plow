@@ -13,7 +13,7 @@ use std::str::FromStr;
 
 const RELATED_FIELD: &str = "`registry:license`";
 /// A sane character count for a `registry:license` field.
-const LICENSE_MAX_ALLOWED_CHAR_COUNT: usize = 100;
+const LICENSE_MAX_ALLOWED_CHAR_COUNT: usize = 10_000;
 /// Ensures that a value for `registry:license` is specified as annotation on the ontology.
 #[derive(Debug, Default)]
 pub struct HasRegistryLicense;
