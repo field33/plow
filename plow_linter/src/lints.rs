@@ -38,11 +38,22 @@ pub mod contains_registry_prefix;
 pub mod has_canonical_prefix;
 pub mod has_ontology_declaration;
 pub mod has_ontology_format_version;
+pub mod has_rdfs_comment_manifest_context;
+pub mod has_rdfs_label_manifest_context;
+pub mod has_registry_author;
+pub mod has_registry_category;
+pub mod has_registry_keyword;
+pub mod has_registry_license;
+pub mod has_registry_license_spdx;
 pub mod has_registry_package_name;
 pub mod has_registry_package_version;
+pub mod has_registry_short_description;
 pub mod root_prefix_matches_pattern;
 pub mod valid_rdfs_labels;
 pub mod valid_registry_dependencies;
+pub mod valid_registry_documentation;
+pub mod valid_registry_homepage;
+pub mod valid_registry_repository;
 
 pub use base_matches_root_prefix::BaseMatchesRootPrefix;
 pub use contains_owl_prefixes::ContainsOWLPrefixes;
@@ -50,11 +61,22 @@ pub use contains_registry_prefix::ContainsRegistryPrefix;
 pub use has_canonical_prefix::HasCanonicalPrefix;
 pub use has_ontology_declaration::HasOntologyDeclaration;
 pub use has_ontology_format_version::HasOntologyFormatVersion;
+pub use has_rdfs_comment_manifest_context::HasRdfsCommentManifestContext;
+pub use has_rdfs_label_manifest_context::HasRdfsLabelManifestContext;
+pub use has_registry_author::HasRegistryAuthor;
+pub use has_registry_category::HasRegistryCategory;
+pub use has_registry_keyword::HasRegistryKeyword;
+pub use has_registry_license::HasRegistryLicense;
+pub use has_registry_license_spdx::HasRegistryLicenseSPDX;
 pub use has_registry_package_name::HasRegistryPackageName;
 pub use has_registry_package_version::HasRegistryPackageVersion;
+pub use has_registry_short_description::HasRegistryShortDescription;
 pub use root_prefix_matches_pattern::RootPrefixMatchesPattern;
 pub use valid_rdfs_labels::ValidRdfsLabels;
 pub use valid_registry_dependencies::ValidRegistryDependencies;
+pub use valid_registry_documentation::ValidRegistryDocumentation;
+pub use valid_registry_homepage::ValidRegistryHomepage;
+pub use valid_registry_repository::ValidRegistryRepository;
 
 #[derive(Debug, Default, Clone)]
 pub struct AddPrefixes {
@@ -109,6 +131,32 @@ pub fn required_package_management_lints() -> Vec<Box<dyn Lint>> {
         Box::new(HasRegistryPackageVersion::default()) as Box<dyn Lint>,
         Box::new(ValidRegistryDependencies::default()) as Box<dyn Lint>,
         Box::new(ValidRdfsLabels::default()) as Box<dyn Lint>,
+    ]
+}
+
+#[allow(clippy::as_conversions)]
+pub fn required_plow_registry_lints() -> Vec<Box<dyn Lint>> {
+    vec![
+        Box::new(BaseMatchesRootPrefix::default()) as Box<dyn Lint>,
+        Box::new(ContainsOWLPrefixes::default()) as Box<dyn Lint>,
+        Box::new(ContainsRegistryPrefix::default()) as Box<dyn Lint>,
+        Box::new(HasOntologyDeclaration::default()) as Box<dyn Lint>,
+        Box::new(HasOntologyFormatVersion::default()) as Box<dyn Lint>,
+        //
+        Box::new(HasRegistryPackageName::default()) as Box<dyn Lint>,
+        Box::new(HasRegistryPackageVersion::default()) as Box<dyn Lint>,
+        Box::new(HasRegistryAuthor::default()) as Box<dyn Lint>,
+        Box::new(HasRegistryCategory::default()) as Box<dyn Lint>,
+        Box::new(HasRegistryKeyword::default()) as Box<dyn Lint>,
+        Box::new(HasRegistryLicenseSPDX::default()) as Box<dyn Lint>,
+        Box::new(HasRegistryLicense::default()) as Box<dyn Lint>,
+        Box::new(ValidRegistryDependencies::default()) as Box<dyn Lint>,
+        Box::new(ValidRegistryHomepage::default()) as Box<dyn Lint>,
+        Box::new(ValidRegistryRepository::default()) as Box<dyn Lint>,
+        Box::new(ValidRegistryDocumentation::default()) as Box<dyn Lint>,
+        Box::new(HasRegistryShortDescription::default()) as Box<dyn Lint>,
+        Box::new(HasRdfsCommentManifestContext::default()) as Box<dyn Lint>,
+        Box::new(HasRdfsLabelManifestContext::default()) as Box<dyn Lint>,
     ]
 }
 

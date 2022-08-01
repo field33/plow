@@ -6,8 +6,8 @@ use crate::lint::{
     },
     lint_failure, lint_success, lint_warning, Lint, LintResult,
 };
-use plow_graphify::document_to_graph;
 use harriet::TurtleDocument;
+use plow_graphify::document_to_graph;
 use plow_ontology::constants::REGISTRY_PACKAGE_VERSION;
 use plow_package_management::metadata::get_root_prefix;
 use rdftk_iri::IRI as RDFTK_IRI;

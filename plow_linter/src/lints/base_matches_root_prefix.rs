@@ -11,6 +11,7 @@ impl Lint for BaseMatchesRootPrefix {
         "Check that the @base directive matches the value for the `:` prefix."
     }
 
+    /// Check that the @base directive matches the value for the `:` prefix.
     fn lint(&self, document: &TurtleDocument) -> LintResult {
         if let Some(root_prefix) = get_root_prefix(document) {
             let mut base_directive = None;

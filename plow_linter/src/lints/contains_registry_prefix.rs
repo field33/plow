@@ -5,14 +5,13 @@ use harriet::{Directive, Item, Statement, TurtleDocument};
 #[derive(Debug, Default)]
 pub struct ContainsRegistryPrefix;
 
-/// Check if ontology contains the prefix for the REGISTRY ontology.
-///
-/// Currently required to ensure that editing operations work smoothly.
 impl Lint for ContainsRegistryPrefix {
     fn short_description(&self) -> &str {
         "Check if ontology contains the prefix for the REGISTRY ontology"
     }
 
+    /// Check if ontology contains the prefix for the REGISTRY ontology.
+    /// Currently required to ensure that editing operations work smoothly.
     fn lint(&self, document: &TurtleDocument) -> LintResult {
         let mut owl_prefixes = vec![("registry", "http://field33.com/ontologies/REGISTRY/")];
 

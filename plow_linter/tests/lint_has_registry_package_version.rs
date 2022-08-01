@@ -11,7 +11,6 @@ registry:canonicalPrefix "test" ;
 "#
 );
 
-// Only simple and fully complete version strings are allowed with no prefix or suffixes. e.g. major.minor.patch.
 #[test]
 fn lint_registry_package_version_exists_and_valid() {
     let ttl_document_with_package_version_a =

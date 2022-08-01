@@ -3,11 +3,12 @@ use crate::lint::{
     lint_failure, lint_success, Lint, LintResult,
 };
 use crate::lints::get_root_prefix;
-use plow_graphify::document_to_graph;
 use harriet::TurtleDocument;
+use plow_graphify::document_to_graph;
 use plow_ontology::constants::{
     OWL_ANNOTATION_PROPERTY, OWL_CLASS, OWL_DATA_PROPERTY, OWL_OBJECT_PROPERTY, RDFS_LABEL,
 };
+
 use rdftk_iri::IRI as RDFTK_IRI;
 
 use std::collections::HashSet;
@@ -26,8 +27,9 @@ impl Lint for ValidRdfsLabels {
     /// Every `Class`, `ObjectProperty`, `DataProperty`, `AnnotationProperty` should have an `rdfs:label` annotation
     /// `rdfs:label` annotations with a string literal should contain `@en` as a language tag
     fn lint(&self, document: &TurtleDocument) -> LintResult {
+        let rdf_factory = rdftk_core::simple::statement::statement_factory();
         if let Ok(rdf_graph) = document_to_graph(document) {
-            if get_root_prefix(document).is_some() {
+            if let Some(root_prefix) = get_root_prefix(document) {
                 let graph = rdf_graph.borrow();
                 // We explicitly pass valid data, unwrap is safe here.
                 #[allow(clippy::unwrap_used)]
@@ -35,6 +37,7 @@ impl Lint for ValidRdfsLabels {
                     .statements()
                     .filter(|statement| {
                         if let Some(object_iri) = statement.object().as_iri() {
+                            // dbg!(&object_iri.path());
                             return object_iri == &RDFTK_IRI::from_str(OWL_CLASS).unwrap().into()
                                 || object_iri
                                     == &RDFTK_IRI::from_str(OWL_OBJECT_PROPERTY).unwrap().into()
@@ -62,6 +65,21 @@ impl Lint for ValidRdfsLabels {
                     .statements()
                     .filter(|statement| {
 
+                        // We ignore the rdfs:label statements which belong to the manifest.
+                        // They are linted differently.
+                        // See has_rdfs_label_manifest_context.rs
+                        let root_prefix_path = rdf_factory
+                            .named_subject(RDFTK_IRI::from_str(root_prefix).unwrap().into())
+                            .as_iri()
+                            .unwrap()
+                            .path()
+                            .clone()
+                            .to_string();
+                        let subject_path = statement.subject().as_iri().unwrap().path().to_string();
+                        if root_prefix_path == subject_path {
+                            return false;
+                        }
+
                         if statement.predicate() == &RDFTK_IRI::from_str(RDFS_LABEL).unwrap().into()
                         {
                             // Statement has a `rdfs:label` predicate
@@ -70,6 +88,7 @@ impl Lint for ValidRdfsLabels {
 
                             // Validate those labels
                             if let Some(literal) = statement.object().as_literal() {
+                                // dbg!(literal.lexical_form());
                                 const ENGLISH_LANGUAGE_CODE: &str = "en";
                                 if let Some(language_tag) = literal.language() {
 

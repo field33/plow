@@ -1,11 +1,29 @@
 use crate::lint::{lint_failure, LintResult};
+use addr::parse_dns_name;
 use anyhow::Result;
 use plow_package_management::resolve::Dependency;
 use plow_package_management::version::SemanticVersion;
-use rdftk_core::model::statement::Statement;
+use rdftk_core::model::{
+    literal::{LanguageTag, Literal},
+    statement::Statement,
+};
+use rustrict::CensorStr;
 use semver::Version;
 use std::{cell::RefCell, collections::HashSet, rc::Rc};
 use thiserror::Error;
+
+/// An internal helper which catches multiple of the same annotations which are not allowed.
+pub fn catch_single_annotations_which_may_exist(
+    annotations: &HashSet<&Rc<dyn Statement>>,
+    related_field: &str,
+) -> Option<LintResult> {
+    if annotations.len() > 1 {
+        return Some(lint_failure!(&format!(
+            "More than 1 {related_field} annotations found."
+        )));
+    }
+    None
+}
 
 /// An internal helper which catches the absence of single annotations which must exist.
 pub fn catch_single_annotations_which_must_exist(
@@ -23,6 +41,71 @@ pub fn catch_single_annotations_which_must_exist(
         )));
     }
     None
+}
+
+/// An internal helper which catches the absence of single annotations which must exist.
+pub fn catch_single_or_multiple_annotations_which_must_exist(
+    annotations: &HashSet<&Rc<dyn Statement>>,
+    related_field: &str,
+) -> Option<LintResult> {
+    if annotations.is_empty() {
+        return Some(lint_failure!(&format!(
+            "No {related_field} annotations found."
+        )));
+    }
+    None
+}
+
+#[allow(dead_code)]
+/// An internal helper which checks a literal for an english language tag.
+pub fn literal_has_language_tag_and_it_is_english(literal: &Rc<dyn Literal>) -> bool {
+    if let Some(LanguageTag::Tag(tag)) = literal.language() {
+        return tag.language() == "en";
+    }
+    false
+}
+
+/// An internal helper which returns a lint failure if the literal contains a language tag.
+pub fn fail_if_has_language_tag(
+    literal: &Rc<dyn Literal>,
+    related_field: &str,
+) -> Option<LintResult> {
+    if literal.has_language() {
+        return Some(lint_failure!(&format!(
+            "{related_field} does not accept language tags."
+        )));
+    }
+    None
+}
+
+/// An internal helper which applies profanity filter to a literal.
+pub fn fail_if_contains_inappropriate_word(
+    literal: &Rc<dyn Literal>,
+    related_field: &str,
+) -> Option<LintResult> {
+    let raw_literal = literal.lexical_form();
+    if raw_literal.is_inappropriate() {
+        return Some(lint_failure!(&format!(
+            "The value of {related_field} contains one or more inappropriate words which are not allowed in Plow registry."
+        )));
+    }
+    None
+}
+
+/// An internal helper which applies domain validation to a literal.
+pub fn fail_if_domain_name_is_invalid(
+    literal: &Rc<dyn Literal>,
+    related_field: &str,
+) -> Option<LintResult> {
+    let raw_literal = literal.lexical_form();
+    parse_dns_name(raw_literal).map_or_else(
+        |_| {
+            Some(lint_failure!(&format!(
+                "The value of {related_field} is not a valid domain name."
+            )))
+        },
+        |_| None,
+    )
 }
 
 #[derive(Error, Debug)]
