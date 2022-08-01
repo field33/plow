@@ -12,7 +12,6 @@ registry:packageName "@field33/valid" ;
 "#
 );
 
-// Checks that rdfs:comment field's correct format is 50 chars long and email is validated.
 #[test]
 fn lint_registry_rdfs_comment_manifest_context_exists_and_valid() {
     // Only alphanumeric characters and underscored are allowed.

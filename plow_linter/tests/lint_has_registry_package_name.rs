@@ -11,8 +11,6 @@ registry:packageVersion "=2.3.4" ;
 "#
 );
 
-// Checks that registry:packageName field's correct format (should be @namespace/package_name ,
-// with both the namespace and package name only being alphanumeric characters + underscore)
 #[test]
 fn lint_registry_package_name_exists_and_valid() {
     // Only alphanumeric characters and underscored are allowed.

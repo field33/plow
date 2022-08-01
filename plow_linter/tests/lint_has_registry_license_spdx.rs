@@ -12,7 +12,6 @@ registry:packageName "@field33/valid" ;
 "#
 );
 
-// Checks that registry:licenseSPDX field's correct format is 50 chars long and email is validated.
 #[test]
 fn lint_registry_license_spdx_exists_and_valid() {
     // Only alphanumeric characters and underscored are allowed.
