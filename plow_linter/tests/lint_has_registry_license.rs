@@ -49,7 +49,7 @@ fn lint_registry_license_exists_and_valid() {
     assert!(result_b.is_success());
     assert!(result_c.is_failure());
     assert!(result_d.is_failure());
-    assert!(result_e.is_failure());
+    assert!(result_e.is_success());
     assert!(result_f.is_success());
 }
 

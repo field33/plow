@@ -35,7 +35,7 @@ Duis et elit ac tellus facilisis venenatis eu ut mi. Etiam dapibus rhoncus lacus
     let ttl_document_with_rdfs_comment_c =
         format!("{RDFS_COMMENT_MANIFEST_CONTEXT_BASE} rdfs:comment \"Long description with inappropriate words asshole fucking shit.\"@en .");
     let ttl_document_with_rdfs_comment_d =
-        format!("{RDFS_COMMENT_MANIFEST_CONTEXT_BASE} rdfs:comment \"Fuck multiple long descriptions.\"@en, \"Which are allowed because it uses a generic annotation on the other hand only the first one will be evaulated as a long description and later ones are ignored in this case this test case should FAIL because of the use of inappropriate words.\"@en .");
+        format!("{RDFS_COMMENT_MANIFEST_CONTEXT_BASE} rdfs:comment \"Multiple long descriptions.\"@en, \"Which are not allowed.\"@en .");
     let ttl_document_with_rdfs_comment_e = format!(
         "{RDFS_COMMENT_MANIFEST_CONTEXT_BASE} rdfs:comment \"A language tag is necessary.\" ."
     );
@@ -58,7 +58,9 @@ Duis et elit ac tellus facilisis venenatis eu ut mi. Etiam dapibus rhoncus lacus
     let result_f = lint.lint(&document_f);
     assert!(result_a.is_success());
     assert!(result_b.is_failure());
-    assert!(result_c.is_failure());
+    // Profanity filter turned off.
+    assert!(result_c.is_success());
+    //
     assert!(result_d.is_failure());
     assert!(result_e.is_failure());
     assert!(result_f.is_failure());

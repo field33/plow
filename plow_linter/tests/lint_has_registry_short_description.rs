@@ -47,7 +47,9 @@ fn lint_registry_short_description_exists_and_valid() {
 
     assert!(result_a.is_success());
     assert!(result_b.is_failure());
-    assert!(result_c.is_failure());
+    // Profanity filter turned off.
+    assert!(result_c.is_success());
+    //
     assert!(result_d.is_failure());
     assert!(result_e.is_failure());
 }

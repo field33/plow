@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use std::str::FromStr;
 
 const RELATED_FIELD: &str = "`registry:licenseSPDX`";
-/// A sane character count for a `registry:licenseSPDX` field.
+/// A sane character count for a `licenseSPDX` field.
 const SPDX_LICENSE_MAX_ALLOWED_CHAR_COUNT: usize = 100;
 /// Ensures that a value for `registry:licenseSPDX` is specified as annotation on the ontology.
 #[derive(Debug, Default)]

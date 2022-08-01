@@ -1,9 +1,6 @@
 use crate::lint::{
     common_error_literals::{NO_ROOT_PREFIX, RDF_GRAPH_PARSE_ERROR},
-    helpers::{
-        catch_single_annotations_which_must_exist, fail_if_contains_inappropriate_word,
-        literal_has_language_tag_and_it_is_english,
-    },
+    helpers::catch_single_annotations_which_must_exist,
     lint_failure, lint_success, Lint, LintResult,
 };
 use harriet::TurtleDocument;
@@ -65,13 +62,14 @@ impl Lint for HasRdfsCommentManifestContext {
                         if long_description_raw.chars().count() > RDFS_COMMENT_MANIFEST_CONTEXT_MAX_ALLOWED_CHAR_COUNT {
                             return lint_failure!(format!("{lint_prefix} allows a maximum of {RDFS_COMMENT_MANIFEST_CONTEXT_MAX_ALLOWED_CHAR_COUNT} characters."));
                         }
-                        if literal_has_language_tag_and_it_is_english(literal) {
-                            if let Some(failure) =
-                                fail_if_contains_inappropriate_word(literal, &lint_prefix)
-                            {
-                                return failure;
-                            }
-                        }
+                        // Check for profanity. Currently not applied.
+                        // if literal_has_language_tag_and_it_is_english(literal) {
+                        //     if let Some(failure) =
+                        //         fail_if_contains_inappropriate_word(literal, &lint_prefix)
+                        //     {
+                        //         return failure;
+                        //     }
+                        // }
                         if !literal.has_language() {
                             return lint_failure!(format!(
                                 "{lint_prefix} should be tagged with a language tag."

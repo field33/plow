@@ -1,6 +1,6 @@
 use crate::lint::{
     common_error_literals::{NO_ROOT_PREFIX, RDF_GRAPH_PARSE_ERROR},
-    helpers::{catch_single_annotations_which_must_exist, fail_if_contains_inappropriate_word},
+    helpers::{ fail_if_contains_inappropriate_word, catch_single_or_multiple_annotations_which_must_exist},
     lint_failure, lint_success, Lint, LintResult,
 };
 use harriet::TurtleDocument;
@@ -46,7 +46,7 @@ impl Lint for HasRegistryLicense {
                 // TODO: Ask opinions about allowing multiple license annotations.
                 // Currently only a single one is allowed.
                 if let Some(failure) =
-                    catch_single_annotations_which_must_exist(&annotations, RELATED_FIELD)
+                    catch_single_or_multiple_annotations_which_must_exist(&annotations, RELATED_FIELD)
                 {
                     return failure;
                 }
@@ -68,7 +68,6 @@ impl Lint for HasRegistryLicense {
                         {
                             return failure;
                         }
-                        // TODO: What extra validation could be done here?
                         lint_success!(format!("{lint_prefix} is valid."))
                     },
                 );

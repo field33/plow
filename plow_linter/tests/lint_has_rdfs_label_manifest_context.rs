@@ -24,7 +24,7 @@ fn lint_registry_rdfs_label_manifest_context_exists_and_valid() {
     let ttl_document_with_rdfs_label_c =
         format!("{RDFS_LABEL_MANIFEST_CONTEXT_BASE} rdfs:label \"A title with inappropriate words dick suck shit.\"@en .");
     let ttl_document_with_rdfs_label_d =
-        format!("{RDFS_LABEL_MANIFEST_CONTEXT_BASE} rdfs:label \"Fuck multiple titles.\"@en, \"Which are allowed because it uses a generic annotation on the other hand only the first one will be evaluated as a title and later ones are ignored in this case this test case should FAIL because of the use of inappropriate words.\"@en .");
+        format!("{RDFS_LABEL_MANIFEST_CONTEXT_BASE} rdfs:label \"Multiple titles.\"@en, \"Which are not allowed.\"@en .");
     let ttl_document_with_rdfs_label_e =
         format!("{RDFS_LABEL_MANIFEST_CONTEXT_BASE} rdfs:label \"A language tag is necessary in a title.\" .");
 
@@ -55,7 +55,9 @@ rdf:type owl:NamedIndividual ."
 
     assert!(result_a.is_success());
     assert!(result_b.is_failure());
-    assert!(result_c.is_failure());
+    // Profanity filter turned off.
+    assert!(result_c.is_success());
+    //
     assert!(result_d.is_failure());
     assert!(result_e.is_failure());
     assert!(result_f.is_success());
