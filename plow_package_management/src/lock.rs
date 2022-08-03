@@ -158,6 +158,12 @@ pub struct PackagesInLockFile {
     packages: Vec<PackageInLockFile>,
 }
 
+impl PackagesInLockFile {
+    pub fn packages(&self) -> &[PackageInLockFile] {
+        &self.packages
+    }
+}
+
 /// A package in the form to be serialized to or to be deserialized to or from the lock file.
 #[derive(Serialize, Deserialize)]
 pub struct PackageInLockFile {
