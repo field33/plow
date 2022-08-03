@@ -25,6 +25,9 @@ fn lint_registry_license_spdx_exists_and_valid() {
     let ttl_document_with_registry_license_spdx_d =
         format!("{REGISTRY_LICENSE_SPDX_BASE} registry:licenseSPDX \"A Made Up License-3.0\" .");
 
+    let ttl_document_with_registry_license_spdx_e =
+        format!("{REGISTRY_LICENSE_SPDX_BASE} registry:licenseSPDX \"MIT\"@en .");
+
     let document_a =
         TurtleDocument::parse_full(&ttl_document_with_registry_license_spdx_a).unwrap();
     let document_b =
@@ -33,17 +36,21 @@ fn lint_registry_license_spdx_exists_and_valid() {
         TurtleDocument::parse_full(&ttl_document_with_registry_license_spdx_c).unwrap();
     let document_d =
         TurtleDocument::parse_full(&ttl_document_with_registry_license_spdx_d).unwrap();
+    let document_e =
+        TurtleDocument::parse_full(&ttl_document_with_registry_license_spdx_e).unwrap();
 
     let lint = HasRegistryLicenseSPDX::default();
     let result_a = lint.lint(&document_a);
     let result_b = lint.lint(&document_b);
     let result_c = lint.lint(&document_c);
     let result_d = lint.lint(&document_d);
+    let result_e = lint.lint(&document_e);
 
     assert!(result_a.is_success());
     assert!(result_b.is_success());
     assert!(result_c.is_failure());
     assert!(result_d.is_failure());
+    assert!(result_e.is_failure());
 }
 
 #[test]

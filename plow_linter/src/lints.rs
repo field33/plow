@@ -35,6 +35,9 @@ use plow_package_management::metadata::get_root_prefix;
 pub mod base_matches_root_prefix;
 pub mod contains_owl_prefixes;
 pub mod contains_registry_prefix;
+pub mod exists_registry_license;
+pub mod exists_registry_license_spdx;
+pub mod has_at_least_one_valid_license_annotation;
 pub mod has_canonical_prefix;
 pub mod has_ontology_declaration;
 pub mod has_ontology_format_version;
@@ -58,6 +61,9 @@ pub mod valid_registry_repository;
 pub use base_matches_root_prefix::BaseMatchesRootPrefix;
 pub use contains_owl_prefixes::ContainsOWLPrefixes;
 pub use contains_registry_prefix::ContainsRegistryPrefix;
+pub use exists_registry_license::ExistsRegistryLicense;
+pub use exists_registry_license_spdx::ExistsRegistryLicenseSPDX;
+pub use has_at_least_one_valid_license_annotation::HasAtLeastOneValidLicenseAnnotation;
 pub use has_canonical_prefix::HasCanonicalPrefix;
 pub use has_ontology_declaration::HasOntologyDeclaration;
 pub use has_ontology_format_version::HasOntologyFormatVersion;
@@ -115,6 +121,9 @@ impl FixSuggestion for AddPrefixes {
     }
 }
 
+// TODO: This part needs some order and more organization.
+// It could be done in a later PR but we need to organize and not duplicate lints here.
+
 // Currently up-casting is not existent but there are plans for it which can be followed through these links.
 // https://stackoverflow.com/questions/28632968/why-doesnt-rust-support-trait-object-upcasting
 // https://github.com/rust-lang/rust/issues/65991
@@ -148,8 +157,7 @@ pub fn required_plow_registry_lints() -> Vec<Box<dyn Lint>> {
         Box::new(HasRegistryAuthor::default()) as Box<dyn Lint>,
         Box::new(HasRegistryCategory::default()) as Box<dyn Lint>,
         Box::new(HasRegistryKeyword::default()) as Box<dyn Lint>,
-        Box::new(HasRegistryLicenseSPDX::default()) as Box<dyn Lint>,
-        Box::new(HasRegistryLicense::default()) as Box<dyn Lint>,
+        Box::new(HasAtLeastOneValidLicenseAnnotation::default()) as Box<dyn Lint>,
         Box::new(ValidRegistryDependencies::default()) as Box<dyn Lint>,
         Box::new(ValidRegistryHomepage::default()) as Box<dyn Lint>,
         Box::new(ValidRegistryRepository::default()) as Box<dyn Lint>,
@@ -177,7 +185,9 @@ pub fn all_lints() -> Vec<Box<dyn Lint>> {
     let mut all = required_package_management_lints();
     let mut style_lints = required_style_lints();
     let mut reference_registry_lints = required_reference_registry_lints();
+    let mut plow_registry_lints = required_plow_registry_lints();
     all.append(&mut style_lints);
     all.append(&mut reference_registry_lints);
+    all.append(&mut plow_registry_lints);
     all
 }
