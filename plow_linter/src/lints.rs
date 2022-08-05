@@ -184,10 +184,8 @@ pub fn required_reference_registry_lints() -> Vec<Box<dyn Lint>> {
 pub fn all_lints() -> Vec<Box<dyn Lint>> {
     let mut all = required_package_management_lints();
     let mut style_lints = required_style_lints();
-    let mut reference_registry_lints = required_reference_registry_lints();
     let mut plow_registry_lints = required_plow_registry_lints();
     all.append(&mut style_lints);
-    all.append(&mut reference_registry_lints);
     all.append(&mut plow_registry_lints);
     all
 }

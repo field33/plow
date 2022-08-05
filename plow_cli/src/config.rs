@@ -1,4 +1,66 @@
 use anyhow::{anyhow, bail, Result};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Debug, Deserialize, Default)]
+pub struct PlowConfigFile<'cred> {
+    pub workspace: Workspace,
+    #[serde(borrow)]
+    pub registry: Registry<'cred>,
+}
+
+impl PlowConfigFile<'_> {
+    /// Returns the token for the registry.
+    pub fn with_workspace(workspace: &Workspace) -> Self {
+        PlowConfigFile {
+            registry: Registry::default(),
+            workspace: workspace.clone(),
+        }
+    }
+}
+
+#[derive(Serialize, Debug, Deserialize, Default, Clone)]
+pub struct Workspace {
+    pub members: Vec<String>,
+}
+
+impl From<Vec<std::path::PathBuf>> for Workspace {
+    fn from(paths: Vec<std::path::PathBuf>) -> Self {
+        Workspace {
+            members: paths
+                .iter()
+                .map(|path| path.to_string_lossy().to_string())
+                .collect(),
+        }
+    }
+}
+impl From<Vec<camino::Utf8PathBuf>> for Workspace {
+    fn from(paths: Vec<camino::Utf8PathBuf>) -> Self {
+        Workspace {
+            members: paths.iter().map(|path| path.to_string()).collect(),
+        }
+    }
+}
+
+/// Registry table in credentials file (toml).
+#[derive(Serialize, Debug, Deserialize)]
+pub struct Registry<'reg> {
+    url: &'reg str,
+}
+
+impl<'reg> Registry<'reg> {
+    /// Returns the token for the registry.
+    pub const fn new(url: &'reg str) -> Self {
+        Registry { url }
+    }
+}
+
+impl Default for Registry<'_> {
+    fn default() -> Self {
+        Registry {
+            url: "https://staging-api.plow.pm",
+        }
+    }
+}
 
 // For more information: <http://www.brynosaurus.com/cachedir/>
 const CACHE_DIRECTORY_TAG_FILE_NAME: &str = "CACHEDIR.TAG";
