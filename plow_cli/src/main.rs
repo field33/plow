@@ -87,6 +87,7 @@ use reqwest::Client;
 use util::get_a_list_of_requested_dependencies_from_a_field;
 
 use crate::{
+    config::{get_registry_url, Registry},
     login::{get_saved_api_token, save_credentials_replace_existing},
     submit::response::StatusInfo,
 };
@@ -184,28 +185,27 @@ pub fn main() -> Result<()> {
             if let Some(field_file_path) = sub_matches.get_one::<String>("FIELD_PATH") {
                 let field_file_path = camino::Utf8PathBuf::from(field_file_path);
                 if field_file_path.exists() {
-                    let lock_file_path: camino::Utf8PathBuf = if let Some(parent) =
+                    let lock_file_path: Option<camino::Utf8PathBuf> = if let Some(parent) =
                         camino::Utf8PathBuf::from(&field_file_path).parent()
                     {
                         // TODO: Update lock file name later..
                         let possible_lock_file_path = parent.join("Ontology.lock");
 
                         let lock_file_path = if possible_lock_file_path.exists() {
-                            possible_lock_file_path
+                            Some(possible_lock_file_path)
                         } else {
-                            command_failed(
-                            &format!("Could not find a lock file at {possible_lock_file_path}, creating a lock file with this command not implemented yet. If you place the lock file in the same folder with the field submission would work normally."));
+                            info(
+                            &format!("Could not find a lock file at {possible_lock_file_path}, creating a lock file with this command not implemented yet. If you place the lock file in the same folder with the field submission would work normally.\n On the other hand you might have no dependencies at all and you can just submit the field directly. If you have dependencies stated in the field but not provide a lock file your submission will fail though."));
 
-                            // TODO: Resolve deps and create a lock file and return contents later.
-                            todo!()
+                            // TODO: Try Resolve deps and create a lock file and return contents later change info message and then allow submission without a lock file.
+                            None
                         };
                         lock_file_path
                     } else {
-                        command_failed(
-                            &format!("Could not find a lock file in the same folder of the field, creating a lock file with this command not implemented yet. If you place the lock file in the same folder with the field submission would work normally."),
-                        );
-                        //TODO: Resolve deps and create a lock file and return contents later.
-                        todo!()
+                        info(
+                            &format!("Could not find a lock file in the same directory with the field, creating a lock file with this command not implemented yet. If you place the lock file in the same folder with the field submission would work normally.\n On the other hand you might have no dependencies at all and you can just submit the field directly. If you have dependencies stated in the field but not provide a lock file your submission will fail though."));
+                        // TODO: Try Resolve deps and create a lock file and return contents later change info message and then allow submission without a lock file.
+                        None
                     };
 
                     // Ready to do pre submission lint.
@@ -224,87 +224,123 @@ pub fn main() -> Result<()> {
                     let public = !sub_matches.is_present("private");
                     let dry_run = !sub_matches.is_present("dry_run");
 
-                    // TODO: Implement this later..
-                    if sub_matches.is_present("registry") {
-                        let registry_path = sub_matches.get_one::<String>("registry");
-                        // TODO: Implement this.
-                    }
+                    let registry_url = if sub_matches.is_present("registry") {
+                        let registry_url = sub_matches.get_one::<String>("registry");
+                        registry_url.map_or_else(
+                            || {
+                                command_not_complete("Try providing a valid registry url.");
+                                // Dummy
+                                "".to_owned()
+                            },
+                            std::borrow::ToOwned::to_owned,
+                        )
+                    } else if let Ok(url) = get_registry_url() {
+                        url
+                    } else {
+                        command_not_complete("Try providing a valid registry url either in Plow.toml or with a command line argument.");
+                        // Dummy
+                        "".to_owned()
+                    };
 
                     // TODO: Handle these errors properly.
-                    let submission = reqwest::blocking::multipart::Form::new()
-                        .text("public", if public { "true" } else { "false" })
-                        .file("field", field_file_path)?
-                        .file("lock_file", lock_file_path)?;
+                    let submission = if let Some(lock_file_path) = lock_file_path {
+                        reqwest::blocking::multipart::Form::new()
+                            .text("public", if public { "true" } else { "false" })
+                            .file("field", field_file_path)?
+                            .file("lock_file", lock_file_path)?
+                    } else {
+                        reqwest::blocking::multipart::Form::new()
+                            .text("public", if public { "true" } else { "false" })
+                            .file("field", field_file_path)?
+                    };
 
                     let client = reqwest::blocking::Client::new();
 
                     // Read auth.
-                    let token = "";
+                    let token = get_saved_api_token().unwrap_or_else(|err| {
+                        command_failed(&format!(
+                            "Could not read API token from ~/.plow/credentials.toml: {}. Please run `plow login <api-token>` to login.",
+                            err
+                        ));
+                        // Dummy
+                        "".to_owned()
+                    });
+
+                    let mut submission_url = format!("{registry_url}/v1/field/submit");
+                    if dry_run {
+                        // TODO: Should I url encode this?
+                        // Or reqwest does it?
+                        submission_url.push_str(stringify!("?dry-run=true"));
+                    }
 
                     let submission_response = client
-                        .post("your url")
+                        .post(&submission_url)
                         .header("Authorization", &format!("Basic {token}"))
                         .multipart(submission)
                         .send()?;
                     let status = submission_response.status();
 
-                    if !status.is_success() {
-                        if let Ok(response_body_value) =
-                            submission_response.json::<serde_json::Value>()
-                        {
-                            if let Some(status_text_value) = response_body_value.get("status") {
-                                let response_body_contents = response_body_value.to_string();
-                                if let Some(status_text) = status_text_value.as_str() {
-                                    if let Ok(status_info) = StatusInfo::try_from(status_text) {
-                                        let negative_response = match status_info {
-                                            StatusInfo::Error => {
-                                                if let Ok(error_response) = serde_json::from_str::<
-                                                    crate::submit::response::Error,
-                                                >(
-                                                    &response_body_contents,
-                                                ) {
-                                                    crate::submit::response::PlowSubmissionErrorResponse::Error(error_response)
-                                                } else {
-                                                    // Invalid response
-                                                    todo!()
-                                                }
-                                            }
-                                            StatusInfo::Failure => {
-                                                if let Ok(failure_response) = serde_json::from_str::<
-                                                    crate::submit::response::Failure,
-                                                >(
-                                                    &response_body_contents,
-                                                ) {
-                                                    crate::submit::response::PlowSubmissionErrorResponse::Failure(failure_response)
-                                                } else {
-                                                    // Invalid response
-                                                    todo!()
-                                                }
-                                            }
-                                            _ => {
-                                                // Can not be success here..
+                    if let Ok(response_body_value) = submission_response.json::<serde_json::Value>()
+                    {
+                        if let Some(status_text_value) = response_body_value.get("status") {
+                            let response_body_contents = response_body_value.to_string();
+                            if let Some(status_text) = status_text_value.as_str() {
+                                if let Ok(status_info) = StatusInfo::try_from(status_text) {
+                                    // Do something with the responses..
+                                    match status_info {
+                                        StatusInfo::Error => {
+                                            if let Ok(error_response) = serde_json::from_str::<
+                                                crate::submit::response::Error,
+                                            >(
+                                                &response_body_contents
+                                            ) {
+                                                dbg!(&response_body_contents);
+                                            } else {
+                                                // Invalid response
                                                 todo!()
                                             }
-                                        };
+                                        }
+                                        StatusInfo::Failure => {
+                                            if let Ok(failure_response) = serde_json::from_str::<
+                                                crate::submit::response::Failure,
+                                            >(
+                                                &response_body_contents
+                                            ) {
+                                                dbg!(&response_body_contents);
+                                            } else {
+                                                // Invalid response
+                                                todo!()
+                                            }
+                                        }
+                                        StatusInfo::Success => {
+                                            if let Ok(success_response) = serde_json::from_str::<
+                                                crate::submit::response::Success,
+                                            >(
+                                                &response_body_contents
+                                            ) {
+                                                dbg!(&response_body_contents);
+                                            } else {
+                                                // Invalid response
+                                                todo!()
+                                            }
+                                        }
+                                    };
 
-                                        // TODO: Maybe the enum in between is not necessary..
-                                        // Do something with the failure..
-                                        todo!()
-                                    } else {
-                                        todo!()
-                                        // not jsend
-                                    }
+                                    todo!()
                                 } else {
                                     todo!()
-                                    // Bad text
+                                    // not jsend
                                 }
                             } else {
                                 todo!()
-                                // Bad response.
+                                // Bad text
                             }
                         } else {
-                            command_failed(&format!("Submission failed with status code {status}. There was no valid body in the response."));
+                            todo!()
+                            // Bad response.
                         }
+                    } else {
+                        command_failed(&format!("Submission failed with status code {status}. There was no valid body in the response."));
                     }
 
                     println!(
@@ -335,29 +371,30 @@ pub fn main() -> Result<()> {
                 .collect();
 
             // Create fields directory if it does not exist.
-            std::fs::create_dir(&path_to_fields_dir);
-
-            for (existing_path, field_metadata) in existing_field_paths_in_directory
-                .iter()
-                .zip(found_field_metadata.iter())
-            {
-                std::fs::create_dir(path_to_fields_dir.join(&field_metadata.namespace));
-                std::fs::create_dir(
-                    path_to_fields_dir
-                        .join(&field_metadata.namespace)
-                        .join(&field_metadata.name),
-                );
-                let new_field_dest = path_to_fields_dir
-                    .join(&field_metadata.namespace)
-                    .join(&field_metadata.name)
-                    .join(
-                        &existing_path
-                            .file_name()
-                            .unwrap()
-                            .to_string_lossy()
-                            .to_string(),
+            if !path_to_fields_dir.exists() {
+                std::fs::create_dir(&path_to_fields_dir);
+                for (existing_path, field_metadata) in existing_field_paths_in_directory
+                    .iter()
+                    .zip(found_field_metadata.iter())
+                {
+                    std::fs::create_dir(path_to_fields_dir.join(&field_metadata.namespace));
+                    std::fs::create_dir(
+                        path_to_fields_dir
+                            .join(&field_metadata.namespace)
+                            .join(&field_metadata.name),
                     );
-                std::fs::copy(existing_path, &new_field_dest)?;
+                    let new_field_dest = path_to_fields_dir
+                        .join(&field_metadata.namespace)
+                        .join(&field_metadata.name)
+                        .join(
+                            &existing_path
+                                .file_name()
+                                .unwrap()
+                                .to_string_lossy()
+                                .to_string(),
+                        );
+                    std::fs::copy(existing_path, &new_field_dest)?;
+                }
             }
 
             let field_paths_in_fields_dir = util::list_files(path_to_fields_dir, "ttl");
@@ -392,6 +429,11 @@ fn command_failed(advice: &str) {
     println!("\t{}", "Command failed".red().bold(),);
     println!("\t{} {advice}", "Advice".yellow().bold(),);
     std::process::exit(0xFF);
+}
+
+fn info(info: &str) {
+    println!("\t{}", "Info".yellow().bold(),);
+    println!("\t{info}");
 }
 
 fn command_not_complete(advice: &str) {

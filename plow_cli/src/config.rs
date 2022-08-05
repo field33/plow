@@ -77,6 +77,13 @@ pub fn get_config_dir() -> Result<std::path::PathBuf> {
     Ok(homedir.join(".plow"))
 }
 
+pub fn get_registry_url() -> Result<String> {
+    let config_file_path = camino::Utf8PathBuf::from("./Plow.toml");
+    let config_file_contents = std::fs::read_to_string(&config_file_path)?;
+    let config_file = toml::from_str::<PlowConfigFile>(&config_file_contents)?;
+    Ok(config_file.registry.url.to_owned())
+}
+
 // TODO: Revisit initial structure
 // config.toml file?
 // credentials.toml file instead of credentials?

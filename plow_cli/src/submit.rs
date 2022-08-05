@@ -2,11 +2,6 @@ pub mod response {
     use anyhow::bail;
     use serde::{Deserialize, Serialize};
 
-    pub enum PlowSubmissionErrorResponse<'res> {
-        Failure(Failure<'res>),
-        Error(Error<'res>),
-    }
-
     /// `status` field of the response.
     ///
     /// Following [`JSend`](https://github.com/omniti-labs/jsend) spec
