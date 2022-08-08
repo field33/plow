@@ -18,7 +18,7 @@ pub struct ValidRegistryDocumentation;
 
 impl Lint for ValidRegistryDocumentation {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:documentation`"
+        "Check that the field is annotated with a value for `registry:documentation`"
     }
     /// Lints for the validity of `registry:documentation`.
     /// Domain validation is applied.

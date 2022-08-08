@@ -7,7 +7,7 @@ pub struct ContainsRegistryPrefix;
 
 impl Lint for ContainsRegistryPrefix {
     fn short_description(&self) -> &str {
-        "Check if ontology contains the prefix for the REGISTRY ontology"
+        "Check if the field contains the prefix for the REGISTRY ontology"
     }
 
     /// Check if ontology contains the prefix for the REGISTRY ontology.
@@ -28,10 +28,10 @@ impl Lint for ContainsRegistryPrefix {
         }
 
         if owl_prefixes.is_empty() {
-            return lint_success!("ontology contains the `registry:` prefix");
+            return lint_success!("The field contains the `registry:` prefix.");
         }
         LintResult::Failure(owl_prefixes.iter().map(|(prefix, iri)| {
-            format!("The ontology is missing a prefix directive for {prefix}: `@prefix {prefix}: <{iri}> .`")
+            format!("The field is missing a prefix directive for {prefix}: `@prefix {prefix}: <{iri}> .`")
         }).collect())
     }
 

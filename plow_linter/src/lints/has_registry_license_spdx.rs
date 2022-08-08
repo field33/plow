@@ -20,7 +20,7 @@ pub struct HasRegistryLicenseSPDX;
 
 impl Lint for HasRegistryLicenseSPDX {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:licenseSPDX`"
+        "Check that the field is annotated with a value for `registry:licenseSPDX`"
     }
     /// Lints for the existence of `registry:licenseSPDX` and its validity.
     /// Check <https://spdx.org/licenses> for a list of available licenses.

@@ -15,7 +15,7 @@ pub struct HasCanonicalPrefix;
 
 impl Lint for HasCanonicalPrefix {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:canonicalPrefix`"
+        "Check that the field is annotated with a value for `registry:canonicalPrefix`"
     }
 
     /// Check that the ontology is annotated with a value for `registry:canonicalPrefix`

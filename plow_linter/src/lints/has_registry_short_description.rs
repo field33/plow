@@ -20,7 +20,7 @@ pub struct HasRegistryShortDescription;
 
 impl Lint for HasRegistryShortDescription {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:shortDescription`"
+        "Check that the field is annotated with a value for `registry:shortDescription`"
     }
     /// Lints for the existence and validity of `registry:shortDescription`.
     /// Maximum 280 characters are allowed.

@@ -26,7 +26,7 @@ pub struct HasRegistryKeyword;
 
 impl Lint for HasRegistryKeyword {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:keyword`"
+        "Check that the field is annotated with a value for `registry:keyword`"
     }
     /// Lints for the existence of `registry:keyword` and its validity.
     /// Keywords could be chosen freely.

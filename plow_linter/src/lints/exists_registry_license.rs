@@ -20,7 +20,7 @@ pub struct ExistsRegistryLicense;
 
 impl Lint for ExistsRegistryLicense {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:license`"
+        "Check that the field is annotated with a value for `registry:license`"
     }
 
     /// Lints for the existence of `registry:license` annotation only without validation.

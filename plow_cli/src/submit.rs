@@ -1,11 +1,14 @@
 mod response;
 
-use clap::{ArgMatches, App, Arg, Command, arg};
+use crate::{
+    config::get_registry_url, feedback::*, lint::lint_file, login::get_saved_api_token,
+    submit::response::StatusInfo,
+};
+use anyhow::Result;
+use clap::{arg, App, Arg, ArgMatches, Command};
+use colored::*;
 use plow_linter::lints::required_plow_registry_lints;
 use reqwest::blocking::multipart::Form;
-use crate::{feedback::*, lint::lint_file, config::get_registry_url, login::get_saved_api_token, submit::response::StatusInfo};
-use anyhow::Result;
-use colored::*;
 
 pub fn attach_as_sub_command() -> App<'static> {
     Command::new("submit")
@@ -33,9 +36,9 @@ pub fn attach_as_sub_command() -> App<'static> {
 
 pub fn run_command(sub_matches: &ArgMatches) -> Result<()> {
     if let Some(field_file_path) = sub_matches.get_one::<String>("FIELD_PATH") {
-    let field_file_path = camino::Utf8PathBuf::from(field_file_path);
-    if field_file_path.exists() {
-        let lock_file_path: Option<camino::Utf8PathBuf> = camino::Utf8PathBuf::from(&field_file_path).parent().map_or_else(|| {
+        let field_file_path = camino::Utf8PathBuf::from(field_file_path);
+        if field_file_path.exists() {
+            let lock_file_path: Option<camino::Utf8PathBuf> = camino::Utf8PathBuf::from(&field_file_path).parent().map_or_else(|| {
             info(
                 "Could not find a lock file in the same directory with the field, creating a lock file with this command not implemented yet. If you place the lock file in the same folder with the field submission would work normally.\n On the other hand you might have no dependencies at all and you can just submit the field directly. If you have dependencies stated in the field but not provide a lock file your submission will fail though.");
             // TODO: Try Resolve deps and create a lock file and return contents later change info message and then allow submission without a lock file.
@@ -56,54 +59,54 @@ pub fn run_command(sub_matches: &ArgMatches) -> Result<()> {
             lock_file_path
         });
 
-        // Ready to do pre submission lint.
-        if lint_file(
-            field_file_path.as_str(),
-            Some(required_plow_registry_lints()),
-        )
-        .is_err()
-        {
-            command_failed(
+            // Ready to do pre submission lint.
+            if lint_file(
+                field_file_path.as_str(),
+                Some(required_plow_registry_lints()),
+            )
+            .is_err()
+            {
+                command_failed(
                 "Depending on the red lines in the output, try to fix your field and try again.",
             );
-        }
+            }
 
-        // File linted and ready to submit.
-        let public = !sub_matches.is_present("private");
-        let dry_run = sub_matches.is_present("dry-run");
+            // File linted and ready to submit.
+            let public = !sub_matches.is_present("private");
+            let dry_run = sub_matches.is_present("dry-run");
 
-        let registry_url = if sub_matches.is_present("registry") {
-            let registry_url = sub_matches.get_one::<String>("registry");
-            registry_url.map_or_else(
-                || {
-                    command_not_complete("Try providing a valid registry url.");
-                    // Dummy
-                    "".to_owned()
-                },
-                std::borrow::ToOwned::to_owned,
-            )
-        } else if let Ok(url) = get_registry_url() {
-            url
-        } else {
-            command_not_complete("Try providing a valid registry url either in Plow.toml or with a command line argument.");
-            // Dummy
-            "".to_owned()
-        };
+            let registry_url = if sub_matches.is_present("registry") {
+                let registry_url = sub_matches.get_one::<String>("registry");
+                registry_url.map_or_else(
+                    || {
+                        command_not_complete("Try providing a valid registry url.");
+                        // Dummy
+                        "".to_owned()
+                    },
+                    std::borrow::ToOwned::to_owned,
+                )
+            } else if let Ok(url) = get_registry_url() {
+                url
+            } else {
+                command_not_complete("Try providing a valid registry url either in Plow.toml or with a command line argument.");
+                // Dummy
+                "".to_owned()
+            };
 
-        // TODO: Handle these errors properly.
-        let submission = if let Some(lock_file_path) = lock_file_path {
-            reqwest::blocking::multipart::Form::new()
-                .text("public", if public { "true" } else { "false" })
-                .file("field", field_file_path)?
-                .file("lock_file", lock_file_path)?
-        } else {
-            reqwest::blocking::multipart::Form::new()
-                .text("public", if public { "true" } else { "false" })
-                .file("field", field_file_path)?
-        };
+            // TODO: Handle these errors properly.
+            let submission = if let Some(lock_file_path) = lock_file_path {
+                reqwest::blocking::multipart::Form::new()
+                    .text("public", if public { "true" } else { "false" })
+                    .file("field", field_file_path)?
+                    .file("lock_file", lock_file_path)?
+            } else {
+                reqwest::blocking::multipart::Form::new()
+                    .text("public", if public { "true" } else { "false" })
+                    .file("field", field_file_path)?
+            };
 
-        // Read auth.
-        let token = get_saved_api_token().unwrap_or_else(|err| {
+            // Read auth.
+            let token = get_saved_api_token().unwrap_or_else(|err| {
             command_failed(&format!(
                 "Could not read API token from ~/.plow/credentials.toml: {}. Please run `plow login <api-token>` to login.",
                 err
@@ -112,32 +115,36 @@ pub fn run_command(sub_matches: &ArgMatches) -> Result<()> {
             "".to_owned()
         });
 
-        let mut submission_url = format!("{registry_url}/v1/field/submit");
-        if dry_run {
-            submission_url.push_str("?dry-run=true");
-        }
+            let mut submission_url = format!("{registry_url}/v1/field/submit");
+            if dry_run {
+                submission_url.push_str("?dry-run=true");
+            }
 
-        return send_submission(&submission_url, &registry_url, submission, &token);
-    }
-    command_failed(
+            return send_submission(&submission_url, &registry_url, submission, &token, dry_run);
+        }
+        command_failed(
                 &format!("The field you've provided at {field_file_path} is not readable, you may check that if the file is readable in a normal text editor first."),
             );
     }
     Ok(())
 }
 
-
-pub fn send_submission(submission_url: &str, registry_url:&str, submission: Form, token: &str) -> Result<()> {
-        let client = reqwest::blocking::Client::new();
-        let submission_response = client
-            .post(submission_url)
-            .header("Authorization", &format!("Basic {token}"))
-            .multipart(submission)
-            .send()?;
-        let status = submission_response.status();
-            if let Ok(response_body_value) = submission_response.json::<serde_json::Value>()
-        {
-            response_body_value.get("status").map_or_else(|| {
+pub fn send_submission(
+    submission_url: &str,
+    registry_url: &str,
+    submission: Form,
+    token: &str,
+    dry_run: bool,
+) -> Result<()> {
+    let client = reqwest::blocking::Client::new();
+    let submission_response = client
+        .post(submission_url)
+        .header("Authorization", &format!("Basic {token}"))
+        .multipart(submission)
+        .send()?;
+    let status = submission_response.status();
+    if let Ok(response_body_value) = submission_response.json::<serde_json::Value>() {
+        response_body_value.get("status").map_or_else(|| {
                 submission_failed("Registry sent an invalid response.");
             }, |status_text_value| {
                 let response_body_contents = response_body_value.to_string();
@@ -187,10 +194,18 @@ pub fn send_submission(submission_url: &str, registry_url:&str, submission: Form
                                 >(
                                     &response_body_contents
                                 ).is_ok() {
-                                    println!(
+                                    if dry_run {
+                                        println!(
+                                        "\t{} run was successful. You may safely submit the field to plow.",
+                                        "Submission".green().bold(),
+                                        );
+                                    }
+                                    else {
+                                        println!(
                                         "\t{} successful. The field is now uploaded to plow.",
                                         "Submission".green().bold(),
-                                    );                                     
+                                        );
+                                    }
                                 } else {
                                     submission_failed(
                                         "Registry sent an invalid response.",
@@ -202,10 +217,8 @@ pub fn send_submission(submission_url: &str, registry_url:&str, submission: Form
                         submission_failed("Registry sent an invalid response which doesn't conform to jsend standard.");
                     });
             });
-        } else {
-            command_failed(&format!("Submission failed with status code {status}. There was no valid body in the response. You may check weather the registry url you have provided is right. Your current registry url is {registry_url}"));
-        }
-        Ok(())
+    } else {
+        command_failed(&format!("Submission failed with status code {status}. There was no valid body in the response. You may check weather the registry url you have provided is right. Your current registry url is {registry_url}"));
+    }
+    Ok(())
 }
-
-

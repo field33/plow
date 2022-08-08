@@ -18,7 +18,7 @@ pub struct ValidRegistryHomepage;
 
 impl Lint for ValidRegistryHomepage {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:homepage`"
+        "Check that the field is annotated with a value for `registry:homepage`"
     }
 
     /// Lints for the validity of `registry:homepage`.

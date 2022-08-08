@@ -3,8 +3,8 @@ use crate::lint::{
     helpers::{catch_single_annotations_which_must_exist, validate_namespace_and_name},
     lint_failure, lint_success, Lint, LintResult,
 };
-use plow_graphify::document_to_graph;
 use harriet::TurtleDocument;
+use plow_graphify::document_to_graph;
 use plow_ontology::constants::REGISTRY_PACKAGE_NAME;
 use plow_package_management::metadata::get_root_prefix;
 use rdftk_iri::IRI as RDFTK_IRI;
@@ -18,7 +18,7 @@ pub struct HasRegistryPackageName;
 
 impl Lint for HasRegistryPackageName {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:packageName`"
+        "Check that the field is annotated with a value for `registry:packageName`"
     }
     /// Lints for the existence of `registry:packageName` and its correct format
     /// (should be `@namespace/package_name` , with both the namespace and package name

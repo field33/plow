@@ -53,7 +53,7 @@ pub struct HasRegistryCategory;
 
 impl Lint for HasRegistryCategory {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:category`"
+        "Check that the field is annotated with a value for `registry:category`"
     }
     /// Lints for the existence of `registry:category` and its validity.
     /// Available categories are defined by plow. 

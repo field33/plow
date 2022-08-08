@@ -20,7 +20,7 @@ pub struct HasRegistryAuthor;
 
 impl Lint for HasRegistryAuthor {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:author`"
+        "Check that the field is annotated with a value for `registry:author`"
     }
     /// Lints for the existence of `registry:author` and its validity.
     /// Max character count is set to 50.
@@ -104,7 +104,7 @@ impl Lint for HasRegistryAuthor {
                        return lint_failure!(format!("Some {lint_prefix} annotations are invalid. More info: {}", messages.join(", ")));
                     }
                 }
-                lint_success!("All {lint_prefix} annotations are valid.")
+                lint_success!(format!("All {lint_prefix} annotations are valid."))
             } else {
                 lint_failure!(NO_ROOT_PREFIX)
             }

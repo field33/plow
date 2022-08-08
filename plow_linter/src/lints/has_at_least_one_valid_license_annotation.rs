@@ -10,7 +10,7 @@ pub struct HasAtLeastOneValidLicenseAnnotation;
 
 impl Lint for HasAtLeastOneValidLicenseAnnotation {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:license` or `registry:licenseSPDX`, both missing are not allowed."
+        "Check that the field is annotated with a value for `registry:license` or `registry:licenseSPDX`, both missing are not allowed."
     }
 
     fn lint(&self, document: &TurtleDocument) -> LintResult {

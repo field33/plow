@@ -26,7 +26,7 @@ impl Lint for BaseMatchesRootPrefix {
             if let Some(base_directive) = base_directive {
                 let base_directive_iri = &base_directive.iri.iri;
                 if *base_directive_iri == *root_prefix {
-                    return lint_success!("@base directive matches `:` prefix");
+                    return lint_success!("@base directive matches `:` prefix.");
                 }
                 return lint_failure!(format!("@base directive (`{base_directive_iri}`) doesn't match the `:` prefix (`{root_prefix}`). Maybe there is a typo, or no trailing slash?"));
             }

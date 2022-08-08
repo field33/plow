@@ -20,7 +20,7 @@ pub struct HasRdfsCommentManifestContext;
 
 impl Lint for HasRdfsCommentManifestContext {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `rdfs:comment`"
+        "Check that the field is annotated with a value for `rdfs:comment`"
     }
     /// Lints for the existence of `rdfs:comment` and its validity.
     /// The meaning of this tag is the long description of the ontology.
@@ -75,7 +75,7 @@ impl Lint for HasRdfsCommentManifestContext {
                                 "{lint_prefix} should be tagged with a language tag."
                             ));
                         }
-                        lint_success!(format!("{lint_prefix} is valid."))
+                        lint_success!(format!("{lint_prefix} is valid, which represents the field description."))
                     },
                 );
                 result

@@ -21,7 +21,7 @@ pub struct ValidRdfsLabels;
 
 impl Lint for ValidRdfsLabels {
     fn short_description(&self) -> &str {
-        "Check that the related ontology is annotated with a value for `rdfs:label`"
+        "Check that the related field is annotated with a value for `rdfs:label`"
     }
 
     /// Every `Class`, `ObjectProperty`, `DataProperty`, `AnnotationProperty` should have an `rdfs:label` annotation

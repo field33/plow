@@ -21,7 +21,7 @@ pub struct HasOntologyFormatVersion;
 
 impl Lint for HasOntologyFormatVersion {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:ontologyFormatVersion`, and it is equal to an acceptable value (`v1`)."
+        "Check that the field is annotated with a value for `registry:ontologyFormatVersion`, and it is equal to an acceptable value (`v1`)."
     }
 
     /// Check that the ontology is annotated with a value for `registry:ontologyFormatVersion`, and it is equal to an acceptable value (`v1`).

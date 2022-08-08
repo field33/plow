@@ -21,7 +21,7 @@ pub struct HasRegistryPackageVersion;
 
 impl Lint for HasRegistryPackageVersion {
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:packageVersion`"
+        "Check that the field is annotated with a value for `registry:packageVersion`"
     }
 
     /// Lints for the existence of `registry:packageVersion` and its correct format

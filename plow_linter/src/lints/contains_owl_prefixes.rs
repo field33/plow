@@ -13,7 +13,7 @@ pub struct ContainsOWLPrefixes;
 
 impl Lint for ContainsOWLPrefixes {
     fn short_description(&self) -> &str {
-        "Check if ontology contains all important OWL prefixes"
+        "Check if the field contains all important OWL prefixes"
     }
 
     /// Check if ontology contains all important OWL prefixes
@@ -39,10 +39,13 @@ impl Lint for ContainsOWLPrefixes {
         }
 
         if owl_prefixes.is_empty() {
-            return LintResult::Success("ontology contains all prefixes referenced in OWL2 standard / necessary for Protege".to_owned());
+            return LintResult::Success(
+                "The field contains all prefixes referenced in OWL2 standard / necessary for Protege."
+                    .to_owned(),
+            );
         }
         LintResult::Failure(owl_prefixes.iter().map(|(prefix, iri)| {
-            format!("The ontology is missing a prefix directive for {prefix}: `@prefix {prefix}: <{iri}> .`", prefix = prefix, iri = iri)
+            format!("The field is missing a prefix directive for {prefix}: `@prefix {prefix}: <{iri}> .`", prefix = prefix, iri = iri)
         }).collect())
     }
 }

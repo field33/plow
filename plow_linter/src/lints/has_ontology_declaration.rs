@@ -13,7 +13,7 @@ pub struct HasOntologyDeclaration;
 
 impl Lint for HasOntologyDeclaration {
     fn short_description(&self) -> &str {
-        "Check that a ontology is declared in the file (matching the \":\" @prefix)"
+        "Check that a field is declared in the file (matching the \":\" @prefix)"
     }
 
     /// Checks whether an ontology has been declared in the document.
@@ -64,7 +64,7 @@ impl Lint for HasOntologyDeclaration {
                     return LintResult::Failure(error_messages);
                 }
 
-                lint_success!("Ontology declaration found.")
+                lint_success!("Ontology declaration found in the field.")
             } else {
                 return lint_failure!(NO_ROOT_PREFIX);
             }

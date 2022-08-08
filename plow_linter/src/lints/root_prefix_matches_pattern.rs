@@ -27,10 +27,10 @@ impl Lint for RootPrefixMatchesPattern {
             let re = Regex::new("http://field33.com/ontologies/([a-zA-Z_]*)/$").unwrap();
             if re.is_match(&root_prefix_directive.iri.iri) {
                 return lint_success!(
-                    "ontology root prefix directive (`@prefix :`) matches expected pattern"
+                    "Ontology root prefix directive (`@prefix :`) matches expected pattern"
                 );
             }
-            return lint_failure!("ontology root prefix directive (`@prefix :`) does not match expected pattern (`http://field33.com/ontologies/ONTOLOGY_NAME/`)");
+            return lint_failure!("Ontology root prefix directive (`@prefix :`) does not match expected pattern (`http://field33.com/ontologies/ONTOLOGY_NAME/`)");
         }
         lint_failure!(NO_ROOT_PREFIX)
     }
