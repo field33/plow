@@ -54,7 +54,7 @@ impl Lint for ValidRdfsLabels {
                     .collect::<HashSet<_>>();
 
                 if all_subject_iris_with_selected_owl_props.is_empty() {
-                    return lint_success!("No statements found with a Class, ObjectProperty, DataProperty, AnnotationProperty which needs a {RELATED_FIELD} associated with it.");
+                    return lint_success!(format!("No statements found with a Class, ObjectProperty, DataProperty, AnnotationProperty which needs a {RELATED_FIELD} associated with it."));
                 }
 
                 let mut failures = vec![];
@@ -127,7 +127,7 @@ impl Lint for ValidRdfsLabels {
                 if !failures.is_empty() {
                     return LintResult::Failure(failures);
                 }
-                lint_success!("Every Class, ObjectProperty, DataProperty, AnnotationProperty has an {RELATED_FIELD} annotation with a string literal and @en as a language tag.")
+                lint_success!(format!("Every Class, ObjectProperty, DataProperty, AnnotationProperty has an {RELATED_FIELD} annotation with a string literal and @en as a language tag."))
             } else {
                 lint_failure!(NO_ROOT_PREFIX)
             }

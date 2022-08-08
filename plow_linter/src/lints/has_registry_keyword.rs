@@ -105,7 +105,7 @@ impl Lint for HasRegistryKeyword {
                         ));
                     }
                 }
-                lint_success!("All {RELATED_FIELD} annotations are valid.")
+                lint_success!(format!("All {RELATED_FIELD} annotations are valid."))
             } else {
                 lint_failure!(NO_ROOT_PREFIX)
             }
