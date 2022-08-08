@@ -103,8 +103,8 @@ Answer misery adieus add wooded how nay men before though. Pretended belonging c
     assert!(result_a.is_success());
     assert!(result_b.is_success());
     assert!(result_c.is_failure());
-    assert!(result_d.is_failure());
-    assert!(result_e.is_success());
+    assert!(result_d.is_success());
+    assert!(result_e.is_failure());
     assert!(result_f.is_success());
 }
 

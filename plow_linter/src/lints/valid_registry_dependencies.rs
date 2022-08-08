@@ -6,8 +6,8 @@ use crate::lint::{
     common_error_literals::{NO_ROOT_PREFIX, RDF_GRAPH_PARSE_ERROR},
     lint_failure, lint_success, Lint, LintResult,
 };
-use plow_graphify::document_to_graph;
 use harriet::TurtleDocument;
+use plow_graphify::document_to_graph;
 use plow_ontology::constants::REGISTRY_DEPENDENCY;
 use plow_package_management::metadata::get_root_prefix;
 use rdftk_iri::IRI as RDFTK_IRI;
@@ -109,7 +109,9 @@ impl Lint for ValidRegistryDependencies {
                 if !warnings.is_empty() {
                     return LintResult::Warning(warnings);
                 }
-                lint_success!("All values attached to {RELATED_FIELD} fields are valid.")
+                lint_success!(format!(
+                    "All values attached to {RELATED_FIELD} fields are valid."
+                ))
             } else {
                 lint_failure!(NO_ROOT_PREFIX)
             }

@@ -12,7 +12,7 @@ use semver::Version;
 use std::{cell::RefCell, collections::HashSet, rc::Rc};
 use thiserror::Error;
 
-/// An internal helper which catches multiple of the same annotations which are not allowed.
+/// An internal helper which catches multiple of the same annotations which are not allowed but it allows for them to not exist.
 pub fn catch_single_annotations_which_may_exist(
     annotations: &HashSet<&Rc<dyn Statement>>,
     related_field: &str,

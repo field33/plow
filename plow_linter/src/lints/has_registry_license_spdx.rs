@@ -43,8 +43,6 @@ impl Lint for HasRegistryLicenseSPDX {
                     })
                     .collect::<HashSet<_>>();
 
-                // TODO: Ask opinions about allowing multiple licenseSPDX annotations.
-                // Currently only a single one is allowed.
                 if let Some(failure) =
                     catch_single_annotations_which_must_exist(&annotations, RELATED_FIELD)
                 {
@@ -59,6 +57,11 @@ impl Lint for HasRegistryLicenseSPDX {
                     || lint_failure!(format!("{lint_prefix} is not a literal.")),
                     |literal| {
                         let license_spdx_raw = literal.lexical_form().trim();
+                        if literal.has_language() {
+                            return lint_failure!(format!(
+                                "{lint_prefix} does not accept language tags."
+                            ));
+                        }
                         if license_spdx_raw.chars().count() > SPDX_LICENSE_MAX_ALLOWED_CHAR_COUNT {
                             return lint_failure!(format!("{lint_prefix} allows a maximum of {SPDX_LICENSE_MAX_ALLOWED_CHAR_COUNT} characters."));
                         }

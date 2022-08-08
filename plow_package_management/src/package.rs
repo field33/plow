@@ -73,6 +73,30 @@ pub struct RetrievedPackageVersion {
     pub file_path: PathBuf,
 }
 
+#[derive(Debug, Clone)]
+pub struct FieldMetadata {
+    pub namespace: String,
+    pub name: String,
+    pub version: String,
+    pub dependencies: Vec<Dependency<SemanticVersion>>,
+}
+
+impl FieldMetadata {
+    pub fn new(
+        namespace: String,
+        name: String,
+        version: String,
+        dependencies: Vec<Dependency<SemanticVersion>>,
+    ) -> Self {
+        Self {
+            namespace,
+            name,
+            version,
+            dependencies,
+        }
+    }
+}
+
 /// A flat list of package versions (e.g. dependencies) tha has been retrieved (= downloaded).
 #[derive(Debug, Clone)]
 pub struct RetrievedPackageSet {
@@ -84,6 +108,16 @@ pub struct OrganizationToResolveFor {
     pub package_name: String,
     pub package_version: SemanticVersion,
     pub dependencies: Vec<Dependency<SemanticVersion>>,
+}
+
+impl From<FieldMetadata> for OrganizationToResolveFor {
+    fn from(field_metadata: FieldMetadata) -> Self {
+        Self {
+            package_name: ORGANIZATION_NAME.to_owned(),
+            package_version: SemanticVersion::default(),
+            dependencies: field_metadata.dependencies,
+        }
+    }
 }
 
 impl From<OntologyMetadata> for OrganizationToResolveFor {
