@@ -1,6 +1,8 @@
-use anyhow::bail;
+mod response;
+
 use clap::{ArgMatches, App, Arg, Command, arg};
 use plow_linter::lints::required_plow_registry_lints;
+use reqwest::blocking::multipart::Form;
 use crate::{feedback::*, lint::lint_file, config::get_registry_url, login::get_saved_api_token, submit::response::StatusInfo};
 use anyhow::Result;
 use colored::*;
@@ -100,8 +102,6 @@ pub fn run_command(sub_matches: &ArgMatches) -> Result<()> {
                 .file("field", field_file_path)?
         };
 
-        let client = reqwest::blocking::Client::new();
-
         // Read auth.
         let token = get_saved_api_token().unwrap_or_else(|err| {
             command_failed(&format!(
@@ -114,19 +114,28 @@ pub fn run_command(sub_matches: &ArgMatches) -> Result<()> {
 
         let mut submission_url = format!("{registry_url}/v1/field/submit");
         if dry_run {
-            // TODO: Should I url encode this?
-            // Or reqwest does it?
             submission_url.push_str("?dry-run=true");
         }
 
+        return send_submission(&submission_url, &registry_url, submission, &token);
+    }
+    command_failed(
+                &format!("The field you've provided at {field_file_path} is not readable, you may check that if the file is readable in a normal text editor first."),
+            );
+    }
+    Ok(())
+}
+
+
+pub fn send_submission(submission_url: &str, registry_url:&str, submission: Form, token: &str) -> Result<()> {
+        let client = reqwest::blocking::Client::new();
         let submission_response = client
-            .post(&submission_url)
+            .post(submission_url)
             .header("Authorization", &format!("Basic {token}"))
             .multipart(submission)
             .send()?;
         let status = submission_response.status();
-
-        if let Ok(response_body_value) = submission_response.json::<serde_json::Value>()
+            if let Ok(response_body_value) = submission_response.json::<serde_json::Value>()
         {
             response_body_value.get("status").map_or_else(|| {
                 submission_failed("Registry sent an invalid response.");
@@ -196,89 +205,7 @@ pub fn run_command(sub_matches: &ArgMatches) -> Result<()> {
         } else {
             command_failed(&format!("Submission failed with status code {status}. There was no valid body in the response. You may check weather the registry url you have provided is right. Your current registry url is {registry_url}"));
         }
-        return Ok(());
-    }
-    command_failed(
-                &format!("The field you've provided at {field_file_path} is not readable, you may check that if the file is readable in a normal text editor first."),
-            );
-    }
-    bail!("Please give a file path to a ttl file to lint.");
+        Ok(())
 }
 
 
-pub mod response {
-    use anyhow::bail;
-    use serde::{Deserialize, Serialize};
-
-    /// `status` field of the response.
-    ///
-    /// Following [`JSend`](https://github.com/omniti-labs/jsend) spec
-    #[derive(Debug, Serialize, Deserialize, PartialEq)]
-    pub enum StatusInfo {
-        #[serde(rename(serialize = "success", deserialize = "success"))]
-        Success,
-        #[serde(rename(serialize = "fail", deserialize = "fail"))]
-        Failure,
-        #[serde(rename(serialize = "error", deserialize = "error"))]
-        Error,
-    }
-
-    impl TryFrom<&str> for StatusInfo {
-        type Error = anyhow::Error;
-        fn try_from(s: &str) -> Result<Self, anyhow::Error> {
-            match s {
-                "success" => Ok(StatusInfo::Success),
-                "fail" => Ok(StatusInfo::Failure),
-                "error" => Ok(StatusInfo::Error),
-                s => bail!("Invalid status text: {}", s),
-            }
-        }
-    }
-    /// A response with success status.
-    ///
-    /// Following [`JSend`](https://github.com/omniti-labs/jsend#success) spec
-    #[derive(Debug, Serialize, Deserialize)]
-    pub struct Success<'body> {
-        pub status: StatusInfo,
-        #[serde(borrow)]
-        pub data: Option<Data<'body>>,
-    }
-
-    /// A response with fail status.
-    ///
-    /// Following [`JSend`](https://github.com/omniti-labs/jsend#fail) spec
-    #[derive(Debug, Serialize, Deserialize)]
-    pub struct Failure<'body> {
-        pub status: StatusInfo,
-        #[serde(borrow)]
-        pub data: Data<'body>,
-    }
-
-    /// A response with error status.
-    ///
-    /// Following [`JSend`](https://github.com/omniti-labs/jsend#error) spec
-    #[derive(Debug, Serialize, Deserialize)]
-    pub struct Error<'body> {
-        pub status: StatusInfo,
-        pub code: u16,
-        pub error: &'body str,
-        pub message: &'body str,
-        pub data: Option<Data<'body>>,
-        pub timestamp: String,
-    }
-
-    #[allow(clippy::large_enum_variant)]
-    /// `data` field of the response.
-    ///
-    /// Following [`JSend`](https://github.com/omniti-labs/jsend) spec
-    #[derive(Debug, Serialize, Deserialize)]
-    #[serde(untagged)]
-    pub enum Data<'data> {
-        FailureMessage(&'data str),
-        // Serialized as {"field": "...", }
-        SubmissionLintingResults {
-            /// Non exhaustive list of linting failure messages.
-            failures: Vec<String>,
-        },
-    }
-}

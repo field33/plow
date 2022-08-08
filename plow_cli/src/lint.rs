@@ -2,7 +2,6 @@ use anyhow::{anyhow, Result};
 use clap::ArgMatches;
 use clap::{arg, App, Command};
 use colored::*;
-use dialoguer::console::Emoji;
 use harriet::TurtleDocument;
 use nom::error::VerboseError;
 use plow_linter::{

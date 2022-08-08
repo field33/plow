@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug, Deserialize, Default)]
@@ -25,7 +25,7 @@ pub struct Workspace {
 
 impl From<Vec<std::path::PathBuf>> for Workspace {
     fn from(paths: Vec<std::path::PathBuf>) -> Self {
-        Workspace {
+        Self {
             members: paths
                 .iter()
                 .map(|path| path.to_string_lossy().to_string())
@@ -35,8 +35,8 @@ impl From<Vec<std::path::PathBuf>> for Workspace {
 }
 impl From<Vec<camino::Utf8PathBuf>> for Workspace {
     fn from(paths: Vec<camino::Utf8PathBuf>) -> Self {
-        Workspace {
-            members: paths.iter().map(|path| path.to_string()).collect(),
+        Self {
+            members: paths.iter().map(std::string::ToString::to_string).collect(),
         }
     }
 }

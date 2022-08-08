@@ -1,5 +1,5 @@
 use crate::{config::create_configuration_directory_if_not_exists, feedback::command_not_complete};
-use anyhow::{anyhow, bail, Result};
+use anyhow::Result;
 use clap::{arg, App, Command};
 use colored::*;
 use serde::{Deserialize, Serialize};
