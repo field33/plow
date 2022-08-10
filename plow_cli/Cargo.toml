@@ -27,5 +27,5 @@ serde_json = "1"
 reqwest = { version = "0.11", features = ["blocking", "multipart"]}
 colored = "2"
 plow_package_management = { git = "https://github.com/field33/plow", branch = "minor-updates-to-plow-tools" }
-plow_linter = { git = "https://github.com/field33/plow", branch = "minor-updates-to-plow-tools" }
+plow_linter = { path = "../plow_linter" }
 plow_ontology = "0.1"

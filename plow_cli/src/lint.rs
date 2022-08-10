@@ -9,7 +9,7 @@ use plow_linter::{
     lints::all_lints,
 };
 
-use crate::feedback::command_not_complete;
+use crate::feedback::{command_not_complete, linting_failed};
 
 pub fn attach_as_sub_command() -> App<'static> {
     Command::new("lint")
@@ -17,25 +17,24 @@ pub fn attach_as_sub_command() -> App<'static> {
         .arg(arg!([FIELD_PATH]))
 }
 
-pub fn run_command(sub_matches: &ArgMatches) -> Result<()> {
+pub fn run_command(sub_matches: &ArgMatches) {
     if let Some(file_path) = sub_matches.get_one::<String>("FIELD_PATH") {
         let path_buf = camino::Utf8PathBuf::from(file_path);
         if path_buf.exists() {
-            // TODO: Add specific lints here.
-            lint_file(file_path, None)?;
+            println!("\t{} the provided field..", "Linting".green().bold(),);
 
-            println!("\t{} successful.", "Lint".green().bold(),);
-            return Ok(());
+            // TODO: Add specific lints here.
+            if lint_file(file_path, None).is_err() {
+                linting_failed();
+            }
+
+            println!("\t{} successful.", "Linting".green().bold(),);
         }
         command_not_complete(
                     &format!("please provide a field (a valid .ttl file path) for plow to lint, {file_path} does not exist"),
                 );
-        // Unreachable code.
-        return Ok(());
     }
     command_not_complete("please provide a field (a valid .ttl file path) for plow to lint");
-    // Unreachable code.
-    return Ok(());
 }
 
 pub fn lint_file(
@@ -56,16 +55,16 @@ pub fn lint_file(
         let res = lint.lint(&document);
         match res {
             Success(message) => {
-                println!("{}", message.green());
+                println!("\t\t{}", message.green());
             }
             Warning(messages) => {
                 for message in messages {
-                    println!("{}", message.yellow());
+                    println!("\t\t{}", message.yellow());
                 }
             }
             Failure(messages) => {
                 for message in messages {
-                    println!("{}", message.red());
+                    println!("\t\t{}", message.red());
                 }
                 contains_err = true;
             }

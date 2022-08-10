@@ -21,9 +21,17 @@ pub fn command_failed(advice: &str) {
     std::process::exit(0xFF);
 }
 
+pub fn linting_failed() {
+    println!("\t{}", "Linting failed".red().bold(),);
+    println!(
+        "\t{} Depending on the red lines in the linting output, update your field and try again.",
+        "Advice".yellow().bold(),
+    );
+    std::process::exit(0xFF);
+}
+
 pub fn info(info: &str) {
-    println!("{}", "Info".yellow().bold(),);
-    println!("{info}\n");
+    println!("\t{} {info}", "Info".yellow().bold());
 }
 
 pub fn command_not_complete(advice: &str) {

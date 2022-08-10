@@ -3655,7 +3655,7 @@ dependencies = [
  "dirs",
  "harriet",
  "nom",
- "plow_linter 0.1.1 (git+https://github.com/field33/plow?branch=minor-updates-to-plow-tools)",
+ "plow_linter",
  "plow_ontology 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_package_management 0.1.0 (git+https://github.com/field33/plow?branch=minor-updates-to-plow-tools)",
  "reqwest",
@@ -3710,7 +3710,7 @@ dependencies = [
  "nom",
  "notify",
  "open",
- "plow_linter 0.1.1",
+ "plow_linter",
  "plow_ontology 0.1.1",
  "plow_package_management 0.1.0",
  "rfd",
@@ -3745,39 +3745,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "plow_linter"
-version = "0.1.1"
-source = "git+https://github.com/field33/plow?branch=minor-updates-to-plow-tools#aa90ac415374dd573c982b1cd6dc533ebe3766b1"
-dependencies = [
- "addr",
- "anyhow",
- "aquamarine",
- "email_address",
- "harriet",
- "nom",
- "plow_graphify 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_ontology 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rdftk_core",
- "rdftk_iri",
- "regex",
- "rustrict",
- "semver 1.0.13",
- "serde",
- "serde_json",
- "spdx",
- "tempdir",
- "thiserror",
-]
-
-[[package]]
 name = "plow_ontology"
 version = "0.1.1"
 dependencies = [
  "anyhow",
  "harriet",
  "plow_graphify 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.1.1",
+ "plow_linter",
  "rdftk_core",
  "rdftk_iri",
  "serde",
@@ -3825,7 +3799,7 @@ dependencies = [
  "harriet",
  "itertools 0.10.3",
  "plow_graphify 0.1.0",
- "plow_linter 0.1.1",
+ "plow_linter",
  "plow_ontology 0.1.1",
  "pubgrub",
  "rdftk_core",

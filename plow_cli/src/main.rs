@@ -87,7 +87,7 @@ pub fn main() -> Result<()> {
             login::run_command(sub_matches)?;
         }
         Some(("lint", sub_matches)) => {
-            lint::run_command(sub_matches)?;
+            lint::run_command(sub_matches);
         }
         Some(("submit", sub_matches)) => {
             submit::run_command(sub_matches)?;

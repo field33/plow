@@ -89,13 +89,13 @@ pub fn get_registry_url() -> Result<String> {
 // credentials.toml file instead of credentials?
 pub fn create_configuration_directory_if_not_exists() -> Result<camino::Utf8PathBuf> {
     let config_dir = get_config_dir()?;
-    if !config_dir.exists() {
+    if config_dir.exists() {
         return Ok(config_dir.to_string_lossy().as_ref().into());
     }
 
     std::fs::create_dir_all(&config_dir)?;
     std::fs::write(
-        config_dir.join("credentials"),
+        config_dir.join("credentials.toml"),
         "# `plow login <your-api-token>` will store your api token in this file.\n",
     )?;
 

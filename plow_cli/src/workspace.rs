@@ -1,9 +1,10 @@
 use crate::{
     config::{self, PlowConfigFile},
-    feedback::command_failed,
+    feedback::{command_failed, info},
 };
 use anyhow::{anyhow, Result};
 
+use colored::Colorize;
 use harriet::{Item, Literal, Object, ParseError, Triples, TurtleDocument, IRI};
 use plow_package_management::{
     package::{FieldMetadata, OrganizationToResolveFor},
@@ -292,6 +293,7 @@ pub fn prepare() -> Result<()> {
         .collect::<Vec<OrganizationToResolveFor>>();
 
     // Resolve deps and lock, prepare protege ws
-
-    todo!()
+    println!("\t{} is ready for plow.", "Workspace".green().bold());
+    info("Workspace creation is a work in progress currently and not fully implemented. Expect errors.");
+    Ok(())
 }

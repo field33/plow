@@ -38,27 +38,10 @@ pub fn run_command(sub_matches: &ArgMatches) -> Result<()> {
     if let Some(field_file_path) = sub_matches.get_one::<String>("FIELD_PATH") {
         let field_file_path = camino::Utf8PathBuf::from(field_file_path);
         if field_file_path.exists() {
-            let lock_file_path: Option<camino::Utf8PathBuf> = camino::Utf8PathBuf::from(&field_file_path).parent().map_or_else(|| {
-            info(
-                "Could not find a lock file in the same directory with the field, creating a lock file with this command not implemented yet. If you place the lock file in the same folder with the field submission would work normally.\n On the other hand you might have no dependencies at all and you can just submit the field directly. If you have dependencies stated in the field but not provide a lock file your submission will fail though.");
-            // TODO: Try Resolve deps and create a lock file and return contents later change info message and then allow submission without a lock file.
-            None
-        }, |parent| {
-            // TODO: Update lock file name later..
-            let possible_lock_file_path = parent.join("Ontology.lock");
-
-            let lock_file_path = if possible_lock_file_path.exists() {
-                Some(possible_lock_file_path)
-            } else {
-                info(
-                &format!("Could not find a lock file at {possible_lock_file_path}, creating a lock file with this command not implemented yet. If you place the lock file in the same folder with the field submission would work normally.\n On the other hand you might have no dependencies at all and you can just submit the field directly. If you have dependencies stated in the field but not provide a lock file your submission will fail though."));
-
-                // TODO: Try Resolve deps and create a lock file and return contents later change info message and then allow submission without a lock file.
-                None
-            };
-            lock_file_path
-        });
-
+            println!(
+                "\t{} the field before submission..",
+                "Linting".green().bold(),
+            );
             // Ready to do pre submission lint.
             if lint_file(
                 field_file_path.as_str(),
@@ -66,10 +49,9 @@ pub fn run_command(sub_matches: &ArgMatches) -> Result<()> {
             )
             .is_err()
             {
-                command_failed(
-                "Depending on the red lines in the output, try to fix your field and try again.",
-            );
+                linting_failed();
             }
+            println!("\t{} successful.", "Linting".green().bold(),);
 
             // File linted and ready to submit.
             let public = !sub_matches.is_present("private");
@@ -94,16 +76,9 @@ pub fn run_command(sub_matches: &ArgMatches) -> Result<()> {
             };
 
             // TODO: Handle these errors properly.
-            let submission = if let Some(lock_file_path) = lock_file_path {
-                reqwest::blocking::multipart::Form::new()
-                    .text("public", if public { "true" } else { "false" })
-                    .file("field", field_file_path)?
-                    .file("lock_file", lock_file_path)?
-            } else {
-                reqwest::blocking::multipart::Form::new()
-                    .text("public", if public { "true" } else { "false" })
-                    .file("field", field_file_path)?
-            };
+            let submission = reqwest::blocking::multipart::Form::new()
+                .text("public", if public { "true" } else { "false" })
+                .file("field", field_file_path)?;
 
             // Read auth.
             let token = get_saved_api_token().unwrap_or_else(|err| {
