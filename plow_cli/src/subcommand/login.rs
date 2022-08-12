@@ -2,7 +2,7 @@ use crate::{
     config::create_configuration_directory_if_not_exists, error::CliError, feedback::Feedback,
 };
 
-use clap::{arg, App, ArgMatches, Command};
+use clap::{arg, App, AppSettings, ArgMatches, Command};
 use colored::*;
 use serde::{Deserialize, Serialize};
 
@@ -48,8 +48,9 @@ impl Feedback for SuccessfulLogin {
 
 pub fn attach_as_sub_command() -> App<'static> {
     Command::new("login")
-        .about("Registers an api token for the CLI to use.")
+        .about("Registers an api token to interact with remote registries.")
         .arg(arg!([API_TOKEN]))
+        .setting(AppSettings::ArgRequiredElseHelp)
 }
 
 #[allow(clippy::as_conversions)]

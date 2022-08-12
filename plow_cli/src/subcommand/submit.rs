@@ -4,7 +4,7 @@ use crate::error::SubmissionError::*;
 use crate::error::{CliError, SubmissionError};
 use crate::{config::get_registry_url, feedback::*};
 use anyhow::Result;
-use clap::{arg, App, Arg, ArgMatches, Command};
+use clap::{arg, App, AppSettings, Arg, ArgMatches, Command};
 use plow_linter::lints::required_plow_registry_lints;
 use reqwest::blocking::multipart::Form;
 
@@ -15,7 +15,7 @@ use super::login::get_saved_api_token;
 
 pub fn attach_as_sub_command() -> App<'static> {
     Command::new("submit")
-        .about("Submits an ontology to plow registry.")
+        .about("Submits a field to the specified registry.")
         .arg(
             Arg::with_name("registry")
                 .short('r')
@@ -35,6 +35,7 @@ pub fn attach_as_sub_command() -> App<'static> {
                 .help("Submit the field privately.")
         )
         .arg(arg!([FIELD_PATH]))
+        .setting(AppSettings::ArgRequiredElseHelp)
 }
 
 #[allow(clippy::as_conversions)]

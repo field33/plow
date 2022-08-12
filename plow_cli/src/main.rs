@@ -66,35 +66,46 @@ mod feedback;
 mod subcommand;
 mod workspace;
 
-use clap::App;
-use feedback::Feedback;
+use clap::{App, AppSettings};
+use feedback::command_failed;
 
 #[allow(clippy::missing_panics_doc)]
 pub fn main() {
-    let matches = App::new("plow")
+    let app = App::new("plow")
         .version("0.1.0")
-        .author("Ali Somay <ali@field33.com>")
-        .about("Plow package manager.")
+        .about("Plowing the field of knowledge. Package management for ontologies.")
         .subcommand(subcommand::lint::attach_as_sub_command())
         .subcommand(subcommand::login::attach_as_sub_command())
         .subcommand(subcommand::submit::attach_as_sub_command())
         .subcommand(subcommand::init::attach_as_sub_command())
-        .get_matches();
+        .setting(AppSettings::SubcommandRequiredElseHelp)
+        .setting(AppSettings::SubcommandPrecedenceOverArg);
 
-    match matches.subcommand() {
+    let mut app_for_help_reference = app.clone();
+
+    let matches = app.get_matches();
+    if match matches.subcommand() {
         Some(("login", sub_matches)) => {
             subcommand::login::run_command(sub_matches).feedback();
+            Some(())
         }
         Some(("lint", sub_matches)) => {
             subcommand::lint::run_command(sub_matches).feedback();
+            Some(())
         }
         Some(("submit", sub_matches)) => {
             subcommand::submit::run_command(sub_matches).feedback();
+            Some(())
         }
         Some(("init", sub_matches)) => {
             subcommand::init::run_command(sub_matches).feedback();
+            Some(())
         }
-        // _ => workspace::prepare(),
-        _ => todo!(),
-    };
+        _ => None,
+    }
+    .is_none()
+        && app_for_help_reference.print_long_help().is_err()
+    {
+        command_failed("Please use a subcommand which is supported by this version of plow. You may consult plow --help.");
+    }
 }

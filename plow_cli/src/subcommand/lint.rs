@@ -1,5 +1,5 @@
-use clap::ArgMatches;
 use clap::{arg, App, Command};
+use clap::{AppSettings, ArgMatches};
 use colored::*;
 use harriet::TurtleDocument;
 use nom::error::VerboseError;
@@ -23,6 +23,7 @@ pub fn attach_as_sub_command() -> App<'static> {
     Command::new("lint")
         .about("Lints a field.")
         .arg(arg!([FIELD_PATH]))
+        .setting(AppSettings::ArgRequiredElseHelp)
 }
 
 #[allow(clippy::as_conversions)]
