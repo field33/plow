@@ -61,42 +61,40 @@
 )]
 
 pub mod config;
+mod error;
 mod feedback;
-mod init;
-mod lint;
-mod login;
-mod submit;
+mod subcommand;
 mod workspace;
 
-use anyhow::Result;
 use clap::App;
+use feedback::Feedback;
 
-pub fn main() -> Result<()> {
+#[allow(clippy::missing_panics_doc)]
+pub fn main() {
     let matches = App::new("plow")
         .version("0.1.0")
         .author("Ali Somay <ali@field33.com>")
         .about("Plow package manager.")
-        .subcommand(lint::attach_as_sub_command())
-        .subcommand(login::attach_as_sub_command())
-        .subcommand(submit::attach_as_sub_command())
-        .subcommand(init::attach_as_sub_command())
+        .subcommand(subcommand::lint::attach_as_sub_command())
+        .subcommand(subcommand::login::attach_as_sub_command())
+        .subcommand(subcommand::submit::attach_as_sub_command())
+        .subcommand(subcommand::init::attach_as_sub_command())
         .get_matches();
 
     match matches.subcommand() {
         Some(("login", sub_matches)) => {
-            login::run_command(sub_matches)?;
+            subcommand::login::run_command(sub_matches).feedback();
         }
         Some(("lint", sub_matches)) => {
-            lint::run_command(sub_matches);
+            subcommand::lint::run_command(sub_matches).feedback();
         }
         Some(("submit", sub_matches)) => {
-            submit::run_command(sub_matches)?;
+            subcommand::submit::run_command(sub_matches).feedback();
         }
         Some(("init", sub_matches)) => {
-            init::run_command(sub_matches)?;
+            subcommand::init::run_command(sub_matches).feedback();
         }
-        _ => workspace::prepare()?,
-    }
-
-    Ok(())
+        // _ => workspace::prepare(),
+        _ => todo!(),
+    };
 }

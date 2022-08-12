@@ -1,5 +1,7 @@
-use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
+
+use crate::error::CliError;
+use crate::error::ConfigError::*;
 
 #[derive(Serialize, Debug, Deserialize, Default)]
 pub struct PlowConfigFile<'cred> {
@@ -71,64 +73,78 @@ Signature: 8a477f597d28d172789f06886806bc55
 #	http://www.brynosaurus.com/cachedir/
 "#;
 
-pub fn get_config_dir() -> Result<std::path::PathBuf> {
-    let homedir =
-        dirs::home_dir().ok_or_else(|| anyhow!("User home directory could not be found."))?;
+pub fn get_config_dir() -> Result<std::path::PathBuf, CliError> {
+    let homedir = dirs::home_dir().ok_or_else(|| {
+        FailedToGetConfigDirectory("User home directory could not be found.".to_owned())
+    })?;
     Ok(homedir.join(".plow"))
 }
 
-pub fn get_registry_url() -> Result<String> {
+pub fn get_registry_url() -> Result<String, CliError> {
     let config_file_path = camino::Utf8PathBuf::from("./Plow.toml");
-    let config_file_contents = std::fs::read_to_string(&config_file_path)?;
-    let config_file = toml::from_str::<PlowConfigFile>(&config_file_contents)?;
+    let config_file_contents =
+        std::fs::read_to_string(&config_file_path).map_err(|_| FailedToReadWorkspaceConfigFile)?;
+    let config_file = toml::from_str::<PlowConfigFile>(&config_file_contents)
+        .map_err(|_| FailedToReadWorkspaceConfigFile)?;
     Ok(config_file.registry.url.to_owned())
 }
 
 // TODO: Revisit initial structure
 // config.toml file?
 // credentials.toml file instead of credentials?
-pub fn create_configuration_directory_if_not_exists() -> Result<camino::Utf8PathBuf> {
+pub fn create_configuration_directory_if_not_exists() -> Result<camino::Utf8PathBuf, CliError> {
     let config_dir = get_config_dir()?;
     if config_dir.exists() {
         return Ok(config_dir.to_string_lossy().as_ref().into());
     }
 
-    std::fs::create_dir_all(&config_dir)?;
+    std::fs::create_dir_all(&config_dir)
+        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
     std::fs::write(
         config_dir.join("credentials.toml"),
         "# `plow login <your-api-token>` will store your api token in this file.\n",
-    )?;
+    )
+    .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
 
     let registry_dir = config_dir.join("registry");
-    std::fs::create_dir_all(&registry_dir)?;
+    std::fs::create_dir_all(&registry_dir)
+        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
     std::fs::write(
         config_dir
             .join("registry")
             .join(CACHE_DIRECTORY_TAG_FILE_NAME),
         CACHE_DIRECTORY_TAG_FILE_CONTENTS,
-    )?;
-    std::fs::create_dir_all(registry_dir.join("artifact_cache"))?;
+    )
+    .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    std::fs::create_dir_all(registry_dir.join("artifact_cache"))
+        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
 
     let index_dir = registry_dir.join("index");
-    std::fs::create_dir_all(&index_dir)?;
-    std::fs::create_dir_all(index_dir.join(".cache"))?;
-    std::fs::write(index_dir.join(".last_updated"), "")?;
-    std::fs::create_dir_all(index_dir.join(".cache").join("public"))?;
-    std::fs::create_dir_all(index_dir.join(".cache").join("private"))?;
+    std::fs::create_dir_all(&index_dir)
+        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    std::fs::create_dir_all(index_dir.join(".cache"))
+        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    std::fs::write(index_dir.join(".last_updated"), "")
+        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    std::fs::create_dir_all(index_dir.join(".cache").join("public"))
+        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    std::fs::create_dir_all(index_dir.join(".cache").join("private"))
+        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
 
     Ok(config_dir.to_string_lossy().as_ref().into())
 }
 
-pub fn remove_configuration_directory_if_exists() -> Result<()> {
+pub fn remove_configuration_directory_if_exists() -> Result<(), CliError> {
     let config_dir = get_config_dir()?;
     if !config_dir.exists() {
         return Ok(());
     }
-    std::fs::remove_dir_all(&config_dir)?;
+    std::fs::remove_dir_all(&config_dir)
+        .map_err(|err| FailedToRemoveConfigDirectory(err.to_string()))?;
     Ok(())
 }
 
-pub fn clean_configuration_directory() -> Result<camino::Utf8PathBuf> {
+pub fn clean_configuration_directory() -> Result<camino::Utf8PathBuf, CliError> {
     let config_dir = get_config_dir()?;
     if !config_dir.exists() {
         return create_configuration_directory_if_not_exists();

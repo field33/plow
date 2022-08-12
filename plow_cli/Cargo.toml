@@ -3,7 +3,7 @@ name = "plow_cli"
 description = "Plow package management command line applications."
 version = "0.1.0"
 license = "MIT OR Apache-2.0"
-authors = ["Maximilian Goisser <max@field33.com>", "Ali Somay <ali@field33.com>"]
+authors = ["Ali Somay <ali@field33.com>"]
 keywords = ["plow", "package_management", "cli"]
 repository = "https://github.com/field33/plow/"
 edition = "2021"
@@ -29,3 +29,4 @@ colored = "2"
 plow_package_management = { git = "https://github.com/field33/plow", branch = "minor-updates-to-plow-tools" }
 plow_linter = { path = "../plow_linter" }
 plow_ontology = "0.1"
+thiserror = "1"
