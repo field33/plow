@@ -1,4 +1,6 @@
 mod field;
+mod utils;
+mod workspace;
 
 use crate::error::CliError;
 use crate::error::FieldInitializationError::*;
@@ -27,7 +29,7 @@ impl Feedback for SuccessfulWorkspaceCreation {
 
 fn initialize_field(field_name: &str) -> Result<impl Feedback, CliError> {
     let field = self::field::new(field_name)?;
-    print!("{field}");
+    field.split('\n').for_each(|line| println!("\t{}", line));
     Ok(SuccessfulFieldInitialization)
 }
 
@@ -54,8 +56,7 @@ pub fn run_command(sub_matches: &ArgMatches) -> Box<dyn Feedback + '_> {
 
 pub fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError> {
     if !sub_matches.args_present() {
-        // crate::workspace::prepare()
-        todo!()
+        workspace::prepare()?;
     }
     if sub_matches.is_present("field") {
         let field_name = sub_matches

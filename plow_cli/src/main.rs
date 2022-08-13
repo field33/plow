@@ -64,7 +64,6 @@ pub mod config;
 mod error;
 mod feedback;
 mod subcommand;
-mod workspace;
 
 use clap::{App, AppSettings};
 use feedback::command_failed;

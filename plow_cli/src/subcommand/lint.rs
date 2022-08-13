@@ -55,14 +55,13 @@ pub fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliEr
 }
 
 pub fn lint_file(
-    ontology_file_path: &str,
+    field_path: &str,
     specific_lints: Option<Vec<Box<dyn Lint>>>,
 ) -> Result<(), CliError> {
-    let field_contents =
-        std::fs::read_to_string(&ontology_file_path).map_err(|err| FailedToReadField {
-            field_path: ontology_file_path.to_owned(),
-            details: err.to_string(),
-        })?;
+    let field_contents = std::fs::read_to_string(field_path).map_err(|err| FailedToReadField {
+        field_path: field_path.to_owned(),
+        details: err.to_string(),
+    })?;
 
     let (_, document) = TurtleDocument::parse::<VerboseError<&str>>(&field_contents)
         .map_err(|_| FailedToParseField)?;
@@ -92,7 +91,32 @@ pub fn lint_file(
     }
 
     if contains_failures {
-        return Err(LintContainsFailures.into());
+        return Err(LintsContainFailuresOpaque.into());
+    }
+    Ok(())
+}
+
+pub fn lint_file_fail_on_failure(
+    field_path: &str,
+    specific_lints: Option<Vec<Box<dyn Lint>>>,
+) -> Result<(), CliError> {
+    let field_contents = std::fs::read_to_string(field_path).map_err(|err| FailedToReadField {
+        field_path: field_path.to_owned(),
+        details: err.to_string(),
+    })?;
+
+    let (_, document) = TurtleDocument::parse::<VerboseError<&str>>(&field_contents)
+        .map_err(|_| FailedToParseField)?;
+
+    let lints = specific_lints.map_or_else(all_lints, |specific_lints| specific_lints);
+
+    for lint in lints {
+        if lint.lint(&document).is_failure() {
+            return Err(SingleLintContainsFailure {
+                field_path: field_path.to_owned(),
+            }
+            .into());
+        }
     }
     Ok(())
 }

@@ -5,12 +5,14 @@ mod field_init;
 mod lint;
 mod login;
 mod submission;
+mod workspace_init;
 
 pub use config::ConfigError;
 pub use field_init::FieldInitializationError;
 pub use lint::LintSubcommandError;
 pub use login::LoginError;
 pub use submission::SubmissionError;
+pub use workspace_init::WorkspaceInitializationError;
 
 use crate::feedback::{command_not_complete, Feedback};
 use thiserror::Error;
@@ -27,6 +29,8 @@ pub enum CliError {
     LintSubcommand(LintSubcommandError),
     #[error("")]
     FieldInitialization(FieldInitializationError),
+    #[error("")]
+    WorkspaceInitialization(WorkspaceInitializationError),
     #[error("The command line option you have provided is not in the list of options. Please run plow --help to see the list of options.")]
     UnknownOption,
 }
@@ -61,6 +65,12 @@ impl From<FieldInitializationError> for CliError {
     }
 }
 
+impl From<WorkspaceInitializationError> for CliError {
+    fn from(error: WorkspaceInitializationError) -> Self {
+        Self::WorkspaceInitialization(error)
+    }
+}
+
 impl Feedback for CliError {
     fn feedback(&self) {
         use CliError::*;
@@ -70,6 +80,7 @@ impl Feedback for CliError {
             Config(error) => error.feedback(),
             LintSubcommand(error) => error.feedback(),
             FieldInitialization(error) => error.feedback(),
+            WorkspaceInitialization(error) => error.feedback(),
             UnknownOption => {
                 command_not_complete(&format!("{self}"));
             }

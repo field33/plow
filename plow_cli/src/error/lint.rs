@@ -13,7 +13,11 @@ pub enum LintSubcommandError {
     #[error("Please provide a field (a valid .ttl file path) for plow to lint")]
     NoFieldProvidedToLint,
     #[error("")]
-    LintContainsFailures,
+    LintsContainFailuresOpaque,
+    #[error("")]
+    SingleLintContainsFailure { field_path: String },
+    #[error("")]
+    LintsContainFailures { field_paths: Vec<String> },
 }
 
 impl Feedback for LintSubcommandError {
@@ -26,8 +30,12 @@ impl Feedback for LintSubcommandError {
             NoFieldProvidedToLint => {
                 command_not_complete(&format!("{self}"));
             }
-            LintContainsFailures => {
+            LintsContainFailuresOpaque => {
                 linting_failed();
+            }
+            SingleLintContainsFailure { .. } => { /* Omit feedback */ }
+            LintsContainFailures { .. } => {
+                todo!()
             }
         }
     }

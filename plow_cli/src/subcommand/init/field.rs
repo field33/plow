@@ -43,40 +43,37 @@ impl ToString for FieldName {
 impl TryFrom<String> for FieldName {
     type Error = CliError;
     fn try_from(package_name: String) -> Result<Self, Self::Error> {
-        let is_alphanumeric = package_name
-            .chars()
-            .all(|c| char::is_alphanumeric(c) || c == '_');
-        if !is_alphanumeric {
-            return Err(InvalidFieldNameProvided {
-                reason: "Name may only contain alphanumeric characters and underscores".to_owned(),
-            }
-            .into());
-        }
-        let contains_double_underscores = package_name.contains("__");
-        if contains_double_underscores {
-            return Err(InvalidFieldNameProvided {
-                reason: "Name may not contain two underscores after each other `__`".to_owned(),
-            }
-            .into());
-        }
-
         let parts = package_name.split('/').collect::<Vec<_>>();
+
         if parts.len() != 2 {
             return Err(InvalidFieldNameProvided {
                 reason: "An example of a valid name @namespace/name".to_owned(),
             }
             .into());
         }
-        if parts[0]
+
+        let is_alphanumeric_namespace = parts[0]
             .chars()
-            .next()
-            .ok_or_else(|| InvalidFieldNameProvided {
-                reason: "An example of a valid name @namespace/name".to_owned(),
-            })?
-            != '@'
+            .all(|c| char::is_alphanumeric(c) || c == '_' || c == '@');
+
+        let is_alphanumeric_name = parts[1]
+            .chars()
+            .all(|c| char::is_alphanumeric(c) || c == '_');
+
+        if !is_alphanumeric_namespace
+            || !is_alphanumeric_name
+            || !parts[0].starts_with('@')
+            || parts[0].matches('@').count() > 1
         {
             return Err(InvalidFieldNameProvided {
-                reason: "An example of a valid name @namespace/name".to_owned(),
+                reason: "Name may only contain alphanumeric characters and underscores. An example of a valid name @namespace/name".to_owned(),
+            }
+            .into());
+        }
+        let contains_double_underscores = package_name.contains("__");
+        if contains_double_underscores {
+            return Err(InvalidFieldNameProvided {
+                reason: "Name may not contain two underscores after each other `__`. An example of a valid name @namespace/name".to_owned(),
             }
             .into());
         }
