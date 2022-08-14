@@ -1,3 +1,4 @@
+use colored::*;
 use thiserror::Error;
 
 use crate::feedback::{command_failed, command_not_complete, linting_failed, Feedback};
@@ -34,8 +35,12 @@ impl Feedback for LintSubcommandError {
                 linting_failed();
             }
             SingleLintContainsFailure { .. } => { /* Omit feedback */ }
-            LintsContainFailures { .. } => {
-                todo!()
+            LintsContainFailures { field_paths } => {
+                println!("\t{} couldn't pass the linting phase thus ignored and not included in the workspace and fields directory.\n\tPlease lint them individually, correct them and run plow init --force recreate the workspace.", "Paths listed below".yellow().bold());
+                for field_path in field_paths {
+                    println!("\t\t{}", field_path);
+                }
+                std::process::exit(0xFF);
             }
         }
     }

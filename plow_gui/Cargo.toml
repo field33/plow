@@ -11,7 +11,7 @@ edition = "2021"
 [dependencies]
 plow_ontology = { path = "../plow_ontology", version = "0.1.0" }
 plow_package_management = { path = "../plow_package_management", version = "0.1.0" }
-plow_linter = { path = "../plow_linter", version = "0.1.0" }
+plow_linter = "0.1"
 harriet = "0.1"
 nom = "7"
 anyhow = { version = "1.0.42", features = ["backtrace"] }

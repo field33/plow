@@ -1,13 +1,13 @@
-use crate::lint::{
-    common_error_literals::{NO_ROOT_PREFIX, RDF_GRAPH_PARSE_ERROR},
+use crate::{lint::{
+    common_error_literals::{NO_ROOT_PREFIX, },
     lint_failure, lint_success, Lint, LintResult, helpers::catch_single_annotations_which_must_exist,
-};
-use harriet::TurtleDocument;
-use plow_graphify::document_to_graph;
+}, Linter, MultiReaderRdfGraph};
+
+
 use plow_ontology::constants::REGISTRY_LICENSE;
 use plow_package_management::metadata::get_root_prefix;
 use rdftk_iri::IRI as RDFTK_IRI;
-use std::collections::HashSet;
+use std::{collections::HashSet, any::Any};
 use std::str::FromStr;
 
 const RELATED_FIELD: &str = "`registry:license`";
@@ -18,17 +18,27 @@ const LICENSE_MAX_ALLOWED_CHAR_COUNT: usize = 10_000;
 pub struct HasRegistryLicense;
 
 impl Lint for HasRegistryLicense {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }     
     fn short_description(&self) -> &str {
         "Check that the field is annotated with a value for `registry:license`"
     }
     /// Lints for the existence of `registry:license` and its validity.
     /// Check <https://spdx.org/licenses> for a list of available licenses.
     /// Maximum 10000 characters are allowed for a license.
-    fn lint(&self, document: &TurtleDocument) -> LintResult {
+    fn run(
+        &self,
+        Linter {
+            document,
+            graph: MultiReaderRdfGraph { inner: rdf_graph },
+            ..
+        }: &Linter,
+    ) -> LintResult {
         let rdf_factory = rdftk_core::simple::statement::statement_factory();
-        if let Ok(rdf_graph) = document_to_graph(document) {
-            if let Some(root_prefix) = get_root_prefix(document) {
-                let graph = rdf_graph.borrow();
+        if let Some(root_prefix) = get_root_prefix(document) {
+                            let graph_ref = rdf_graph;
+            let graph = graph_ref.borrow();
                 // We explicitly pass valid data, unwrap is safe here.
                 #[allow(clippy::unwrap_used)]
                 let annotations = graph
@@ -76,8 +86,5 @@ impl Lint for HasRegistryLicense {
             } else {
                 lint_failure!(NO_ROOT_PREFIX)
             }
-        } else {
-            lint_failure!(RDF_GRAPH_PARSE_ERROR)
-        }
     }
 }

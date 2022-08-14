@@ -136,7 +136,7 @@ pub fn validate_namespace_and_name(
 ) -> Result<(), NamespaceAndNameLintError> {
     let mut namespace_and_name: Vec<_> = namespace_and_name_literal.split('/').collect();
 
-    if let Some(namespace) = namespace_and_name.get(0) {
+    if let Some(namespace) = namespace_and_name.first() {
         if !namespace.starts_with('@') {
             return Err(NamespaceAndNameLintError::InvalidFormat);
         }

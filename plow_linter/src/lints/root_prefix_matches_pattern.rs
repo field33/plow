@@ -1,20 +1,26 @@
-use crate::lint::{
-    common_error_literals::NO_ROOT_PREFIX, lint_failure, lint_success, Lint, LintResult,
+use std::any::Any;
+
+use crate::{
+    lint::{common_error_literals::NO_ROOT_PREFIX, lint_failure, lint_success, Lint, LintResult},
+    Linter,
 };
-use harriet::{Directive, Item, Statement, TurtleDocument};
+use harriet::{Directive, Item, Statement};
 use regex::Regex;
 
 #[derive(Debug, Default)]
 pub struct RootPrefixMatchesPattern;
 
 impl Lint for RootPrefixMatchesPattern {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
     fn short_description(&self) -> &str {
         "Check if the value for `@prefix :` matches the pattern `http://field33.com/ontologies/ONTOLOGY_NAME/`"
     }
 
-    fn lint(&self, document: &TurtleDocument) -> LintResult {
+    fn run(&self, linter: &Linter) -> LintResult {
         let mut root_prefix_directive = None;
-        for item in &document.items {
+        for item in &linter.document.items {
             if let Item::Statement(Statement::Directive(Directive::Prefix(directive))) = item {
                 if directive.prefix.is_none() {
                     root_prefix_directive = Some(directive);

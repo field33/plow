@@ -9,7 +9,7 @@ edition = "2021"
 
 [dependencies]
 plow_ontology = "0.1"
-plow_graphify = "0.1"
+plow_graphify = { path = "../plow_graphify" }
 plow_package_management = "0.1"
 anyhow = { version = "1", features = ["backtrace"] }
 thiserror = "1"
@@ -27,6 +27,9 @@ email_address = "0.2"
 rustrict = "0.4"
 spdx = "0.8"
 addr = "0.15"
+darc = "0.0.1"
+rayon = "1"
+chashmap = "2"
 
 # [patch.crates-io]
 # plow_graphify = { path = "../plow_graphify" }

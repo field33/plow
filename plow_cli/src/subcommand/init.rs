@@ -57,6 +57,8 @@ pub fn run_command(sub_matches: &ArgMatches) -> Box<dyn Feedback + '_> {
 pub fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError> {
     if !sub_matches.args_present() {
         workspace::prepare()?;
+
+        // TODO: Return Success here..
     }
     if sub_matches.is_present("field") {
         let field_name = sub_matches

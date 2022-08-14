@@ -1,12 +1,9 @@
 use clap::{arg, App, Command};
 use clap::{AppSettings, ArgMatches};
 use colored::*;
-use harriet::TurtleDocument;
-use nom::error::VerboseError;
-use plow_linter::{
-    lint::{Lint, LintResult},
-    lints::all_lints,
-};
+use plow_linter::lint::LintResult;
+use plow_linter::lints::*;
+use plow_linter::Linter;
 
 use crate::error::CliError;
 use crate::error::LintSubcommandError::*;
@@ -43,8 +40,7 @@ pub fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliEr
 
     if field.exists() {
         general_lint_start();
-        // TODO: Add specific lints here.
-        lint_file(field_file_path, None)?;
+        lint_file(field_file_path, all_lints())?;
         return Ok(SuccessfulLint);
     }
 
@@ -54,25 +50,21 @@ pub fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliEr
     .into())
 }
 
-pub fn lint_file(
-    field_path: &str,
-    specific_lints: Option<Vec<Box<dyn Lint>>>,
-) -> Result<(), CliError> {
+pub fn lint_file(field_path: &str, lints: LintSet) -> Result<(), CliError> {
     let field_contents = std::fs::read_to_string(field_path).map_err(|err| FailedToReadField {
         field_path: field_path.to_owned(),
         details: err.to_string(),
     })?;
 
-    let (_, document) = TurtleDocument::parse::<VerboseError<&str>>(&field_contents)
-        .map_err(|_| FailedToParseField)?;
-
-    let lints = specific_lints.map_or_else(all_lints, |specific_lints| specific_lints);
+    // TODO: Handle this error.
+    let mut linter = Linter::try_from(field_contents.as_ref()).unwrap();
+    linter.add_lint_set(lints);
+    let results = linter.run_lints();
 
     let mut contains_failures = false;
-    for lint in lints {
+    for result in results {
         use LintResult::*;
-        let res = lint.lint(&document);
-        match res {
+        match result {
             Success(message) => {
                 println!("\t\t{}", message.green());
             }
@@ -96,27 +88,22 @@ pub fn lint_file(
     Ok(())
 }
 
-pub fn lint_file_fail_on_failure(
-    field_path: &str,
-    specific_lints: Option<Vec<Box<dyn Lint>>>,
-) -> Result<(), CliError> {
+pub fn lint_file_fail_on_failure(field_path: &str, lints: LintSet) -> Result<(), CliError> {
     let field_contents = std::fs::read_to_string(field_path).map_err(|err| FailedToReadField {
         field_path: field_path.to_owned(),
         details: err.to_string(),
     })?;
 
-    let (_, document) = TurtleDocument::parse::<VerboseError<&str>>(&field_contents)
-        .map_err(|_| FailedToParseField)?;
+    // TODO: Handle this error.
+    let mut linter = Linter::try_from(field_contents.as_ref()).unwrap();
+    linter.add_lint_set(lints);
 
-    let lints = specific_lints.map_or_else(all_lints, |specific_lints| specific_lints);
-
-    for lint in lints {
-        if lint.lint(&document).is_failure() {
-            return Err(SingleLintContainsFailure {
-                field_path: field_path.to_owned(),
-            }
-            .into());
+    if linter.run_lints_check_if_contains_any_failure() {
+        return Err(SingleLintContainsFailure {
+            field_path: field_path.to_owned(),
         }
+        .into());
     }
+
     Ok(())
 }

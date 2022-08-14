@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use camino::{Utf8Path, Utf8PathBuf};
+use plow_linter::lints::all_lints;
 use plow_package_management::package::{FieldMetadata, OrganizationToResolveFor};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
@@ -27,7 +28,7 @@ fn lint_found_fields(
     let failed_field_paths_on_linting = found_field_paths_in_directory
         .par_iter()
         .filter_map(|path| {
-            if let Err(err) = lint_file_fail_on_failure(path.as_ref(), None) {
+            if let Err(err) = lint_file_fail_on_failure(path.as_ref(), all_lints()) {
                 Some(err)
             } else {
                 None
@@ -97,6 +98,9 @@ pub fn prepare() -> Result<(), CliError> {
     let plow_toml = Utf8PathBuf::from("./Plow.toml");
     let fields_dir = Utf8PathBuf::from("./fields");
 
+    // TODO: Fail command when rerun
+    // Add force flag to recreate the ws
+
     let mut found_field_paths_in_directory =
         list_files(".", "ttl").map_err(|err| FailedRecursiveListingFields {
             reason: err.to_string(),
@@ -109,16 +113,18 @@ pub fn prepare() -> Result<(), CliError> {
     let linting_failures = lint_found_fields(&found_field_paths_in_directory);
 
     // Remove the paths from the list of found fields which has failed lints.
-    if let Some((failed_paths, _)) = linting_failures {
+    if let Some((ref failed_paths, _)) = linting_failures {
         found_field_paths_in_directory.retain(|path| !failed_paths.contains(&path.to_string()));
     }
+
+    // TODO: Collect manifests also. Do not read again and again..
 
     #[allow(clippy::unwrap_used)]
     let found_fields_in_directory = found_field_paths_in_directory
         .iter()
-        // Assume linted
-        .map(|path| (path, FieldManifest::new(path.to_string()).unwrap()))
-        .map(|(path, manifest)| {
+        .map(|path| {
+            // TODO: Handle errors.
+            let manifest = FieldManifest::new(std::fs::read_to_string(path).unwrap()).unwrap();
             let metadata = manifest.make_field_metadata_from_manifest_unchecked();
             FoundFieldInDirectory {
                 path: path.clone(),
@@ -126,6 +132,8 @@ pub fn prepare() -> Result<(), CliError> {
             }
         })
         .collect::<Vec<_>>();
+
+    // TODO: According to the first todos this might be unnecessary
 
     // Create fields directory if it does not exist.
     if !fields_dir.exists() {
@@ -141,8 +149,10 @@ pub fn prepare() -> Result<(), CliError> {
     let field_metadata_in_fields_dir = found_field_paths_in_directory
         .iter()
         // Assume linted
-        .map(|path| FieldManifest::new(path.to_string()).unwrap())
-        .map(|manifest| manifest.make_field_metadata_from_manifest_unchecked())
+        .map(|path| {
+            let manifest = FieldManifest::new(std::fs::read_to_string(path).unwrap()).unwrap();
+            manifest.make_field_metadata_from_manifest_unchecked()
+        })
         .collect::<Vec<_>>();
 
     let workspace: crate::config::Workspace = field_paths_in_fields_dir.into();
@@ -161,8 +171,14 @@ pub fn prepare() -> Result<(), CliError> {
         .map(std::convert::Into::into)
         .collect::<Vec<OrganizationToResolveFor>>();
 
+    if let Some((_, err)) = linting_failures {
+        return Err(err);
+    }
+
     // Prepare workspace (organization folder creation, Plow toml etc. acquire the list of dependencies to resolve to create lock files)
+    // Done mostly
     // Clone or update the public index (currently) and provide it as a registry to lock the workspace.
+    // Progress...
     // Start dependency resolution and write lock files.
     // Do the protege part if a command line arg is provided.
     // Always update the index with some plow commands.

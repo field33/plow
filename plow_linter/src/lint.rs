@@ -1,8 +1,11 @@
 pub(crate) mod common_error_literals;
 pub(crate) mod helpers;
 
-use crate::lints::AddPrefixes;
+use std::any::Any;
+
+use crate::{lints::AddPrefixes, Linter};
 pub use harriet::TurtleDocument;
+use rayon::prelude::{FromParallelIterator, IntoParallelIterator, ParallelIterator};
 use serde::Serialize;
 
 /// A lint that can be applied to an ontology.
@@ -10,11 +13,15 @@ pub trait Lint {
     /// A short layman-readable description of what the lint is checking for.
     fn short_description(&self) -> &str;
     /// Checks the lint for the ontology.
-    fn lint(&self, document: &TurtleDocument) -> LintResult;
+    fn run(&self, linter: &Linter) -> LintResult;
     /// If possible returns fixes that can be automatically applied to the ontology to resolve the warning/failure.
     #[allow(unused_variables)]
     fn suggest_fix(&self, document: &TurtleDocument) -> Option<Vec<Fixes>> {
         None
+    }
+    fn as_any(&self) -> &dyn Any;
+    fn can_run_in_parallel(&self) -> bool {
+        true
     }
 }
 
@@ -28,6 +35,22 @@ pub enum LintResult {
     Success(String),
     Warning(Vec<String>),
     Failure(Vec<String>),
+}
+
+// Wrapper type for lint results needed for parallel execution.
+pub struct LintResults {
+    pub results: Vec<LintResult>,
+}
+
+impl FromParallelIterator<Vec<LintResult>> for LintResults {
+    fn from_par_iter<I>(par_iter: I) -> Self
+    where
+        I: IntoParallelIterator<Item = Vec<LintResult>>,
+    {
+        let result_chunks: Vec<Vec<LintResult>> = par_iter.into_par_iter().collect();
+        let results = result_chunks.iter().flatten().cloned().collect::<Vec<_>>();
+        Self { results }
+    }
 }
 
 impl LintResult {
@@ -92,7 +115,7 @@ mod tests {
 
     // We don't explicitly need restrictive lints for tests.
     #![allow(clippy::restriction)]
-    use super::*;
+
     use harriet::TurtleDocument;
     use nom::error::VerboseError;
 
@@ -131,37 +154,5 @@ mod tests {
         TurtleDocument::parse::<VerboseError<&str>>(ontology)
             .unwrap()
             .1
-    }
-
-    #[test]
-    fn contains_owl_prefixes() {
-        let ontology = parse_ontology_broken();
-        let lint = crate::lints::ContainsOWLPrefixes::default();
-        assert!(match lint.lint(&ontology) {
-            LintResult::Failure(messages) => {
-                messages.len() == 1 && messages[0] == "The ontology is missing a prefix directive for rdfs: `@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .`"
-            }
-            _ => false,
-        });
-    }
-
-    #[test]
-    fn root_prefix_matches_pattern() {
-        let lint = crate::lints::RootPrefixMatchesPattern::default();
-
-        let correct_ontology = parse_ontology();
-        assert!(match lint.lint(&correct_ontology) {
-            LintResult::Success(_) => {
-                true
-            }
-            _ => false,
-        });
-        let broken_ontology = parse_ontology_broken();
-        assert!(match lint.lint(&broken_ontology) {
-            LintResult::Failure(messages) => {
-                messages.len() == 1 && messages[0] == "ontology root prefix directive (`@prefix :`) does not match expected pattern (`http://field33.com/ontologies/ONTOLOGY_NAME/`)"
-            }
-            _ => false,
-        });
     }
 }

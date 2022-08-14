@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use anyhow::{anyhow, Result};
-use harriet::{Item, Literal, Object, ParseError, Triples, TurtleDocument, IRI};
+use harriet::{Literal, Object, ParseError, Triples, TurtleDocument, Verb, IRI};
 use plow_package_management::{
     package::FieldMetadata,
     registry::index::{IndexedPackageDependency, IndexedPackageVersion},
@@ -25,7 +25,7 @@ impl FieldManifest {
         let mut prefixed_name_to_values_in_ttl: HashMap<String, Result<Vec<String>, _>> =
             HashMap::new();
 
-        let items = TurtleDocument::parse_full(&field_contents)
+        let statements = TurtleDocument::parse_full(field_contents.as_ref())
             .map_err(|err| match err {
                 ParseError::ParseError(nom_err) => {
                     anyhow::anyhow!("{}", nom_err.to_string())
@@ -34,19 +34,20 @@ impl FieldManifest {
                     anyhow::anyhow!("{}", message)
                 }
             })?
-            .items;
-        for item in items {
-            match item {
-                Item::Statement(harriet::Statement::Triples(Triples::Labeled(
+            .statements;
+        for statement in statements {
+            match statement {
+                harriet::Statement::Triples(Triples::Labeled(
+                    _,
                     subject,
                     predicate_object_list,
-                ))) => {
-                    for (iri, object_list) in predicate_object_list.list {
+                )) => {
+                    for (_, verb, object_list, _) in predicate_object_list.list {
                         if let harriet::Subject::IRI(IRI::IRIReference(ref subject_iri)) = subject {
                             if let Some(base_iri) = &ontology_iri {
                                 if subject_iri.iri.as_ref() == base_iri {
-                                    match iri {
-                                        IRI::PrefixedName(prefixed_name) => {
+                                    match verb {
+                                        Verb::IRI(IRI::PrefixedName(prefixed_name)) => {
                                             let prefixed_name = format!(
                                                 "{}:{}",
                                                 prefixed_name.prefix.unwrap_or_else(|| {
@@ -76,7 +77,7 @@ impl FieldManifest {
                                                     let collected_strings = object_list
                                                         .list
                                                         .iter()
-                                                        .map(|object| {
+                                                        .map(|(_, _, object)| {
                                                             get_string_literal_from_object(object)
                                                         })
                                                         .collect::<Result<Vec<String>, _>>();
@@ -105,7 +106,7 @@ impl FieldManifest {
                                                 }
                                             }
                                         }
-                                        IRI::IRIReference(_) => {
+                                        _ => {
                                             // Ignore
                                             continue;
                                         }
@@ -115,7 +116,7 @@ impl FieldManifest {
                         }
                     }
                 }
-                Item::Statement(harriet::Statement::Directive(harriet::Directive::Base(base))) => {
+                harriet::Statement::Directive(harriet::Directive::Base(base)) => {
                     ontology_iri = Some(base.iri.iri.to_string());
                 }
                 _ => {
@@ -149,6 +150,7 @@ impl FieldManifest {
                     })
                     .collect()
             });
+
         FieldMetadata {
             namespace,
             name,
@@ -452,7 +454,9 @@ fn get_string_literal_from_object(object: &Object) -> anyhow::Result<String> {
                 let turtle_string = &rdf_literal.string;
                 Ok(turtle_string.to_string())
             }
+            // TODO: Implement when needed..
             Literal::BooleanLiteral(_) => anyhow::bail!("Boolean literal found in RDF literal"),
+            Literal::NumericLiteral(_) => anyhow::bail!("Numeric literal found in RDF literal"),
         },
 
         _ => anyhow::bail!("Boolean literal found in RDF literal"),

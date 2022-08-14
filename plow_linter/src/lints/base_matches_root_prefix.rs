@@ -1,18 +1,36 @@
+use std::any::Any;
+
 use crate::lint::common_error_literals::NO_ROOT_PREFIX;
 use crate::lint::{lint_failure, lint_success, Lint, LintResult};
-use harriet::{Directive, Item, Statement, TurtleDocument};
+use crate::Linter;
+use harriet::{Directive, Item, Statement};
 use plow_package_management::metadata::get_root_prefix;
 
-#[derive(Debug, Default)]
-pub struct BaseMatchesRootPrefix;
+use super::LintName;
+
+#[derive(Debug)]
+pub struct BaseMatchesRootPrefix {
+    pub name: LintName,
+}
+impl Default for BaseMatchesRootPrefix {
+    fn default() -> Self {
+        Self {
+            name: LintName::BaseMatchesRootPrefix,
+        }
+    }
+}
 
 impl Lint for BaseMatchesRootPrefix {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn short_description(&self) -> &str {
         "Check that the @base directive matches the value for the `:` prefix."
     }
 
     /// Check that the @base directive matches the value for the `:` prefix.
-    fn lint(&self, document: &TurtleDocument) -> LintResult {
+    fn run(&self, Linter { document, .. }: &Linter) -> LintResult {
         if let Some(root_prefix) = get_root_prefix(document) {
             let mut base_directive = None;
             for item in &document.items {

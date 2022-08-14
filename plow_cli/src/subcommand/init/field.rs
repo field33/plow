@@ -1,8 +1,9 @@
 use crate::error::CliError;
 use crate::error::FieldInitializationError::*;
 use harriet::Statement;
+use harriet::Whitespace;
 use harriet::{
-    BaseDirective, IRIReference, Item, Object, ObjectList, PredicateObjectList, PrefixDirective,
+    BaseDirective, IRIReference, Object, ObjectList, PredicateObjectList, PrefixDirective,
     PrefixedName, Subject, Triples, TurtleDocument, IRI,
 };
 use harriet::{Directive, Literal, RDFLiteral, StringLiteralQuote, TurtleString};
@@ -85,10 +86,14 @@ impl TryFrom<String> for FieldName {
 pub fn new(name: &str) -> Result<String, CliError> {
     let field_full_name = FieldName::try_from(name.to_owned())?;
     let field_iri = format!("http://field33.com/ontologies/{name}/", name = name);
-    let mut field = TurtleDocument { items: vec![] };
+    let mut field = TurtleDocument {
+        statements: vec![],
+        trailing_whitespace: None,
+    };
 
     // Directives
     let mut prefix_directives = vec![PrefixDirective {
+        leading_whitespace: None,
         prefix: None,
         iri: IRIReference {
             iri: Cow::Borrowed(&field_iri),
@@ -98,54 +103,58 @@ pub fn new(name: &str) -> Result<String, CliError> {
 
     for directive in prefix_directives {
         field
-            .items
-            .push(Item::Statement(Statement::Directive(Directive::Prefix(
-                directive,
-            ))));
+            .statements
+            .push(Statement::Directive(Directive::Prefix(directive)));
     }
 
     field
-        .items
-        .push(Item::Statement(Statement::Directive(Directive::Base(
-            BaseDirective {
-                iri: IRIReference {
-                    iri: Cow::Borrowed(&field_iri),
-                },
+        .statements
+        .push(Statement::Directive(Directive::Base(BaseDirective {
+            leading_whitespace: None,
+            iri: IRIReference {
+                iri: Cow::Borrowed(&field_iri),
             },
-        ))));
+        })));
 
     // Triple for field declaration
-    field
-        .items
-        .push(Item::Statement(Statement::Triples(Triples::Labeled(
-            Subject::IRI(IRI::IRIReference(IRIReference {
-                iri: Cow::Borrowed(&field_iri),
-            })),
-            PredicateObjectList {
-                list: vec![
-                    (
-                        IRI::PrefixedName(PrefixedName {
-                            prefix: Some(Cow::Borrowed("rdf")),
-                            name: Some(Cow::Borrowed("type")),
-                        }),
-                        ObjectList {
-                            list: vec![Object::IRI(IRI::PrefixedName(PrefixedName {
+    field.statements.push(Statement::Triples(Triples::Labeled(
+        None,
+        Subject::IRI(IRI::IRIReference(IRIReference {
+            iri: Cow::Borrowed(&field_iri),
+        })),
+        PredicateObjectList {
+            list: vec![
+                (
+                    Whitespace {
+                        whitespace: "".into(),
+                    },
+                    harriet::Verb::IRI(IRI::PrefixedName(PrefixedName {
+                        prefix: Some(Cow::Borrowed("rdf")),
+                        name: Some(Cow::Borrowed("type")),
+                    })),
+                    ObjectList {
+                        list: vec![(
+                            None,
+                            None,
+                            Object::IRI(IRI::PrefixedName(PrefixedName {
                                 prefix: Some(Cow::Borrowed("owl")),
                                 name: Some(Cow::Borrowed("field")),
-                            }))],
-                        },
-                    ),
-                    make_predicate_stringy_object("registry", "fieldFormatVersion", "v1"),
-                    make_predicate_stringy_object("registry", "packageName", name),
-                    make_predicate_stringy_object("registry", "packageVersion", "0.1.0"),
-                    make_predicate_stringy_object(
-                        "registry",
-                        "canonicalPrefix",
-                        field_full_name.name(),
-                    ),
-                ],
-            },
-        ))));
+                            })),
+                        )],
+                    },
+                    None,
+                ),
+                make_predicate_stringy_object("registry", "fieldFormatVersion", "v1"),
+                make_predicate_stringy_object("registry", "packageName", name),
+                make_predicate_stringy_object("registry", "packageVersion", "0.1.0"),
+                make_predicate_stringy_object(
+                    "registry",
+                    "canonicalPrefix",
+                    field_full_name.name(),
+                ),
+            ],
+        },
+    )));
 
     Ok(field.to_string())
 }
@@ -171,6 +180,7 @@ const fn make_prefix<'directive>(
         iri: IRIReference {
             iri: Cow::Borrowed(iri),
         },
+        leading_whitespace: None,
     }
 }
 
@@ -178,20 +188,33 @@ fn make_predicate_stringy_object<'list>(
     predicate_prefix: &'list str,
     predicate_name: &'list str,
     object_literal: &'list str,
-) -> (IRI<'list>, ObjectList<'list>) {
+) -> (
+    Whitespace<'list>,
+    harriet::Verb<'list>,
+    ObjectList<'list>,
+    Option<Whitespace<'list>>,
+) {
     (
-        IRI::PrefixedName(PrefixedName {
+        Whitespace {
+            whitespace: "".into(),
+        },
+        harriet::Verb::IRI(IRI::PrefixedName(PrefixedName {
             prefix: Some(Cow::Borrowed(predicate_prefix)),
             name: Some(Cow::Borrowed(predicate_name)),
-        }),
+        })),
         ObjectList {
-            list: vec![Object::Literal(Literal::RDFLiteral(RDFLiteral {
-                string: TurtleString::StringLiteralQuote(StringLiteralQuote {
-                    string: Cow::Borrowed(object_literal),
-                }),
-                language_tag: None,
-                iri: None,
-            }))],
+            list: vec![(
+                None,
+                None,
+                Object::Literal(Literal::RDFLiteral(RDFLiteral {
+                    string: TurtleString::StringLiteralQuote(StringLiteralQuote {
+                        string: Cow::Borrowed(object_literal),
+                    }),
+                    language_tag: None,
+                    iri: None,
+                })),
+            )],
         },
+        None,
     )
 }

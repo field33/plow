@@ -1,6 +1,10 @@
 use harriet::TurtleDocument;
-use plow_linter::lint::Lint;
-use plow_linter::lints::HasAtLeastOneValidLicenseAnnotation;
+
+use plow_linter::lints::{
+    ExistsRegistryLicense, ExistsRegistryLicenseSPDX, HasAtLeastOneValidLicenseAnnotation,
+    HasRegistryLicense, HasRegistryLicenseSPDX, PlowLint,
+};
+use plow_linter::Linter;
 
 const REGISTRY_LICENSES_BASE: &str = concat!(
     include_str!("data/default_ttl_header"),
@@ -29,27 +33,56 @@ fn lint_at_least_one_registry_license_exists_and_valid() {
     let ttl_document_with_registry_license_f =
       format!("{REGISTRY_LICENSES_BASE} registry:licenseSPDX \"MIT\"@en; registry:license \"Another content \"@en  .");
 
-    let document_a = TurtleDocument::parse_full(&ttl_document_with_registry_license_a).unwrap();
-    let document_b = TurtleDocument::parse_full(&ttl_document_with_registry_license_b).unwrap();
-    let document_c = TurtleDocument::parse_full(&ttl_document_with_registry_license_c).unwrap();
-    let document_d = TurtleDocument::parse_full(&ttl_document_with_registry_license_d).unwrap();
-    let document_e = TurtleDocument::parse_full(&ttl_document_with_registry_license_e).unwrap();
-    let document_f = TurtleDocument::parse_full(&ttl_document_with_registry_license_f).unwrap();
+    let mut linter_a = Linter::try_from(ttl_document_with_registry_license_a.as_ref()).unwrap();
+    linter_a.add_lint(Box::new(HasAtLeastOneValidLicenseAnnotation::default()) as PlowLint);
+    linter_a.add_sub_lint(Box::new(ExistsRegistryLicense::default()) as PlowLint);
+    linter_a.add_sub_lint(Box::new(ExistsRegistryLicenseSPDX::default()) as PlowLint);
+    linter_a.add_sub_lint(Box::new(HasRegistryLicense::default()) as PlowLint);
+    linter_a.add_sub_lint(Box::new(HasRegistryLicenseSPDX::default()) as PlowLint);
+    let mut linter_b = Linter::try_from(ttl_document_with_registry_license_b.as_ref()).unwrap();
+    linter_b.add_lint(Box::new(HasAtLeastOneValidLicenseAnnotation::default()) as PlowLint);
+    linter_b.add_sub_lint(Box::new(ExistsRegistryLicense::default()) as PlowLint);
+    linter_b.add_sub_lint(Box::new(ExistsRegistryLicenseSPDX::default()) as PlowLint);
+    linter_b.add_sub_lint(Box::new(HasRegistryLicense::default()) as PlowLint);
+    linter_b.add_sub_lint(Box::new(HasRegistryLicenseSPDX::default()) as PlowLint);
+    let mut linter_c = Linter::try_from(ttl_document_with_registry_license_c.as_ref()).unwrap();
+    linter_c.add_lint(Box::new(HasAtLeastOneValidLicenseAnnotation::default()) as PlowLint);
+    linter_c.add_sub_lint(Box::new(ExistsRegistryLicense::default()) as PlowLint);
+    linter_c.add_sub_lint(Box::new(ExistsRegistryLicenseSPDX::default()) as PlowLint);
+    linter_c.add_sub_lint(Box::new(HasRegistryLicense::default()) as PlowLint);
+    linter_c.add_sub_lint(Box::new(HasRegistryLicenseSPDX::default()) as PlowLint);
+    let mut linter_d = Linter::try_from(ttl_document_with_registry_license_d.as_ref()).unwrap();
+    linter_d.add_lint(Box::new(HasAtLeastOneValidLicenseAnnotation::default()) as PlowLint);
+    linter_d.add_sub_lint(Box::new(ExistsRegistryLicense::default()) as PlowLint);
+    linter_d.add_sub_lint(Box::new(ExistsRegistryLicenseSPDX::default()) as PlowLint);
+    linter_d.add_sub_lint(Box::new(HasRegistryLicense::default()) as PlowLint);
+    linter_d.add_sub_lint(Box::new(HasRegistryLicenseSPDX::default()) as PlowLint);
+    let mut linter_e = Linter::try_from(ttl_document_with_registry_license_e.as_ref()).unwrap();
+    linter_e.add_lint(Box::new(HasAtLeastOneValidLicenseAnnotation::default()) as PlowLint);
+    linter_e.add_sub_lint(Box::new(ExistsRegistryLicense::default()) as PlowLint);
+    linter_e.add_sub_lint(Box::new(ExistsRegistryLicenseSPDX::default()) as PlowLint);
+    linter_e.add_sub_lint(Box::new(HasRegistryLicense::default()) as PlowLint);
+    linter_e.add_sub_lint(Box::new(HasRegistryLicenseSPDX::default()) as PlowLint);
+    let mut linter_f = Linter::try_from(ttl_document_with_registry_license_f.as_ref()).unwrap();
+    linter_f.add_lint(Box::new(HasAtLeastOneValidLicenseAnnotation::default()) as PlowLint);
+    linter_f.add_sub_lint(Box::new(ExistsRegistryLicense::default()) as PlowLint);
+    linter_f.add_sub_lint(Box::new(ExistsRegistryLicenseSPDX::default()) as PlowLint);
+    linter_f.add_sub_lint(Box::new(HasRegistryLicense::default()) as PlowLint);
+    linter_f.add_sub_lint(Box::new(HasRegistryLicenseSPDX::default()) as PlowLint);
 
-    let lint = HasAtLeastOneValidLicenseAnnotation::default();
-    let result_a = lint.lint(&document_a);
-    let result_b = lint.lint(&document_b);
-    let result_c = lint.lint(&document_c);
-    let result_d = lint.lint(&document_d);
-    let result_e = lint.lint(&document_e);
-    let result_f = lint.lint(&document_f);
-    dbg!(&result_b);
-    assert!(result_a.is_success());
-    assert!(result_b.is_success());
-    assert!(result_c.is_success());
-    assert!(result_d.is_failure());
-    assert!(result_e.is_failure());
-    assert!(result_f.is_failure());
+    let result_a = linter_a.run_lints();
+    let result_b = linter_b.run_lints();
+    let result_c = linter_c.run_lints();
+    let result_d = linter_d.run_lints();
+    let result_e = linter_e.run_lints();
+    let result_f = linter_f.run_lints();
+
+    assert!(result_a.first().unwrap().is_success());
+    assert!(result_b.first().unwrap().is_success());
+    assert!(result_c.first().unwrap().is_success());
+    assert!(result_d.first().unwrap().is_failure());
+    assert!(result_e.first().unwrap().is_failure());
+    assert!(result_f.first().unwrap().is_failure());
 }
 
 #[test]

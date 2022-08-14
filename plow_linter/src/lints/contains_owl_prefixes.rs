@@ -1,5 +1,10 @@
-use crate::lint::{Lint, LintResult};
-use harriet::{Directive, Item, Statement, TurtleDocument};
+use std::any::Any;
+
+use crate::{
+    lint::{Lint, LintResult},
+    Linter,
+};
+use harriet::{Directive, Item, Statement};
 
 /// Ensures that all the Turtle @prefix directives well-known to the OWL2 standard are present.
 ///
@@ -12,12 +17,15 @@ use harriet::{Directive, Item, Statement, TurtleDocument};
 pub struct ContainsOWLPrefixes;
 
 impl Lint for ContainsOWLPrefixes {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
     fn short_description(&self) -> &str {
         "Check if the field contains all important OWL prefixes"
     }
 
     /// Check if ontology contains all important OWL prefixes
-    fn lint(&self, document: &TurtleDocument) -> LintResult {
+    fn run(&self, linter: &Linter) -> LintResult {
         let mut owl_prefixes = vec![
             ("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
             ("rdfs", "http://www.w3.org/2000/01/rdf-schema#"),
@@ -26,7 +34,7 @@ impl Lint for ContainsOWLPrefixes {
             ("owl", "http://www.w3.org/2002/07/owl#"),
         ];
 
-        for item in &document.items {
+        for item in &linter.document.items {
             if let Item::Statement(Statement::Directive(Directive::Prefix(directive))) = item {
                 if let Some(ref directive_prefix) = directive.prefix {
                     owl_prefixes = owl_prefixes

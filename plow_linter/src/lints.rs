@@ -84,6 +84,35 @@ pub use valid_registry_documentation::ValidRegistryDocumentation;
 pub use valid_registry_homepage::ValidRegistryHomepage;
 pub use valid_registry_repository::ValidRegistryRepository;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LintName {
+    BaseMatchesRootPrefix,
+    ContainsOWLPrefixes,
+    ContainsRegistryPrefix,
+    ExistsRegistryLicense,
+    ExistsRegistryLicenseSPDX,
+    HasAtLeastOneValidLicenseAnnotation,
+    HasCanonicalPrefix,
+    HasOntologyDeclaration,
+    HasOntologyFormatVersion,
+    HasRdfsCommentManifestContext,
+    HasRdfsLabelManifestContext,
+    HasRegistryAuthor,
+    HasRegistryCategory,
+    HasRegistryKeyword,
+    HasRegistryLicense,
+    HasRegistryLicenseSPDX,
+    HasRegistryPackageName,
+    HasRegistryPackageVersion,
+    HasRegistryShortDescription,
+    RootPrefixMatchesPattern,
+    ValidRdfsLabels,
+    ValidRegistryDependencies,
+    ValidRegistryDocumentation,
+    ValidRegistryHomepage,
+    ValidRegistryRepository,
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct AddPrefixes {
     prefixes: Vec<(String, String)>,
@@ -121,6 +150,32 @@ impl FixSuggestion for AddPrefixes {
     }
 }
 
+pub type PlowLint = Box<dyn Lint + Send + Sync + 'static>;
+
+pub struct LintSet {
+    pub lints: Vec<PlowLint>,
+    pub sub_lints: Option<Vec<PlowLint>>,
+}
+
+impl LintSet {
+    pub fn new(lints: Vec<PlowLint>, sub_lints: Option<Vec<PlowLint>>) -> Self {
+        Self { lints, sub_lints }
+    }
+}
+
+pub fn all_lints() -> LintSet {
+    let mut all_lints = required_plow_registry_lints();
+    all_lints.extend(required_style_lints());
+    let all_sub_lints = required_plow_registry_sub_lints();
+    LintSet::new(all_lints, Some(all_sub_lints))
+}
+
+pub fn lints_for_field_submission() -> LintSet {
+    let lints = required_plow_registry_lints();
+    let sub_lints = Some(required_plow_registry_sub_lints());
+    LintSet::new(lints, sub_lints)
+}
+
 // TODO: This part needs some order and more organization.
 // It could be done in a later PR but we need to organize and not duplicate lints here.
 
@@ -129,63 +184,51 @@ impl FixSuggestion for AddPrefixes {
 // https://github.com/rust-lang/rust/issues/65991
 // https://github.com/rust-lang/dyn-upcasting-coercion-initiative
 #[allow(clippy::as_conversions)]
-pub fn required_package_management_lints() -> Vec<Box<dyn Lint>> {
+fn required_base_lints() -> Vec<PlowLint> {
     vec![
-        Box::new(BaseMatchesRootPrefix::default()) as Box<dyn Lint>,
-        Box::new(ContainsOWLPrefixes::default()) as Box<dyn Lint>,
-        Box::new(ContainsRegistryPrefix::default()) as Box<dyn Lint>,
-        Box::new(HasOntologyDeclaration::default()) as Box<dyn Lint>,
-        Box::new(HasOntologyFormatVersion::default()) as Box<dyn Lint>,
-        Box::new(HasRegistryPackageName::default()) as Box<dyn Lint>,
-        Box::new(HasRegistryPackageVersion::default()) as Box<dyn Lint>,
-        Box::new(ValidRegistryDependencies::default()) as Box<dyn Lint>,
-        Box::new(ValidRdfsLabels::default()) as Box<dyn Lint>,
+        Box::new(BaseMatchesRootPrefix::default()) as PlowLint,
+        Box::new(ContainsOWLPrefixes::default()) as PlowLint,
+        Box::new(ContainsRegistryPrefix::default()) as PlowLint,
+        Box::new(HasOntologyDeclaration::default()) as PlowLint,
+        Box::new(HasOntologyFormatVersion::default()) as PlowLint,
     ]
 }
 
 #[allow(clippy::as_conversions)]
-pub fn required_plow_registry_lints() -> Vec<Box<dyn Lint>> {
+fn required_plow_registry_lints() -> Vec<Box<dyn Lint + Send + Sync>> {
+    let mut plow_registry_lints = required_base_lints();
+    plow_registry_lints.extend(vec![
+        Box::new(HasRegistryPackageName::default()) as PlowLint,
+        Box::new(HasRegistryPackageVersion::default()) as PlowLint,
+        Box::new(HasRegistryAuthor::default()) as PlowLint,
+        Box::new(HasRegistryCategory::default()) as PlowLint,
+        Box::new(HasRegistryKeyword::default()) as PlowLint,
+        Box::new(HasAtLeastOneValidLicenseAnnotation::default()) as PlowLint,
+        Box::new(ValidRegistryDependencies::default()) as PlowLint,
+        Box::new(ValidRegistryHomepage::default()) as PlowLint,
+        Box::new(ValidRegistryRepository::default()) as PlowLint,
+        Box::new(ValidRegistryDocumentation::default()) as PlowLint,
+        Box::new(HasRegistryShortDescription::default()) as PlowLint,
+        Box::new(HasRdfsCommentManifestContext::default()) as PlowLint,
+        Box::new(HasRdfsLabelManifestContext::default()) as PlowLint,
+        // TODO: Re-check these to see if we need them and why we need them.
+        // Box::new(RootPrefixMatchesPattern::default()) as PlowLint,
+        // Box::new(HasCanonicalPrefix::default()) as PlowLint,
+    ]);
+    plow_registry_lints
+}
+
+#[allow(clippy::as_conversions)]
+fn required_plow_registry_sub_lints() -> Vec<Box<dyn Lint + Send + Sync>> {
     vec![
-        Box::new(BaseMatchesRootPrefix::default()) as Box<dyn Lint>,
-        Box::new(ContainsOWLPrefixes::default()) as Box<dyn Lint>,
-        Box::new(ContainsRegistryPrefix::default()) as Box<dyn Lint>,
-        Box::new(HasOntologyDeclaration::default()) as Box<dyn Lint>,
-        Box::new(HasOntologyFormatVersion::default()) as Box<dyn Lint>,
-        //
-        Box::new(HasRegistryPackageName::default()) as Box<dyn Lint>,
-        Box::new(HasRegistryPackageVersion::default()) as Box<dyn Lint>,
-        Box::new(HasRegistryAuthor::default()) as Box<dyn Lint>,
-        Box::new(HasRegistryCategory::default()) as Box<dyn Lint>,
-        Box::new(HasRegistryKeyword::default()) as Box<dyn Lint>,
-        Box::new(HasAtLeastOneValidLicenseAnnotation::default()) as Box<dyn Lint>,
-        Box::new(ValidRegistryDependencies::default()) as Box<dyn Lint>,
-        Box::new(ValidRegistryHomepage::default()) as Box<dyn Lint>,
-        Box::new(ValidRegistryRepository::default()) as Box<dyn Lint>,
-        Box::new(ValidRegistryDocumentation::default()) as Box<dyn Lint>,
-        Box::new(HasRegistryShortDescription::default()) as Box<dyn Lint>,
-        Box::new(HasRdfsCommentManifestContext::default()) as Box<dyn Lint>,
-        Box::new(HasRdfsLabelManifestContext::default()) as Box<dyn Lint>,
+        Box::new(ExistsRegistryLicense::default()) as PlowLint,
+        Box::new(ExistsRegistryLicenseSPDX::default()) as PlowLint,
+        Box::new(HasRegistryLicense::default()) as PlowLint,
+        Box::new(HasRegistryLicenseSPDX::default()) as PlowLint,
     ]
 }
 
 #[allow(clippy::as_conversions)]
-pub fn required_style_lints() -> Vec<Box<dyn Lint>> {
-    vec![Box::new(ValidRdfsLabels::default()) as Box<dyn Lint>]
-}
-
-#[allow(clippy::as_conversions)]
-pub fn required_reference_registry_lints() -> Vec<Box<dyn Lint>> {
-    vec![
-        // Box::new(RootPrefixMatchesPattern::default()) as Box<dyn Lint>,
-        Box::new(HasCanonicalPrefix::default()) as Box<dyn Lint>,
-    ]
-}
-
-pub fn all_lints() -> Vec<Box<dyn Lint>> {
-    let mut all = required_package_management_lints();
-    let mut style_lints = required_style_lints();
-    let mut plow_registry_lints = required_plow_registry_lints();
-    all.append(&mut style_lints);
-    all.append(&mut plow_registry_lints);
-    all
+fn required_style_lints() -> Vec<Box<dyn Lint + Send + Sync>> {
+    vec![Box::new(ValidRdfsLabels::default()) as PlowLint]
 }
