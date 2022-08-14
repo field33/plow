@@ -112,7 +112,7 @@ impl FixSuggestion for Fixes {
 
 #[cfg(test)]
 mod tests {
-
+    #![allow(dead_code)]
     // We don't explicitly need restrictive lints for tests.
     #![allow(clippy::restriction)]
 

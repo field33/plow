@@ -60,7 +60,7 @@ use harriet::{
     Directive, IRIReference, Item, Literal, Object, PrefixedName, Statement as HarrietStatement,
     Subject, Triples, TurtleDocument, IRI as HarrietIRI,
 };
-use rdftk_core::model::graph::{GraphFactory, GraphRef};
+use rdftk_core::model::graph::GraphRef;
 use rdftk_core::model::literal::LanguageTag;
 use rdftk_core::model::statement::{ObjectNodeRef, StatementList};
 use rdftk_core::simple;
@@ -70,7 +70,6 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::string::ToString;
-use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

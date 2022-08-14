@@ -56,8 +56,7 @@ pub fn lint_file(field_path: &str, lints: LintSet) -> Result<(), CliError> {
         details: err.to_string(),
     })?;
 
-    // TODO: Handle this error.
-    let mut linter = Linter::try_from(field_contents.as_ref()).unwrap();
+    let mut linter = Linter::try_from(field_contents.as_ref()).map_err(|_| FailedToParseField)?;
     linter.add_lint_set(lints);
     let results = linter.run_lints();
 
@@ -94,8 +93,7 @@ pub fn lint_file_fail_on_failure(field_path: &str, lints: LintSet) -> Result<(),
         details: err.to_string(),
     })?;
 
-    // TODO: Handle this error.
-    let mut linter = Linter::try_from(field_contents.as_ref()).unwrap();
+    let mut linter = Linter::try_from(field_contents.as_ref()).map_err(|_| FailedToParseField)?;
     linter.add_lint_set(lints);
 
     if linter.run_lints_check_if_contains_any_failure() {
