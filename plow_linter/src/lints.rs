@@ -28,7 +28,7 @@
 // TODO: add lint to check that there is an import for every defined dependency
 // TODO: add lint to check that only IRIs from direct imports (= NOT transitive imports) are used
 use crate::lint::{FixSuggestion, Lint};
-use harriet::{Directive, IRIReference, Item, PrefixDirective, Statement, TurtleDocument};
+use harriet::{Directive, IRIReference, PrefixDirective, Statement, TurtleDocument};
 use plow_ontology::constants::{REGISTRY_PREFIX, REGISTRY_PREFIX_IRI};
 use plow_package_management::metadata::get_root_prefix;
 
@@ -129,22 +129,22 @@ impl AddPrefixes {
 impl FixSuggestion for AddPrefixes {
     fn apply(&self, document: &mut TurtleDocument) {
         let mut index_of_last_prefix = 0;
-        for (i, item) in document.items.iter().enumerate() {
-            if let Item::Statement(Statement::Directive(Directive::Prefix(_))) = item {
+        for (i, statement) in document.statements.iter().enumerate() {
+            if let Statement::Directive(Directive::Prefix(_)) = statement {
                 index_of_last_prefix = i;
             }
         }
         index_of_last_prefix += 1;
 
         for prefix in &self.prefixes {
-            let new_prefix =
-                Item::Statement(Statement::Directive(Directive::Prefix(PrefixDirective {
-                    prefix: Some(prefix.0.clone().into()),
-                    iri: IRIReference {
-                        iri: prefix.1.clone().into(),
-                    },
-                })));
-            document.items.insert(index_of_last_prefix, new_prefix);
+            let new_prefix = Statement::Directive(Directive::Prefix(PrefixDirective {
+                leading_whitespace: None,
+                prefix: Some(prefix.0.clone().into()),
+                iri: IRIReference {
+                    iri: prefix.1.clone().into(),
+                },
+            }));
+            document.statements.insert(index_of_last_prefix, new_prefix);
             index_of_last_prefix += 1;
         }
     }

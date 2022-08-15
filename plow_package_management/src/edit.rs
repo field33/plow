@@ -1,7 +1,8 @@
 use anyhow::anyhow;
 use harriet::{
-    IRIReference, Item, Literal, Object, ObjectList, PredicateObjectList, PrefixedName, RDFLiteral,
-    Statement, StringLiteralQuote, Subject, Triples, TurtleDocument, TurtleString, IRI,
+    IRIReference, Literal, Object, ObjectList, PredicateObjectList, PrefixedName, RDFLiteral,
+    Statement, StringLiteralQuote, Subject, Triples, TurtleDocument, TurtleString, Verb,
+    Whitespace, IRI,
 };
 use plow_ontology::constants::REGISTRY_DEPENDENCY;
 use std::borrow::Cow;
@@ -22,42 +23,59 @@ pub struct AddDependency {
 
 impl EditOperation for AddDependency {
     fn apply(&self, document: &mut TurtleDocument) -> Result<(), anyhow::Error> {
-        let annotation = Item::Statement(Statement::Triples(Triples::Labeled(
+        let annotation = Statement::Triples(Triples::Labeled(
+            None,
             Subject::IRI(IRI::IRIReference(IRIReference {
                 iri: Cow::from(self.ontology_iri.clone()),
             })),
             PredicateObjectList {
                 list: vec![
                     (
-                        IRI::IRIReference(IRIReference {
-                            iri: Cow::Borrowed(REGISTRY_DEPENDENCY),
-                        }),
-                        ObjectList {
-                            list: vec![Object::Literal(Literal::RDFLiteral(RDFLiteral {
-                                string: TurtleString::StringLiteralQuote(StringLiteralQuote {
-                                    string: Cow::Owned(self.dependency.to_string()),
-                                }),
-                                language_tag: None,
-                                iri: None,
-                            }))],
+                        Whitespace {
+                            whitespace: "".into(),
                         },
+                        harriet::Verb::IRI(IRI::IRIReference(IRIReference {
+                            iri: Cow::Borrowed(REGISTRY_DEPENDENCY),
+                        })),
+                        ObjectList {
+                            list: vec![(
+                                None,
+                                None,
+                                Object::Literal(Literal::RDFLiteral(RDFLiteral {
+                                    string: TurtleString::StringLiteralQuote(StringLiteralQuote {
+                                        string: Cow::Owned(self.dependency.to_string()),
+                                    }),
+                                    language_tag: None,
+                                    iri: None,
+                                })),
+                            )],
+                        },
+                        None,
                     ),
                     (
-                        IRI::PrefixedName(PrefixedName {
+                        Whitespace {
+                            whitespace: "".into(),
+                        },
+                        harriet::Verb::IRI(IRI::PrefixedName(PrefixedName {
                             prefix: Some(Cow::Borrowed("owl")),
                             name: Some(Cow::Borrowed("imports")),
-                        }),
+                        })),
                         ObjectList {
-                            list: vec![Object::IRI(IRI::IRIReference(IRIReference {
-                                iri: Cow::Owned(self.dependency_ontology_iri.clone()),
-                            }))],
+                            list: vec![(
+                                None,
+                                None,
+                                Object::IRI(IRI::IRIReference(IRIReference {
+                                    iri: Cow::Owned(self.dependency_ontology_iri.clone()),
+                                })),
+                            )],
                         },
+                        None,
                     ),
                 ],
             },
-        )));
+        ));
 
-        document.items.push(annotation);
+        document.statements.push(annotation);
         Ok(())
     }
 }
@@ -82,48 +100,58 @@ impl EditOperation for RemoveDependency {
             prefix: Some(Cow::from("registry")),
             name: Some(Cow::from("dependency")),
         });
-        for item in &mut document.items {
-            if let Item::Statement(Statement::Triples(Triples::Labeled(
+        for statement in &mut document.statements {
+            if let Statement::Triples(Triples::Labeled(
+                None,
                 subject,
                 ref mut predicate_object_list,
-            ))) = item
+            )) = statement
             {
                 if subject != &ontology_iri_subject {
                     continue;
                 }
-                'predicate_object_list: for (predicate, object_list) in
+                'predicate_object_list: for (_, verb, object_list, _) in
                     &mut predicate_object_list.list
                 {
-                    if predicate != &dependency_predicate
-                        && predicate != &dependency_predicate_prefixed
-                    {
-                        continue 'predicate_object_list;
-                    }
-                    let matching_dependency =
-                        object_list.list.iter().enumerate().find(|(_, object)| {
-                            if let Object::Literal(Literal::RDFLiteral(RDFLiteral {
-                                string, ..
-                            })) = object
+                    match verb {
+                        Verb::IRI(predicate) => {
+                            if predicate != &dependency_predicate
+                                && predicate != &dependency_predicate_prefixed
                             {
-                                if let Ok(dep) = Dependency::<SemanticVersion>::try_from(
-                                    string.to_string().as_str(),
-                                ) {
-                                    dep.full_name == self.dependency_name
-                                } else {
-                                    false
-                                }
-                            } else {
-                                false
+                                continue 'predicate_object_list;
                             }
-                        });
-                    if let Some((dep_index, _)) = matching_dependency {
-                        object_list.list.remove(dep_index);
-                        dependency_found = true;
+                            let matching_dependency = object_list.list.iter().enumerate().find(
+                                |(_, (_, _, object))| {
+                                    if let Object::Literal(Literal::RDFLiteral(RDFLiteral {
+                                        string,
+                                        ..
+                                    })) = object
+                                    {
+                                        if let Ok(dep) = Dependency::<SemanticVersion>::try_from(
+                                            string.to_string().as_str(),
+                                        ) {
+                                            dep.full_name == self.dependency_name
+                                        } else {
+                                            false
+                                        }
+                                    } else {
+                                        false
+                                    }
+                                },
+                            );
+                            if let Some((dep_index, _)) = matching_dependency {
+                                object_list.list.remove(dep_index);
+                                dependency_found = true;
+                            }
+                        }
+                        Verb::A => {
+                            // Currently ignored
+                        }
                     }
                 }
                 let mut now_empty_index: Option<usize> = None;
                 predicate_object_list.list.iter().enumerate().for_each(
-                    |(i, (_predicate, object_list))| {
+                    |(i, (_, _, object_list, _))| {
                         if object_list.list.is_empty() {
                             now_empty_index = Some(i);
                         }

@@ -1,8 +1,8 @@
 //! Provides a metadata view on an ontology file (that has previously been validated).
 
 use anyhow::{anyhow, bail, Context};
+use harriet::{Directive, Statement, TurtleDocument};
 use plow_graphify::document_to_graph;
-use harriet::{Directive, Item, Statement, TurtleDocument};
 use plow_ontology::constants::{
     REGISTRY_CANONICAL_PREFIX, REGISTRY_DEPENDENCY, REGISTRY_ONTOLOGY_FORMAT_VERSION,
     REGISTRY_PACKAGE_NAME, REGISTRY_PACKAGE_VERSION,
@@ -177,8 +177,8 @@ pub fn get_root_prefix<'document>(
     document: &'document TurtleDocument,
 ) -> Option<&'document Cow<'document, str>> {
     let mut root_prefix_directive = None;
-    for item in &document.items {
-        if let Item::Statement(Statement::Directive(Directive::Prefix(directive))) = item {
+    for statement in &document.statements {
+        if let Statement::Directive(Directive::Prefix(directive)) = statement {
             if directive.prefix.is_none() {
                 root_prefix_directive = Some(directive);
             }

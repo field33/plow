@@ -13,7 +13,7 @@ plow_graphify = { path = "../plow_graphify" }
 plow_package_management = "0.1"
 anyhow = { version = "1", features = ["backtrace"] }
 thiserror = "1"
-harriet = "0.1"
+harriet = "0.2"
 nom = "7"
 regex = "1"
 rdftk_core = "0.3"
