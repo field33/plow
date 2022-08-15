@@ -10,7 +10,7 @@ edition = "2021"
 
 [dependencies]
 plow_ontology = { path = "../plow_ontology", version = "0.1.0" }
-plow_graphify = { path = "../plow_graphify", version = "0.1.0" }
+plow_graphify = "0.2"
 anyhow = { version = "1", features = ["backtrace"] }
 thiserror = "1"
 harriet = "0.2"
@@ -36,6 +36,3 @@ pubgrub = "0.2"
 semver = "1"
 
 
-# [patch.crates-io]
-# plow_ontology = { path = "../plow_ontology" }
-# plow_graphify = { path = "../plow_graphify" }

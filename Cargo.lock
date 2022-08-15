@@ -3737,16 +3737,6 @@ dependencies = [
 [[package]]
 name = "plow_graphify"
 version = "0.1.0"
-dependencies = [
- "harriet 0.2.0",
- "rdftk_core",
- "rdftk_iri",
- "thiserror",
-]
-
-[[package]]
-name = "plow_graphify"
-version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b3b473d072287ed8a660d1bd41208d8ebeba46b542e5bec0785faca6f19b6c1"
 dependencies = [
@@ -3762,6 +3752,28 @@ version = "0.1.0"
 source = "git+https://github.com/field33/plow?branch=minor-updates-to-plow-tools#aa90ac415374dd573c982b1cd6dc533ebe3766b1"
 dependencies = [
  "harriet 0.1.1",
+ "rdftk_core",
+ "rdftk_iri",
+ "thiserror",
+]
+
+[[package]]
+name = "plow_graphify"
+version = "0.2.0"
+dependencies = [
+ "harriet 0.2.0",
+ "rdftk_core",
+ "rdftk_iri",
+ "thiserror",
+]
+
+[[package]]
+name = "plow_graphify"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0c82dc4145e250bcf3affbbd864e9831012daa7cc7be843bde53febca7ad9b3"
+dependencies = [
+ "harriet 0.2.0",
  "rdftk_core",
  "rdftk_iri",
  "thiserror",
@@ -3801,7 +3813,7 @@ dependencies = [
  "email_address",
  "harriet 0.2.0",
  "nom",
- "plow_graphify 0.1.0",
+ "plow_graphify 0.2.0",
  "plow_ontology 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_package_management 0.1.0",
  "rayon",
@@ -3850,7 +3862,7 @@ version = "0.1.1"
 dependencies = [
  "anyhow",
  "harriet 0.2.0",
- "plow_graphify 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_linter 0.1.1",
  "rdftk_core",
  "rdftk_iri",
@@ -3898,7 +3910,7 @@ dependencies = [
  "glob",
  "harriet 0.2.0",
  "itertools 0.10.3",
- "plow_graphify 0.1.0",
+ "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_linter 0.1.1",
  "plow_ontology 0.1.1",
  "pubgrub",
