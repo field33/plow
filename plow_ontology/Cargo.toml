@@ -13,7 +13,7 @@ path = "src/lib.rs"
 
 [dependencies]
 plow_graphify = "0.1"
-harriet = "0.1"
+harriet = "0.2"
 anyhow = { version = "1", features = ["backtrace"] }
 rdftk_core = "0.3"
 rdftk_iri = "0.1"

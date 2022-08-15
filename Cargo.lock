@@ -3849,7 +3849,7 @@ name = "plow_ontology"
 version = "0.1.1"
 dependencies = [
  "anyhow",
- "harriet 0.1.1",
+ "harriet 0.2.0",
  "plow_graphify 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_linter 0.1.1",
  "rdftk_core",
