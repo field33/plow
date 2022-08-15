@@ -3,7 +3,7 @@ use std::any::Any;
 use crate::lint::common_error_literals::NO_ROOT_PREFIX;
 use crate::lint::{lint_failure, lint_success, Lint, LintResult};
 use crate::Linter;
-use harriet::{Directive, Item, Statement};
+use harriet::{Directive, Statement};
 use plow_package_management::metadata::get_root_prefix;
 
 use super::LintName;
@@ -33,8 +33,8 @@ impl Lint for BaseMatchesRootPrefix {
     fn run(&self, Linter { document, .. }: &Linter) -> LintResult {
         if let Some(root_prefix) = get_root_prefix(document) {
             let mut base_directive = None;
-            for item in &document.items {
-                if let Item::Statement(Statement::Directive(Directive::Base(directive))) = item {
+            for statement in &document.statements {
+                if let Statement::Directive(Directive::Base(directive)) = statement {
                     if base_directive.is_some() {
                         return LintResult::Failure(vec!["Found more than one @base directive. While it is valid Turtle to redeclare the @base throughout the file, this can easily be misused and is not supported in Field 33 ontologies".to_owned()]);
                     }

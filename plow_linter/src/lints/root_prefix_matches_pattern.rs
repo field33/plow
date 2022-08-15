@@ -4,7 +4,7 @@ use crate::{
     lint::{common_error_literals::NO_ROOT_PREFIX, lint_failure, lint_success, Lint, LintResult},
     Linter,
 };
-use harriet::{Directive, Item, Statement};
+use harriet::{Directive, Statement};
 use regex::Regex;
 
 #[derive(Debug, Default)]
@@ -20,8 +20,8 @@ impl Lint for RootPrefixMatchesPattern {
 
     fn run(&self, linter: &Linter) -> LintResult {
         let mut root_prefix_directive = None;
-        for item in &linter.document.items {
-            if let Item::Statement(Statement::Directive(Directive::Prefix(directive))) = item {
+        for statement in &linter.document.statements {
+            if let Statement::Directive(Directive::Prefix(directive)) = statement {
                 if directive.prefix.is_none() {
                     root_prefix_directive = Some(directive);
                 }

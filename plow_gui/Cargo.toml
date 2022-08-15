@@ -9,8 +9,8 @@ repository = "https://github.com/field33/plow/"
 edition = "2021"
 
 [dependencies]
-plow_ontology = { path = "../plow_ontology", version = "0.1.0" }
-plow_package_management = { path = "../plow_package_management", version = "0.1.0" }
+plow_ontology = "0.1"
+plow_package_management = "0.1"
 plow_linter = "0.1"
 harriet = "0.1"
 nom = "7"

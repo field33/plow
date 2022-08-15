@@ -4,7 +4,7 @@ use crate::{
     lint::{Lint, LintResult},
     Linter,
 };
-use harriet::{Directive, Item, Statement};
+use harriet::{Directive, Statement};
 
 /// Ensures that all the Turtle @prefix directives well-known to the OWL2 standard are present.
 ///
@@ -34,8 +34,8 @@ impl Lint for ContainsOWLPrefixes {
             ("owl", "http://www.w3.org/2002/07/owl#"),
         ];
 
-        for item in &linter.document.items {
-            if let Item::Statement(Statement::Directive(Directive::Prefix(directive))) = item {
+        for statement in &linter.document.statements {
+            if let Statement::Directive(Directive::Prefix(directive)) = statement {
                 if let Some(ref directive_prefix) = directive.prefix {
                     owl_prefixes = owl_prefixes
                         .into_iter()

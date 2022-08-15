@@ -2,7 +2,7 @@ use std::any::Any;
 
 use crate::lint::{lint_success, Lint, LintResult};
 use crate::Linter;
-use harriet::{Directive, Item, Statement};
+use harriet::{Directive, Statement};
 
 #[derive(Debug, Default)]
 pub struct ContainsRegistryPrefix;
@@ -20,8 +20,8 @@ impl Lint for ContainsRegistryPrefix {
     fn run(&self, Linter { document, .. }: &Linter) -> LintResult {
         let mut owl_prefixes = vec![("registry", "http://field33.com/ontologies/REGISTRY/")];
 
-        for item in &document.items {
-            if let Item::Statement(Statement::Directive(Directive::Prefix(directive))) = item {
+        for statement in &document.statements {
+            if let Statement::Directive(Directive::Prefix(directive)) = statement {
                 if let Some(ref directive_prefix) = directive.prefix {
                     owl_prefixes = owl_prefixes
                         .into_iter()
