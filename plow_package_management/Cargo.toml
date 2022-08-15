@@ -31,7 +31,7 @@ toml = "0.5"
 [dev-dependencies]
 tempdir = "0.3"
 plow_linter = { path = "../plow_linter" }
-plow_ontology = { path = "../plow_ontology" }
+plow_ontology = "0.2"
 pubgrub = "0.2"
 semver = "1"
 
