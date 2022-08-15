@@ -3711,7 +3711,7 @@ dependencies = [
 
 [[package]]
 name = "plow_cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -3722,7 +3722,7 @@ dependencies = [
  "fallible-iterator",
  "harriet 0.2.0",
  "nom",
- "plow_linter 0.2.0",
+ "plow_linter 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_package_management 0.2.1",
  "rayon",
@@ -3820,6 +3820,36 @@ dependencies = [
 [[package]]
 name = "plow_linter"
 version = "0.2.0"
+dependencies = [
+ "addr",
+ "anyhow",
+ "aquamarine",
+ "chashmap",
+ "darc",
+ "email_address",
+ "harriet 0.2.0",
+ "nom",
+ "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_ontology 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.2.1",
+ "rayon",
+ "rdftk_core",
+ "rdftk_iri",
+ "regex",
+ "rustrict 0.5.0",
+ "semver 1.0.13",
+ "serde",
+ "serde_json",
+ "spdx",
+ "tempdir",
+ "thiserror",
+]
+
+[[package]]
+name = "plow_linter"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47ffa3521630e0adde6f46761deefda8d90a972fd4ba761e264fc5d9149dab08"
 dependencies = [
  "addr",
  "anyhow",
