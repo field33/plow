@@ -1,7 +1,7 @@
 [package]
 name = "plow_graphify"
 description = "Plow utility library: A tool which transforms a ttl document to a graph which is more convenient to work with."
-version = "0.1.0"
+version = "0.2.0"
 license = "MIT OR Apache-2.0"
 keywords = ["plow", "rdf", "owl", "ttl", "turtle"]
 authors = ["Maximilian Goisser <max@field33.com>", "Ali Somay <ali@field33.com>"]
