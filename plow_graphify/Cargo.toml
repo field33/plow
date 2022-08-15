@@ -10,6 +10,6 @@ edition = "2021"
 
 [dependencies]
 thiserror = "1"
-harriet = "0.1"
+harriet = "0.2"
 rdftk_core = "0.3"
 rdftk_iri = "0.1"

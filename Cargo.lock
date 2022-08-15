@@ -3738,7 +3738,7 @@ dependencies = [
 name = "plow_graphify"
 version = "0.1.0"
 dependencies = [
- "harriet 0.1.1",
+ "harriet 0.2.0",
  "rdftk_core",
  "rdftk_iri",
  "thiserror",
