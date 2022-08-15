@@ -43,11 +43,14 @@ fn async_watcher() -> notify::Result<(RecommendedWatcher, Receiver<notify::Resul
 
     // Automatically select the best implementation for your platform.
     // You can also access each implementation directly e.g. INotifyWatcher.
-    let watcher = RecommendedWatcher::new(move |res| {
-        futures::executor::block_on(async {
-            tx.send(res).await.unwrap();
-        })
-    })?;
+    let watcher = RecommendedWatcher::new(
+        move |res| {
+            futures::executor::block_on(async {
+                tx.send(res).await.unwrap();
+            })
+        },
+        notify::Config::default(),
+    )?;
 
     Ok((watcher, rx))
 }

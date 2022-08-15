@@ -1732,9 +1732,9 @@ checksum = "3dcaa9ae7725d12cdb85b3ad99a434db70b468c09ded17e012d86b5c1010f7a7"
 
 [[package]]
 name = "futures"
-version = "0.3.21"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f73fe65f54d1e12b726f517d3e2135ca3125a437b6d998caf1962961f7172d9e"
+checksum = "ab30e97ab6aacfe635fad58f22c2bb06c8b685f7421eb1e064a729e2a5f481fa"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -1747,9 +1747,9 @@ dependencies = [
 
 [[package]]
 name = "futures-channel"
-version = "0.3.21"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3083ce4b914124575708913bca19bfe887522d6e2e6d0952943f5eac4a74010"
+checksum = "2bfc52cbddcfd745bf1740338492bb0bd83d76c67b445f91c5fb29fae29ecaa1"
 dependencies = [
  "futures-core",
  "futures-sink",
@@ -1757,15 +1757,15 @@ dependencies = [
 
 [[package]]
 name = "futures-core"
-version = "0.3.21"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c09fd04b7e4073ac7156a9539b57a484a8ea920f79c7c675d05d289ab6110d3"
+checksum = "d2acedae88d38235936c3922476b10fced7b2b68136f5e3c03c2d5be348a1115"
 
 [[package]]
 name = "futures-executor"
-version = "0.3.21"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9420b90cfa29e327d0429f19be13e7ddb68fa1cccb09d65e5706b8c7a749b8a6"
+checksum = "1d11aa21b5b587a64682c0094c2bdd4df0076c5324961a40cc3abd7f37930528"
 dependencies = [
  "futures-core",
  "futures-task",
@@ -1786,9 +1786,9 @@ dependencies = [
 
 [[package]]
 name = "futures-io"
-version = "0.3.21"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc4045962a5a5e935ee2fdedaa4e08284547402885ab326734432bed5d12966b"
+checksum = "93a66fc6d035a26a3ae255a6d2bca35eda63ae4c5512bef54449113f7a1228e5"
 
 [[package]]
 name = "futures-lite"
@@ -1807,9 +1807,9 @@ dependencies = [
 
 [[package]]
 name = "futures-macro"
-version = "0.3.21"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33c1e13800337f4d4d7a316bf45a567dbcb6ffe087f16424852d97e97a91f512"
+checksum = "0db9cce532b0eae2ccf2766ab246f114b56b9cf6d445e00c2549fbc100ca045d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1818,21 +1818,21 @@ dependencies = [
 
 [[package]]
 name = "futures-sink"
-version = "0.3.21"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21163e139fa306126e6eedaf49ecdb4588f939600f0b1e770f4205ee4b7fa868"
+checksum = "ca0bae1fe9752cf7fd9b0064c674ae63f97b37bc714d745cbde0afb7ec4e6765"
 
 [[package]]
 name = "futures-task"
-version = "0.3.21"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57c66a976bf5909d801bbef33416c41372779507e7a6b3a5e25e4749c58f776a"
+checksum = "842fc63b931f4056a24d59de13fb1272134ce261816e063e634ad0c15cdc5306"
 
 [[package]]
 name = "futures-util"
-version = "0.3.21"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8b7abd5d659d9b90c8cba917f6ec750a74e2dc23902ef9cd4cc8c8b22e6036a"
+checksum = "f0828a5471e340229c11c77ca80017937ce3c58cb788a17e5f1c2d5c485a9577"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -3191,9 +3191,9 @@ dependencies = [
 
 [[package]]
 name = "notify"
-version = "5.0.0-pre.15"
+version = "5.0.0-pre.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "553f9844ad0b0824605c20fb55a661679782680410abfb1a8144c2e7e437e7a7"
+checksum = "530f6314d6904508082f4ea424a0275cf62d341e118b313663f266429cb19693"
 dependencies = [
  "bitflags",
  "crossbeam-channel",
@@ -3404,9 +3404,9 @@ dependencies = [
 
 [[package]]
 name = "os_str_bytes"
-version = "6.2.0"
+version = "6.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "648001efe5d5c0102d8cea768e348da85d90af8ba91f0bea908f157951493cd4"
+checksum = "9ff7415e9ae3fff1225851df9e0d9e4e5479f947619774677a63572e55e80eff"
 
 [[package]]
 name = "ouroboros"
@@ -3723,8 +3723,8 @@ dependencies = [
  "harriet 0.2.0",
  "nom",
  "plow_linter 0.1.1",
- "plow_ontology 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.1.0 (git+https://github.com/field33/plow?branch=minor-updates-to-plow-tools)",
+ "plow_ontology 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon",
  "reqwest",
  "serde",
@@ -3739,17 +3739,6 @@ name = "plow_graphify"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b3b473d072287ed8a660d1bd41208d8ebeba46b542e5bec0785faca6f19b6c1"
-dependencies = [
- "harriet 0.1.1",
- "rdftk_core",
- "rdftk_iri",
- "thiserror",
-]
-
-[[package]]
-name = "plow_graphify"
-version = "0.1.0"
-source = "git+https://github.com/field33/plow?branch=minor-updates-to-plow-tools#aa90ac415374dd573c982b1cd6dc533ebe3766b1"
 dependencies = [
  "harriet 0.1.1",
  "rdftk_core",
@@ -3793,8 +3782,8 @@ dependencies = [
  "notify",
  "open",
  "plow_linter 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_ontology 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_ontology 0.1.1",
+ "plow_package_management 0.1.0",
  "rfd",
  "serde",
  "serde_json",
@@ -3813,14 +3802,14 @@ dependencies = [
  "email_address",
  "harriet 0.2.0",
  "nom",
- "plow_graphify 0.2.0",
- "plow_ontology 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.1.0",
+ "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_ontology 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon",
  "rdftk_core",
  "rdftk_iri",
  "regex",
- "rustrict",
+ "rustrict 0.5.0",
  "semver 1.0.13",
  "serde",
  "serde_json",
@@ -3841,13 +3830,13 @@ dependencies = [
  "email_address",
  "harriet 0.1.1",
  "nom",
- "plow_graphify 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_ontology 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_graphify 0.1.0",
+ "plow_ontology 0.1.1",
+ "plow_package_management 0.1.0",
  "rdftk_core",
  "rdftk_iri",
  "regex",
- "rustrict",
+ "rustrict 0.4.20",
  "semver 1.0.13",
  "serde",
  "serde_json",
@@ -3859,26 +3848,12 @@ dependencies = [
 [[package]]
 name = "plow_ontology"
 version = "0.1.1"
-dependencies = [
- "anyhow",
- "harriet 0.2.0",
- "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.1.1",
- "rdftk_core",
- "rdftk_iri",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "plow_ontology"
-version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b5bb3f233d5e5db098bd304b702604b4e40ca00e6225c92aabe8ba697167a65"
 dependencies = [
  "anyhow",
  "harriet 0.1.1",
- "plow_graphify 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_graphify 0.1.0",
  "rdftk_core",
  "rdftk_iri",
  "serde",
@@ -3887,12 +3862,12 @@ dependencies = [
 
 [[package]]
 name = "plow_ontology"
-version = "0.1.1"
-source = "git+https://github.com/field33/plow?branch=minor-updates-to-plow-tools#aa90ac415374dd573c982b1cd6dc533ebe3766b1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
- "harriet 0.1.1",
- "plow_graphify 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "harriet 0.2.0",
+ "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_linter 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rdftk_core",
  "rdftk_iri",
  "serde",
@@ -3900,29 +3875,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "plow_package_management"
-version = "0.1.0"
+name = "plow_ontology"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "978610f8f0b468217b25f4f54a858e8d797be0b0d50890808885ecad85b52ee1"
 dependencies = [
  "anyhow",
- "dirs",
- "fallible-iterator",
- "git2",
- "glob",
  "harriet 0.2.0",
- "itertools 0.10.3",
  "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.1.1",
- "plow_ontology 0.1.1",
- "pubgrub",
  "rdftk_core",
  "rdftk_iri",
- "semver 1.0.13",
  "serde",
  "serde_json",
- "sha2 0.10.2",
- "tempdir",
- "thiserror",
- "toml",
 ]
 
 [[package]]
@@ -3938,8 +3902,8 @@ dependencies = [
  "glob",
  "harriet 0.1.1",
  "itertools 0.10.3",
- "plow_graphify 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_ontology 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_graphify 0.1.0",
+ "plow_ontology 0.1.1",
  "pubgrub",
  "rdftk_core",
  "rdftk_iri",
@@ -3953,18 +3917,45 @@ dependencies = [
 
 [[package]]
 name = "plow_package_management"
-version = "0.1.0"
-source = "git+https://github.com/field33/plow?branch=minor-updates-to-plow-tools#aa90ac415374dd573c982b1cd6dc533ebe3766b1"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "dirs",
  "fallible-iterator",
  "git2",
  "glob",
- "harriet 0.1.1",
+ "harriet 0.2.0",
  "itertools 0.10.3",
- "plow_graphify 0.1.0 (git+https://github.com/field33/plow?branch=minor-updates-to-plow-tools)",
- "plow_ontology 0.1.1 (git+https://github.com/field33/plow?branch=minor-updates-to-plow-tools)",
+ "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_linter 0.1.1",
+ "plow_ontology 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pubgrub",
+ "rdftk_core",
+ "rdftk_iri",
+ "semver 1.0.13",
+ "serde",
+ "serde_json",
+ "sha2 0.10.2",
+ "tempdir",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "plow_package_management"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7df0fa032a7b2ee0bd8a7d683e19e4defa9e7e968b685d9540f2d5b314f9884f"
+dependencies = [
+ "anyhow",
+ "dirs",
+ "fallible-iterator",
+ "git2",
+ "glob",
+ "harriet 0.2.0",
+ "itertools 0.10.3",
+ "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_ontology 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "pubgrub",
  "rdftk_core",
  "rdftk_iri",
@@ -4397,9 +4388,25 @@ dependencies = [
 
 [[package]]
 name = "rustrict"
-version = "0.4.18"
+version = "0.4.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18a21511165c8e35416e7d5ad7214d806fcbe29db180fa3f568f1eee246a5f58"
+checksum = "1441ed370cf821cdf48a330cb27fba4fdbd54b94e4a90b27319e4162686614f8"
+dependencies = [
+ "bitflags",
+ "doc-comment",
+ "itertools 0.10.3",
+ "lazy_static",
+ "rustc-hash",
+ "strsim 0.10.0",
+ "unicode-normalization",
+ "unicode_categories",
+]
+
+[[package]]
+name = "rustrict"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ab6d404f2f6170969bf27865e33d708cbfed94a3b5def842c77394178bd7881"
 dependencies = [
  "bitflags",
  "doc-comment",

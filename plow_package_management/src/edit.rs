@@ -101,11 +101,8 @@ impl EditOperation for RemoveDependency {
             name: Some(Cow::from("dependency")),
         });
         for statement in &mut document.statements {
-            if let Statement::Triples(Triples::Labeled(
-                None,
-                subject,
-                ref mut predicate_object_list,
-            )) = statement
+            if let Statement::Triples(Triples::Labeled(_, subject, ref mut predicate_object_list)) =
+                statement
             {
                 if subject != &ontology_iri_subject {
                     continue;
@@ -121,7 +118,7 @@ impl EditOperation for RemoveDependency {
                                 continue 'predicate_object_list;
                             }
                             let matching_dependency = object_list.list.iter().enumerate().find(
-                                |(_, (_, _, object))| {
+                                |(_index, (_, _, object))| {
                                     if let Object::Literal(Literal::RDFLiteral(RDFLiteral {
                                         string,
                                         ..

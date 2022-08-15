@@ -21,7 +21,7 @@ iced_native = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
 async-std = "1.0"
-notify = "5.0.0-pre.13"
+notify =  "5.0.0-pre.13"
 dirs = "4.0.0"
 open = "3"
 # Required, as 1.0.0-alpha.9 fails to build
