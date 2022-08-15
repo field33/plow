@@ -3724,7 +3724,7 @@ dependencies = [
  "nom",
  "plow_linter 0.1.1",
  "plow_ontology 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.2.1",
  "rayon",
  "reqwest",
  "serde",
@@ -3804,7 +3804,7 @@ dependencies = [
  "nom",
  "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.2.1",
  "rayon",
  "rdftk_core",
  "rdftk_iri",
@@ -3918,32 +3918,6 @@ dependencies = [
 [[package]]
 name = "plow_package_management"
 version = "0.2.1"
-dependencies = [
- "anyhow",
- "dirs",
- "fallible-iterator",
- "git2",
- "glob",
- "harriet 0.2.0",
- "itertools 0.10.3",
- "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.1.1",
- "plow_ontology 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "pubgrub",
- "rdftk_core",
- "rdftk_iri",
- "semver 1.0.13",
- "serde",
- "serde_json",
- "sha2 0.10.2",
- "tempdir",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "plow_package_management"
-version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7df0fa032a7b2ee0bd8a7d683e19e4defa9e7e968b685d9540f2d5b314f9884f"
 dependencies = [
@@ -3963,6 +3937,32 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.2",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "plow_package_management"
+version = "0.2.2"
+dependencies = [
+ "anyhow",
+ "dirs",
+ "fallible-iterator",
+ "git2",
+ "glob",
+ "harriet 0.2.0",
+ "itertools 0.10.3",
+ "plow_graphify 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_linter 0.1.1",
+ "plow_ontology 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pubgrub",
+ "rdftk_core",
+ "rdftk_iri",
+ "semver 1.0.13",
+ "serde",
+ "serde_json",
+ "sha2 0.10.2",
+ "tempdir",
  "thiserror",
  "toml",
 ]

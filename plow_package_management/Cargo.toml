@@ -1,7 +1,7 @@
 [package]
 name = "plow_package_management"
 description = "Plow: A package manager for ontologies."
-version = "0.2.1"
+version = "0.2.2"
 license = "MIT OR Apache-2.0"
 keywords = ["plow", "package_management", "pubgrub"]
 authors = ["Maximilian Goisser <max@field33.com>", "Ali Somay <ali@field33.com>"]
