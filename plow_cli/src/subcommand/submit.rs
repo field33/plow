@@ -1,7 +1,7 @@
 mod response;
 
+use crate::error::CliError;
 use crate::error::SubmissionError::*;
-use crate::error::{CliError, SubmissionError};
 use crate::{config::get_registry_url, feedback::*};
 use anyhow::Result;
 use clap::{arg, App, AppSettings, Arg, ArgMatches, Command};
@@ -75,8 +75,8 @@ fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError>
         let submission = reqwest::blocking::multipart::Form::new()
             .text("public", if public { "true" } else { "false" })
             .file("field", &field_file_path)
-            .map_err(|_| SubmissionError::FailedToReadFieldAtPath {
-                field_path: field_file_path.into(),
+            .map_err(|_| FailedToReadFieldAtPath {
+                field_path: field_file_path.clone().into(),
             })?;
 
         // Read credentials

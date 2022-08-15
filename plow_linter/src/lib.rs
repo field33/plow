@@ -196,7 +196,8 @@ impl Linter<'_> {
 impl Linter<'_> {
     pub fn run_lints(&self) -> Vec<LintResult> {
         let results = self.lints.iter().fold(vec![], |mut results, lint| {
-            results.push(lint.run(self));
+            let result = lint.run(self);
+            results.push(result);
             results
         });
         results
@@ -209,7 +210,8 @@ impl Linter<'_> {
         iterator
             .fold(std::vec::Vec::new, |mut results: Vec<LintResult>, lint| {
                 if lint.can_run_in_parallel() {
-                    results.push(lint.run(self));
+                    let result = lint.run(self);
+                    results.push(result);
                 }
                 results
             })

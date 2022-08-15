@@ -46,7 +46,6 @@ impl Lint for ValidRdfsLabels {
                 .statements()
                 .filter(|statement| {
                     if let Some(object_iri) = statement.object().as_iri() {
-                        // dbg!(&object_iri.path());
                         return object_iri == &RDFTK_IRI::from_str(OWL_CLASS).unwrap().into()
                             || object_iri
                                 == &RDFTK_IRI::from_str(OWL_OBJECT_PROPERTY).unwrap().into()
@@ -97,7 +96,6 @@ impl Lint for ValidRdfsLabels {
 
                             // Validate those labels
                             if let Some(literal) = statement.object().as_literal() {
-                                // dbg!(literal.lexical_form());
                                 const ENGLISH_LANGUAGE_CODE: &str = "en";
                                 if let Some(language_tag) = literal.language() {
 

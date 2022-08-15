@@ -16,6 +16,9 @@ pub enum LintSubcommandError {
     #[error("")]
     LintsContainFailuresOpaque,
     #[error("")]
+    /// This is an internal intermediate error to be used when returning early from functions
+    /// which have the purpose of detecting the first error in a lint run.
+    /// User feedback is not necessary.
     SingleLintContainsFailure { field_path: String },
     #[error("")]
     LintsContainFailures { field_paths: Vec<String> },
