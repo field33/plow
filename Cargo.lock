@@ -3973,7 +3973,7 @@ dependencies = [
 
 [[package]]
 name = "plow_package_management"
-version = "0.2.2"
+version = "0.2.4"
 dependencies = [
  "anyhow",
  "dirs",
