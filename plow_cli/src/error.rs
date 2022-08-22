@@ -1,6 +1,7 @@
 #![allow(clippy::pub_use)]
 
 mod config;
+mod field_access;
 mod field_init;
 mod lint;
 mod login;
@@ -8,6 +9,7 @@ mod submission;
 mod workspace_init;
 
 pub use config::ConfigError;
+pub use field_access::FieldAccessError;
 pub use field_init::FieldInitializationError;
 pub use lint::LintSubcommandError;
 pub use login::LoginError;
@@ -31,6 +33,8 @@ pub enum CliError {
     FieldInitialization(FieldInitializationError),
     #[error("")]
     WorkspaceInitialization(WorkspaceInitializationError),
+    #[error("")]
+    FieldAccess(FieldAccessError),
     #[error("The command line option you have provided is not in the list of options. Please run plow --help to see the list of options.")]
     UnknownOption,
 }
@@ -70,6 +74,11 @@ impl From<WorkspaceInitializationError> for CliError {
         Self::WorkspaceInitialization(error)
     }
 }
+impl From<FieldAccessError> for CliError {
+    fn from(error: FieldAccessError) -> Self {
+        Self::FieldAccess(error)
+    }
+}
 
 impl Feedback for CliError {
     fn feedback(&self) {
@@ -81,6 +90,7 @@ impl Feedback for CliError {
             LintSubcommand(error) => error.feedback(),
             FieldInitialization(error) => error.feedback(),
             WorkspaceInitialization(error) => error.feedback(),
+            FieldAccess(error) => error.feedback(),
             UnknownOption => {
                 command_not_complete(&format!("{self}"));
             }

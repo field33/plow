@@ -7,7 +7,7 @@ use plow_linter::Linter;
 
 use crate::error::CliError;
 use crate::error::LintSubcommandError::*;
-use crate::feedback::{general_lint_start, general_lint_success, Feedback};
+use crate::feedback::{field_info, general_lint_start, general_lint_success, Feedback};
 
 pub struct SuccessfulLint;
 impl Feedback for SuccessfulLint {
@@ -38,9 +38,12 @@ pub fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliEr
 
     let field = camino::Utf8PathBuf::from(field_file_path);
 
+    field_info(&field)?;
+
     if field.exists() {
         general_lint_start();
         lint_file(field_file_path, all_lints())?;
+
         return Ok(SuccessfulLint);
     }
 

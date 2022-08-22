@@ -63,6 +63,7 @@
 pub mod config;
 mod error;
 mod feedback;
+pub mod manifest;
 mod subcommand;
 
 use clap::{App, AppSettings};

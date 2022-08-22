@@ -134,6 +134,7 @@ impl FieldManifest {
     }
 
     #[allow(clippy::unwrap_used)]
+    #[allow(clippy::missing_panics_doc)]
     /// Assumes linted input
     pub fn make_field_metadata_from_manifest_unchecked(&self) -> FieldMetadata {
         let namespace = self.field_namespace().unwrap();

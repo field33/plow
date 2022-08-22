@@ -2,6 +2,7 @@ mod response;
 
 use crate::error::CliError;
 use crate::error::SubmissionError::*;
+
 use crate::{config::get_registry_url, feedback::*};
 use anyhow::Result;
 use clap::{arg, App, AppSettings, Arg, ArgMatches, Command};
@@ -52,6 +53,8 @@ fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError>
     let field_file_path = camino::Utf8PathBuf::from(field_file_path_arg);
 
     if field_file_path.exists() {
+        field_info(&field_file_path)?;
+
         submission_lint_start();
 
         lint_file(field_file_path.as_str(), lints_for_field_submission())

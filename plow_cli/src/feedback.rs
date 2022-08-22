@@ -1,4 +1,10 @@
+use camino::Utf8Path;
 use colored::*;
+
+use crate::{
+    error::{CliError, FieldAccessError},
+    manifest::FieldManifest,
+};
 
 pub trait Feedback {
     fn feedback(&self);
@@ -38,6 +44,44 @@ pub fn linting_failed() {
         "Advice".yellow().bold(),
     );
     std::process::exit(0xFF);
+}
+
+pub fn field_info(local_path: &Utf8Path) -> Result<(), CliError> {
+    if !local_path.exists() {
+        return Err(CliError::from(FieldAccessError::FailedToFindFieldAtPath {
+            field_path: local_path.to_string(),
+        }));
+    }
+    let contents = std::fs::read_to_string(&local_path).map_err(|_| {
+        CliError::from(FieldAccessError::FailedToReadFieldAtPath {
+            field_path: local_path.to_string(),
+        })
+    })?;
+
+    let manifest = FieldManifest::new(contents).map_err(|_| {
+        CliError::from(FieldAccessError::FailedToReadFieldManifest {
+            field_path: local_path.to_string(),
+        })
+    })?;
+
+    let full_name = manifest
+        .field_namespace_and_name()
+        .unwrap_or_else(|| "Not specified".to_owned().italic().to_string());
+    let version = manifest
+        .field_version()
+        .unwrap_or_else(|| "Not specified".to_owned().italic().to_string());
+    let dependencies = manifest.field_dependency_literals();
+
+    println!("\t{} {full_name}", "Name".bold());
+    println!("\t{} {version}", "Version".bold());
+    println!("\t{} {local_path}", "Location".bold());
+    if let Some(dependencies) = dependencies {
+        println!("\t{}", "Requested Dependencies".bold());
+        for dependency in &dependencies {
+            println!("\t\t{dependency}");
+        }
+    }
+    Ok(())
 }
 
 #[allow(dead_code)]

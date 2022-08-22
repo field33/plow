@@ -1,13 +1,9 @@
-mod manifest;
-
 use crate::{
     config::PlowConfigFile,
     error::CliError,
     error::WorkspaceInitializationError::*,
-    subcommand::{
-        init::{utils::list_files, workspace::manifest::FieldManifest},
-        lint::lint_file_fail_on_failure,
-    },
+    manifest::FieldManifest,
+    subcommand::{init::utils::list_files, lint::lint_file_fail_on_failure},
 };
 use camino::{Utf8Path, Utf8PathBuf};
 use plow_linter::lints::all_lints;
