@@ -1,14 +1,14 @@
 //! Provides a metadata view on an ontology file (that has previously been validated).
 
 use anyhow::{anyhow, bail, Context};
+use field33_rdftk_core_temporary_fork::model::graph::GraphRef;
+use field33_rdftk_iri_temporary_fork::IRI as RDFTK_IRI;
 use harriet::{Directive, Statement, TurtleDocument};
 use plow_graphify::document_to_graph;
 use plow_ontology::constants::{
     REGISTRY_CANONICAL_PREFIX, REGISTRY_DEPENDENCY, REGISTRY_ONTOLOGY_FORMAT_VERSION,
     REGISTRY_PACKAGE_NAME, REGISTRY_PACKAGE_VERSION,
 };
-use rdftk_core::model::graph::GraphRef;
-use rdftk_iri::IRI as RDFTK_IRI;
 use serde::Serialize;
 use std::borrow::Cow;
 use std::collections::HashSet;
@@ -54,7 +54,7 @@ impl OntologyMetadata {
         root_prefix: &str,
         annotation_property_iri: &str,
     ) -> Result<String, anyhow::Error> {
-        let rdf_factory = rdftk_core::simple::statement::statement_factory();
+        let rdf_factory = field33_rdftk_core_temporary_fork::simple::statement::statement_factory();
         let rdf_graph_borrow = rdf_graph.borrow();
 
         // We explicitly pass valid data, unwrap is safe here.
@@ -87,7 +87,7 @@ impl OntologyMetadata {
         rdf_graph: &GraphRef,
         root_prefix: &str,
     ) -> Result<Vec<String>, anyhow::Error> {
-        let rdf_factory = rdftk_core::simple::statement::statement_factory();
+        let rdf_factory = field33_rdftk_core_temporary_fork::simple::statement::statement_factory();
         let rdf_graph_borrow = rdf_graph.borrow();
 
         // We explicitly pass valid data, unwrap is safe here.

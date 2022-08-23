@@ -83,9 +83,9 @@ use lint::{LintResult, LintResults};
 use lints::{LintSet, PlowLint};
 use plow_graphify::document_to_graph;
 
+use field33_rdftk_core_temporary_fork::model::graph::GraphRef;
 use rayon::prelude::IntoParallelRefIterator;
 use rayon::prelude::ParallelIterator;
-use rdftk_core::model::graph::GraphRef;
 
 pub mod lint;
 pub mod lints;

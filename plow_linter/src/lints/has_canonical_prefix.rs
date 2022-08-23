@@ -2,9 +2,9 @@ use crate::lint::common_error_literals::NO_ROOT_PREFIX;
 use crate::lint::helpers::catch_single_annotations_which_must_exist;
 use crate::lint::{lint_failure, lint_success, Lint, LintResult};
 use crate::{Linter, MultiReaderRdfGraph};
+use field33_rdftk_iri_temporary_fork::IRI as RDFTK_IRI;
 use plow_ontology::constants::REGISTRY_CANONICAL_PREFIX;
 use plow_package_management::metadata::get_root_prefix;
-use rdftk_iri::IRI as RDFTK_IRI;
 use std::any::Any;
 use std::collections::HashSet;
 use std::str::FromStr;
@@ -30,7 +30,7 @@ impl Lint for HasCanonicalPrefix {
             ..
         }: &Linter,
     ) -> LintResult {
-        let rdf_factory = rdftk_core::simple::statement::statement_factory();
+        let rdf_factory = field33_rdftk_core_temporary_fork::simple::statement::statement_factory();
         let graph_ref = rdf_graph;
         let rdf_graph_borrow = graph_ref.borrow();
         if let Some(root_prefix) = get_root_prefix(document) {

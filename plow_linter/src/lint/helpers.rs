@@ -1,12 +1,12 @@
 use crate::lint::{lint_failure, LintResult};
 use addr::parse_dns_name;
 use anyhow::Result;
-use plow_package_management::resolve::Dependency;
-use plow_package_management::version::SemanticVersion;
-use rdftk_core::model::{
+use field33_rdftk_core_temporary_fork::model::{
     literal::{LanguageTag, Literal},
     statement::Statement,
 };
+use plow_package_management::resolve::Dependency;
+use plow_package_management::version::SemanticVersion;
 use rustrict::CensorStr;
 use semver::Version;
 use std::{cell::RefCell, collections::HashSet, rc::Rc};

@@ -56,16 +56,16 @@
     clippy::negative_feature_names
 )]
 
+use field33_rdftk_core_temporary_fork::model::graph::GraphRef;
+use field33_rdftk_core_temporary_fork::model::literal::LanguageTag;
+use field33_rdftk_core_temporary_fork::model::statement::{ObjectNodeRef, StatementList};
+use field33_rdftk_core_temporary_fork::simple;
+use field33_rdftk_core_temporary_fork::simple::indexed::graph_factory;
+use field33_rdftk_iri_temporary_fork::IRI;
 use harriet::{
     Directive, IRIReference, Literal, Object, PrefixedName, Statement as HarrietStatement, Subject,
     Triples, TurtleDocument, Verb, IRI as HarrietIRI,
 };
-use rdftk_core::model::graph::GraphRef;
-use rdftk_core::model::literal::LanguageTag;
-use rdftk_core::model::statement::{ObjectNodeRef, StatementList};
-use rdftk_core::simple;
-use rdftk_core::simple::indexed::graph_factory;
-use rdftk_iri::IRI;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::str::FromStr;

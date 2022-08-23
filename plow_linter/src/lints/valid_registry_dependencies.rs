@@ -7,9 +7,9 @@ use crate::lint::{
 };
 use crate::{Linter, MultiReaderRdfGraph};
 
+use field33_rdftk_iri_temporary_fork::IRI as RDFTK_IRI;
 use plow_ontology::constants::REGISTRY_DEPENDENCY;
 use plow_package_management::metadata::get_root_prefix;
-use rdftk_iri::IRI as RDFTK_IRI;
 
 use std::any::Any;
 use std::collections::HashSet;
@@ -35,7 +35,7 @@ impl Lint for ValidRegistryDependencies {
             ..
         }: &Linter,
     ) -> LintResult {
-        let rdf_factory = rdftk_core::simple::statement::statement_factory();
+        let rdf_factory = field33_rdftk_core_temporary_fork::simple::statement::statement_factory();
         if let Some(root_prefix) = get_root_prefix(document) {
             let graph_ref = rdf_graph;
             let graph = graph_ref.borrow();

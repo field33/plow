@@ -6,7 +6,7 @@ use crate::{lint::{
 
 use plow_ontology::constants::REGISTRY_LICENSE;
 use plow_package_management::metadata::get_root_prefix;
-use rdftk_iri::IRI as RDFTK_IRI;
+use field33_rdftk_iri_temporary_fork::IRI as RDFTK_IRI;
 use std::{collections::HashSet, any::Any};
 use std::str::FromStr;
 
@@ -35,7 +35,7 @@ impl Lint for HasRegistryLicense {
             ..
         }: &Linter,
     ) -> LintResult {
-        let rdf_factory = rdftk_core::simple::statement::statement_factory();
+        let rdf_factory = field33_rdftk_core_temporary_fork::simple::statement::statement_factory();
         if let Some(root_prefix) = get_root_prefix(document) {
                             let graph_ref = rdf_graph;
             let graph = graph_ref.borrow();
