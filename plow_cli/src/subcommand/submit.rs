@@ -6,7 +6,7 @@ use crate::error::SubmissionError::*;
 use crate::{config::get_registry_url, feedback::*};
 use anyhow::Result;
 use clap::{arg, App, AppSettings, Arg, ArgMatches, Command};
-use plow_linter::lints::lints_for_field_submission;
+use plow_linter::lints::field_manifest_lints;
 use reqwest::blocking::multipart::Form;
 
 use self::response::{RegistryResponse, StatusInfo};
@@ -55,12 +55,10 @@ fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError>
     if field_file_path.exists() {
         field_info(&field_file_path)?;
 
-        submission_lint_start();
-
-        lint_file(field_file_path.as_str(), lints_for_field_submission())
+        lint_file(field_file_path.as_str(), vec![field_manifest_lints()])
             .map_err(|_| LintingFailed)?;
 
-        submission_lint_success();
+        general_lint_success();
 
         // File linted and ready to submit.
         let public = !sub_matches.is_present("private");

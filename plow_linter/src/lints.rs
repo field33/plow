@@ -153,27 +153,42 @@ impl FixSuggestion for AddPrefixes {
 pub type PlowLint = Box<dyn Lint + Send + Sync + 'static>;
 
 pub struct LintSet {
+    pub id: uuid::Uuid,
+    pub description: String,
     pub lints: Vec<PlowLint>,
     pub sub_lints: Option<Vec<PlowLint>>,
 }
 
 impl LintSet {
-    pub fn new(lints: Vec<PlowLint>, sub_lints: Option<Vec<PlowLint>>) -> Self {
-        Self { lints, sub_lints }
+    pub fn new(description: &str, lints: Vec<PlowLint>, sub_lints: Option<Vec<PlowLint>>) -> Self {
+        Self {
+            id: uuid::Uuid::new_v4(),
+            description: description.to_owned(),
+            lints,
+            sub_lints,
+        }
     }
 }
 
-pub fn all_lints() -> LintSet {
-    let mut all_lints = required_plow_registry_lints();
+pub fn all_lints_as_one_set() -> LintSet {
+    let mut all_lints = required_field_manifest_lints();
     all_lints.extend(required_style_lints());
-    let all_sub_lints = required_plow_registry_sub_lints();
-    LintSet::new(all_lints, Some(all_sub_lints))
+    let all_sub_lints = required_field_manifest_sub_lints();
+    LintSet::new("complete set of lints", all_lints, Some(all_sub_lints))
 }
 
-pub fn lints_for_field_submission() -> LintSet {
-    let lints = required_plow_registry_lints();
-    let sub_lints = Some(required_plow_registry_sub_lints());
-    LintSet::new(lints, sub_lints)
+pub fn all_lints() -> Vec<LintSet> {
+    vec![field_manifest_lints(), style_lints()]
+}
+
+pub fn field_manifest_lints() -> LintSet {
+    let lints = required_field_manifest_lints();
+    let sub_lints = Some(required_field_manifest_sub_lints());
+    LintSet::new("field manifest lints", lints, sub_lints)
+}
+pub fn style_lints() -> LintSet {
+    let lints = required_style_lints();
+    LintSet::new("style lints", lints, None)
 }
 
 // TODO: This part needs some order and more organization.
@@ -195,7 +210,7 @@ fn required_base_lints() -> Vec<PlowLint> {
 }
 
 #[allow(clippy::as_conversions)]
-fn required_plow_registry_lints() -> Vec<Box<dyn Lint + Send + Sync>> {
+fn required_field_manifest_lints() -> Vec<Box<dyn Lint + Send + Sync>> {
     let mut plow_registry_lints = required_base_lints();
     plow_registry_lints.extend(vec![
         Box::new(HasRegistryPackageName::default()) as PlowLint,
@@ -219,7 +234,7 @@ fn required_plow_registry_lints() -> Vec<Box<dyn Lint + Send + Sync>> {
 }
 
 #[allow(clippy::as_conversions)]
-fn required_plow_registry_sub_lints() -> Vec<Box<dyn Lint + Send + Sync>> {
+fn required_field_manifest_sub_lints() -> Vec<Box<dyn Lint + Send + Sync>> {
     vec![
         Box::new(ExistsRegistryLicense::default()) as PlowLint,
         Box::new(ExistsRegistryLicenseSPDX::default()) as PlowLint,

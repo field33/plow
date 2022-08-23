@@ -29,25 +29,40 @@ fn lint_registry_short_description_exists_and_valid() {
 
     let mut linter_a =
         Linter::try_from(ttl_document_with_registry_short_description_a.as_ref()).unwrap();
-    linter_a.add_lint(Box::new(HasRegistryShortDescription::default()) as PlowLint);
+    linter_a.add_lint_as_set(
+        vec![Box::new(HasRegistryShortDescription::default()) as PlowLint],
+        None,
+    );
     let mut linter_b =
         Linter::try_from(ttl_document_with_registry_short_description_b.as_ref()).unwrap();
-    linter_b.add_lint(Box::new(HasRegistryShortDescription::default()) as PlowLint);
+    linter_b.add_lint_as_set(
+        vec![Box::new(HasRegistryShortDescription::default()) as PlowLint],
+        None,
+    );
     let mut linter_c =
         Linter::try_from(ttl_document_with_registry_short_description_c.as_ref()).unwrap();
-    linter_c.add_lint(Box::new(HasRegistryShortDescription::default()) as PlowLint);
+    linter_c.add_lint_as_set(
+        vec![Box::new(HasRegistryShortDescription::default()) as PlowLint],
+        None,
+    );
     let mut linter_d =
         Linter::try_from(ttl_document_with_registry_short_description_d.as_ref()).unwrap();
-    linter_d.add_lint(Box::new(HasRegistryShortDescription::default()) as PlowLint);
+    linter_d.add_lint_as_set(
+        vec![Box::new(HasRegistryShortDescription::default()) as PlowLint],
+        None,
+    );
     let mut linter_e =
         Linter::try_from(ttl_document_with_registry_short_description_e.as_ref()).unwrap();
-    linter_e.add_lint(Box::new(HasRegistryShortDescription::default()) as PlowLint);
+    linter_e.add_lint_as_set(
+        vec![Box::new(HasRegistryShortDescription::default()) as PlowLint],
+        None,
+    );
 
-    let result_a = linter_a.run_lints();
-    let result_b = linter_b.run_lints();
-    let result_c = linter_c.run_lints();
-    let result_d = linter_d.run_lints();
-    let result_e = linter_e.run_lints();
+    let result_a = linter_a.run_all_lints();
+    let result_b = linter_b.run_all_lints();
+    let result_c = linter_c.run_all_lints();
+    let result_d = linter_d.run_all_lints();
+    let result_e = linter_e.run_all_lints();
 
     assert!(result_a.first().unwrap().is_success());
     assert!(result_b.first().unwrap().is_failure());

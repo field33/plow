@@ -1,7 +1,7 @@
 [package]
 name = "plow_linter"
 description = "A linter to lint Plow ttl documents (interpreted as ontologies)."
-version = "0.2.1"
+version = "0.2.2"
 license = "MIT OR Apache-2.0"
 authors = ["Maximilian Goisser <max@field33.com>", "Ali Somay <ali@field33.com>"]
 repository = "https://github.com/field33/plow/"
@@ -30,4 +30,4 @@ addr = "0.15"
 darc = "0.0.1"
 rayon = "1"
 chashmap = "2"
-
+uuid = "1"

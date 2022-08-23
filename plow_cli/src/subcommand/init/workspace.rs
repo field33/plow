@@ -6,7 +6,7 @@ use crate::{
     subcommand::{init::utils::list_files, lint::lint_file_fail_on_failure},
 };
 use camino::{Utf8Path, Utf8PathBuf};
-use plow_linter::lints::all_lints;
+use plow_linter::lints::all_lints_as_one_set;
 use plow_package_management::package::{FieldMetadata, OrganizationToResolveFor};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
@@ -24,7 +24,7 @@ fn lint_found_fields(
     let failed_field_paths_on_linting = found_field_paths_in_directory
         .par_iter()
         .filter_map(|path| {
-            if let Err(err) = lint_file_fail_on_failure(path.as_ref(), all_lints()) {
+            if let Err(err) = lint_file_fail_on_failure(path.as_ref(), all_lints_as_one_set()) {
                 Some(err)
             } else {
                 None

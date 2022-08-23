@@ -7,7 +7,7 @@ use plow_linter::Linter;
 
 use crate::error::CliError;
 use crate::error::LintSubcommandError::*;
-use crate::feedback::{field_info, general_lint_start, general_lint_success, Feedback};
+use crate::feedback::{field_info, general_lint_success, lint_start, Feedback};
 
 pub struct SuccessfulLint;
 impl Feedback for SuccessfulLint {
@@ -41,7 +41,6 @@ pub fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliEr
     field_info(&field)?;
 
     if field.exists() {
-        general_lint_start();
         lint_file(field_file_path, all_lints())?;
 
         return Ok(SuccessfulLint);
@@ -53,33 +52,38 @@ pub fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliEr
     .into())
 }
 
-pub fn lint_file(field_path: &str, lints: LintSet) -> Result<(), CliError> {
+pub fn lint_file(field_path: &str, lints: Vec<LintSet>) -> Result<(), CliError> {
     let field_contents = std::fs::read_to_string(field_path).map_err(|err| FailedToReadField {
         field_path: field_path.to_owned(),
         details: err.to_string(),
     })?;
 
-    let mut linter = Linter::try_from(field_contents.as_ref()).map_err(|_| FailedToParseField)?;
-    linter.add_lint_set(lints);
-    let results = linter.run_lints();
-
     let mut contains_failures = false;
-    for result in results {
-        use LintResult::*;
-        match result {
-            Success(message) => {
-                println!("\t\t{}", message.green());
-            }
-            Warning(messages) => {
-                for message in messages {
-                    println!("\t\t{}", message.yellow());
+    let mut linter = Linter::try_from(field_contents.as_ref()).map_err(|_| FailedToParseField)?;
+
+    for lint_set in lints {
+        let set_id = lint_set.id;
+        let set_name = linter.add_lint_set(lint_set);
+        lint_start(&set_name);
+
+        let results = linter.run_lint_set(set_id);
+        for result in results {
+            use LintResult::*;
+            match result {
+                Success(message) => {
+                    println!("\t\t{}", message.green());
                 }
-            }
-            Failure(messages) => {
-                for message in messages {
-                    println!("\t\t{}", message.red());
+                Warning(messages) => {
+                    for message in messages {
+                        println!("\t\t{}", message.yellow());
+                    }
                 }
-                contains_failures = true;
+                Failure(messages) => {
+                    for message in messages {
+                        println!("\t\t{}", message.red());
+                    }
+                    contains_failures = true;
+                }
             }
         }
     }

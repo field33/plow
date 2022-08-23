@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use camino::Utf8Path;
 use colored::*;
 
@@ -102,8 +103,12 @@ pub fn submission_lint_start() {
     );
 }
 
-pub fn submission_lint_success() {
-    println!("\t{} successful.", "Linting".green().bold(),);
+pub fn lint_start(lint_set_name: &str) {
+    println!();
+    println!(
+        "\t{} the provided field with {lint_set_name}..",
+        "Linting".green().bold(),
+    );
 }
 
 pub fn general_lint_start() {
@@ -111,5 +116,6 @@ pub fn general_lint_start() {
 }
 
 pub fn general_lint_success() {
+    println!();
     println!("\t{} successful.", "Linting".green().bold(),);
 }

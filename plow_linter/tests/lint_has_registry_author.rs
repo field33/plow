@@ -57,54 +57,102 @@ fn lint_registry_author_exists_and_valid() {
         format!("{REGISTRY_AUTHOR_BASE} registry:author \"Fucking Dick <suck@crap.com>\" .");
 
     let mut linter_a = Linter::try_from(ttl_document_with_registry_author_a.as_ref()).unwrap();
-    linter_a.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_a.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_b = Linter::try_from(ttl_document_with_registry_author_b.as_ref()).unwrap();
-    linter_b.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_b.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_c = Linter::try_from(ttl_document_with_registry_author_c.as_ref()).unwrap();
-    linter_c.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_c.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_d = Linter::try_from(ttl_document_with_registry_author_d.as_ref()).unwrap();
-    linter_d.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_d.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_e = Linter::try_from(ttl_document_with_registry_author_e.as_ref()).unwrap();
-    linter_e.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_e.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_f = Linter::try_from(ttl_document_with_registry_author_f.as_ref()).unwrap();
-    linter_f.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_f.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_g = Linter::try_from(ttl_document_with_registry_author_g.as_ref()).unwrap();
-    linter_g.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_g.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_i = Linter::try_from(ttl_document_with_registry_author_i.as_ref()).unwrap();
-    linter_i.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_i.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_j = Linter::try_from(ttl_document_with_registry_author_j.as_ref()).unwrap();
-    linter_j.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_j.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_k = Linter::try_from(ttl_document_with_registry_author_k.as_ref()).unwrap();
-    linter_k.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_k.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_l = Linter::try_from(ttl_document_with_registry_author_l.as_ref()).unwrap();
-    linter_l.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_l.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_m = Linter::try_from(ttl_document_with_registry_author_m.as_ref()).unwrap();
-    linter_m.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_m.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_n = Linter::try_from(ttl_document_with_registry_author_n.as_ref()).unwrap();
-    linter_n.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_n.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_o = Linter::try_from(ttl_document_with_registry_author_o.as_ref()).unwrap();
-    linter_o.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_o.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_p = Linter::try_from(ttl_document_with_registry_author_p.as_ref()).unwrap();
-    linter_p.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_p.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
     let mut linter_r = Linter::try_from(ttl_document_with_registry_author_r.as_ref()).unwrap();
-    linter_r.add_lint(Box::new(HasRegistryAuthor::default()) as PlowLint);
+    linter_r.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
 
-    let result_a = linter_a.run_lints();
-    let result_b = linter_b.run_lints();
-    let result_c = linter_c.run_lints();
-    let result_d = linter_d.run_lints();
-    let result_e = linter_e.run_lints();
-    let result_f = linter_f.run_lints();
-    let result_g = linter_g.run_lints();
-    let result_i = linter_i.run_lints();
-    let result_j = linter_j.run_lints();
-    let result_k = linter_k.run_lints();
-    let result_l = linter_l.run_lints();
-    let result_m = linter_m.run_lints();
-    let result_n = linter_n.run_lints();
-    let result_o = linter_o.run_lints();
-    let result_p = linter_p.run_lints();
-    let result_r = linter_r.run_lints();
+    let result_a = linter_a.run_all_lints();
+    let result_b = linter_b.run_all_lints();
+    let result_c = linter_c.run_all_lints();
+    let result_d = linter_d.run_all_lints();
+    let result_e = linter_e.run_all_lints();
+    let result_f = linter_f.run_all_lints();
+    let result_g = linter_g.run_all_lints();
+    let result_i = linter_i.run_all_lints();
+    let result_j = linter_j.run_all_lints();
+    let result_k = linter_k.run_all_lints();
+    let result_l = linter_l.run_all_lints();
+    let result_m = linter_m.run_all_lints();
+    let result_n = linter_n.run_all_lints();
+    let result_o = linter_o.run_all_lints();
+    let result_p = linter_p.run_all_lints();
+    let result_r = linter_r.run_all_lints();
 
     assert!(result_a.first().unwrap().is_success());
     assert!(result_b.first().unwrap().is_success());
