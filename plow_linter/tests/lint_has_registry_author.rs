@@ -1,6 +1,7 @@
 use harriet::TurtleDocument;
-use plow_linter::lint::Lint;
-use plow_linter::lints::HasRegistryAuthor;
+
+use plow_linter::lints::{HasRegistryAuthor, PlowLint};
+use plow_linter::Linter;
 
 const REGISTRY_AUTHOR_BASE: &str = concat!(
     include_str!("data/default_ttl_header"),
@@ -55,57 +56,120 @@ fn lint_registry_author_exists_and_valid() {
     let ttl_document_with_registry_author_r =
         format!("{REGISTRY_AUTHOR_BASE} registry:author \"Fucking Dick <suck@crap.com>\" .");
 
-    let document_a = TurtleDocument::parse_full(&ttl_document_with_registry_author_a).unwrap();
-    let document_b = TurtleDocument::parse_full(&ttl_document_with_registry_author_b).unwrap();
-    let document_c = TurtleDocument::parse_full(&ttl_document_with_registry_author_c).unwrap();
-    let document_d = TurtleDocument::parse_full(&ttl_document_with_registry_author_d).unwrap();
-    let document_e = TurtleDocument::parse_full(&ttl_document_with_registry_author_e).unwrap();
-    let document_f = TurtleDocument::parse_full(&ttl_document_with_registry_author_f).unwrap();
-    let document_g = TurtleDocument::parse_full(&ttl_document_with_registry_author_g).unwrap();
-    let document_i = TurtleDocument::parse_full(&ttl_document_with_registry_author_i).unwrap();
-    let document_j = TurtleDocument::parse_full(&ttl_document_with_registry_author_j).unwrap();
-    let document_k = TurtleDocument::parse_full(&ttl_document_with_registry_author_k).unwrap();
-    let document_l = TurtleDocument::parse_full(&ttl_document_with_registry_author_l).unwrap();
-    let document_m = TurtleDocument::parse_full(&ttl_document_with_registry_author_m).unwrap();
-    let document_n = TurtleDocument::parse_full(&ttl_document_with_registry_author_n).unwrap();
-    let document_o = TurtleDocument::parse_full(&ttl_document_with_registry_author_o).unwrap();
-    let document_p = TurtleDocument::parse_full(&ttl_document_with_registry_author_p).unwrap();
-    let document_r = TurtleDocument::parse_full(&ttl_document_with_registry_author_r).unwrap();
+    let mut linter_a = Linter::try_from(ttl_document_with_registry_author_a.as_ref()).unwrap();
+    linter_a.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_b = Linter::try_from(ttl_document_with_registry_author_b.as_ref()).unwrap();
+    linter_b.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_c = Linter::try_from(ttl_document_with_registry_author_c.as_ref()).unwrap();
+    linter_c.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_d = Linter::try_from(ttl_document_with_registry_author_d.as_ref()).unwrap();
+    linter_d.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_e = Linter::try_from(ttl_document_with_registry_author_e.as_ref()).unwrap();
+    linter_e.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_f = Linter::try_from(ttl_document_with_registry_author_f.as_ref()).unwrap();
+    linter_f.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_g = Linter::try_from(ttl_document_with_registry_author_g.as_ref()).unwrap();
+    linter_g.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_i = Linter::try_from(ttl_document_with_registry_author_i.as_ref()).unwrap();
+    linter_i.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_j = Linter::try_from(ttl_document_with_registry_author_j.as_ref()).unwrap();
+    linter_j.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_k = Linter::try_from(ttl_document_with_registry_author_k.as_ref()).unwrap();
+    linter_k.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_l = Linter::try_from(ttl_document_with_registry_author_l.as_ref()).unwrap();
+    linter_l.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_m = Linter::try_from(ttl_document_with_registry_author_m.as_ref()).unwrap();
+    linter_m.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_n = Linter::try_from(ttl_document_with_registry_author_n.as_ref()).unwrap();
+    linter_n.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_o = Linter::try_from(ttl_document_with_registry_author_o.as_ref()).unwrap();
+    linter_o.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_p = Linter::try_from(ttl_document_with_registry_author_p.as_ref()).unwrap();
+    linter_p.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
+    let mut linter_r = Linter::try_from(ttl_document_with_registry_author_r.as_ref()).unwrap();
+    linter_r.add_lint_as_set(
+        vec![Box::new(HasRegistryAuthor::default()) as PlowLint],
+        None,
+    );
 
-    let lint = HasRegistryAuthor::default();
-    let result_a = lint.lint(&document_a);
-    let result_b = lint.lint(&document_b);
-    let result_c = lint.lint(&document_c);
-    let result_d = lint.lint(&document_d);
-    let result_e = lint.lint(&document_e);
-    let result_f = lint.lint(&document_f);
-    let result_g = lint.lint(&document_g);
-    let result_i = lint.lint(&document_i);
-    let result_j = lint.lint(&document_j);
-    let result_k = lint.lint(&document_k);
-    let result_l = lint.lint(&document_l);
-    let result_m = lint.lint(&document_m);
-    let result_n = lint.lint(&document_n);
-    let result_o = lint.lint(&document_o);
-    let result_p = lint.lint(&document_p);
-    let result_r = lint.lint(&document_r);
+    let result_a = linter_a.run_all_lints();
+    let result_b = linter_b.run_all_lints();
+    let result_c = linter_c.run_all_lints();
+    let result_d = linter_d.run_all_lints();
+    let result_e = linter_e.run_all_lints();
+    let result_f = linter_f.run_all_lints();
+    let result_g = linter_g.run_all_lints();
+    let result_i = linter_i.run_all_lints();
+    let result_j = linter_j.run_all_lints();
+    let result_k = linter_k.run_all_lints();
+    let result_l = linter_l.run_all_lints();
+    let result_m = linter_m.run_all_lints();
+    let result_n = linter_n.run_all_lints();
+    let result_o = linter_o.run_all_lints();
+    let result_p = linter_p.run_all_lints();
+    let result_r = linter_r.run_all_lints();
 
-    assert!(result_a.is_success());
-    assert!(result_b.is_success());
-    assert!(result_c.is_success());
-    assert!(result_d.is_failure());
-    assert!(result_e.is_failure());
-    assert!(result_f.is_failure());
-    assert!(result_g.is_success());
-    assert!(result_i.is_failure());
-    assert!(result_j.is_failure());
-    assert!(result_k.is_failure());
-    assert!(result_l.is_failure());
-    assert!(result_m.is_success());
-    assert!(result_n.is_failure());
-    assert!(result_o.is_failure());
-    assert!(result_p.is_success());
-    assert!(result_r.is_failure());
+    assert!(result_a.first().unwrap().is_success());
+    assert!(result_b.first().unwrap().is_success());
+    assert!(result_c.first().unwrap().is_success());
+    assert!(result_d.first().unwrap().is_failure());
+    assert!(result_e.first().unwrap().is_failure());
+    assert!(result_f.first().unwrap().is_failure());
+    assert!(result_g.first().unwrap().is_success());
+    assert!(result_i.first().unwrap().is_failure());
+    assert!(result_j.first().unwrap().is_failure());
+    assert!(result_k.first().unwrap().is_failure());
+    assert!(result_l.first().unwrap().is_failure());
+    assert!(result_m.first().unwrap().is_success());
+    assert!(result_n.first().unwrap().is_failure());
+    assert!(result_o.first().unwrap().is_failure());
+    assert!(result_p.first().unwrap().is_success());
+    assert!(result_r.first().unwrap().is_failure());
 }
 
 #[test]

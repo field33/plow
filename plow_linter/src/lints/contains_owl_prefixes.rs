@@ -1,5 +1,10 @@
-use crate::lint::{Lint, LintResult};
-use harriet::{Directive, Item, Statement, TurtleDocument};
+use std::any::Any;
+
+use crate::{
+    lint::{Lint, LintResult},
+    Linter,
+};
+use harriet::{Directive, Statement};
 
 /// Ensures that all the Turtle @prefix directives well-known to the OWL2 standard are present.
 ///
@@ -12,12 +17,15 @@ use harriet::{Directive, Item, Statement, TurtleDocument};
 pub struct ContainsOWLPrefixes;
 
 impl Lint for ContainsOWLPrefixes {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
     fn short_description(&self) -> &str {
-        "Check if ontology contains all important OWL prefixes"
+        "Check if the field contains all important OWL prefixes"
     }
 
     /// Check if ontology contains all important OWL prefixes
-    fn lint(&self, document: &TurtleDocument) -> LintResult {
+    fn run(&self, linter: &Linter) -> LintResult {
         let mut owl_prefixes = vec![
             ("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
             ("rdfs", "http://www.w3.org/2000/01/rdf-schema#"),
@@ -26,8 +34,8 @@ impl Lint for ContainsOWLPrefixes {
             ("owl", "http://www.w3.org/2002/07/owl#"),
         ];
 
-        for item in &document.items {
-            if let Item::Statement(Statement::Directive(Directive::Prefix(directive))) = item {
+        for statement in &linter.document.statements {
+            if let Statement::Directive(Directive::Prefix(directive)) = statement {
                 if let Some(ref directive_prefix) = directive.prefix {
                     owl_prefixes = owl_prefixes
                         .into_iter()
@@ -39,10 +47,13 @@ impl Lint for ContainsOWLPrefixes {
         }
 
         if owl_prefixes.is_empty() {
-            return LintResult::Success("ontology contains all prefixes referenced in OWL2 standard / necessary for Protege".to_owned());
+            return LintResult::Success(
+                "The field contains all prefixes referenced in OWL2 standard / necessary for Protege."
+                    .to_owned(),
+            );
         }
         LintResult::Failure(owl_prefixes.iter().map(|(prefix, iri)| {
-            format!("The ontology is missing a prefix directive for {prefix}: `@prefix {prefix}: <{iri}> .`", prefix = prefix, iri = iri)
+            format!("The field is missing a prefix directive for {prefix}: `@prefix {prefix}: <{iri}> .`", prefix = prefix, iri = iri)
         }).collect())
     }
 }

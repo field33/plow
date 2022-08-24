@@ -1,14 +1,14 @@
-use crate::lint::{
-    common_error_literals::{NO_ROOT_PREFIX, RDF_GRAPH_PARSE_ERROR},
+use crate::{lint::{
+    common_error_literals::{NO_ROOT_PREFIX, },
     helpers::{catch_single_or_multiple_annotations_which_must_exist, fail_if_contains_inappropriate_word},
     lint_failure, lint_success, Lint, LintResult,
-};
-use harriet::TurtleDocument;
-use plow_graphify::document_to_graph;
+}, Linter, MultiReaderRdfGraph};
+
+
 use plow_ontology::constants::REGISTRY_AUTHOR;
 use plow_package_management::metadata::get_root_prefix;
-use rdftk_iri::IRI as RDFTK_IRI;
-use std::collections::HashSet;
+use field33_rdftk_iri_temporary_fork::IRI as RDFTK_IRI;
+use std::{collections::HashSet, any::Any};
 use std::str::FromStr;
 
 const RELATED_FIELD: &str = "`registry:author`";
@@ -19,16 +19,26 @@ const AUTHOR_NAME_MAX_ALLOWED_CHAR_COUNT: usize = 50;
 pub struct HasRegistryAuthor;
 
 impl Lint for HasRegistryAuthor {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }     
     fn short_description(&self) -> &str {
-        "Check that the ontology is annotated with a value for `registry:author`"
+        "Check that the field is annotated with a value for `registry:author`"
     }
     /// Lints for the existence of `registry:author` and its validity.
     /// Max character count is set to 50.
-    fn lint(&self, document: &TurtleDocument) -> LintResult {
-        let rdf_factory = rdftk_core::simple::statement::statement_factory();
-        if let Ok(rdf_graph) = document_to_graph(document) {
-            if let Some(root_prefix) = get_root_prefix(document) {
-                let graph = rdf_graph.borrow();
+    fn run(
+        &self,
+        Linter {
+            document,
+            graph: MultiReaderRdfGraph { inner: rdf_graph },
+            ..
+        }: &Linter,
+    ) -> LintResult {
+        let rdf_factory = field33_rdftk_core_temporary_fork::simple::statement::statement_factory();
+        if let Some(root_prefix) = get_root_prefix(document) {
+                            let graph_ref = rdf_graph;
+            let graph = graph_ref.borrow();
                 // We explicitly pass valid data, unwrap is safe here.
                 #[allow(clippy::unwrap_used)]
                 let annotations = graph
@@ -60,7 +70,7 @@ impl Lint for HasRegistryAuthor {
                             let author_literal = literal.lexical_form();
                             let name_and_email_raw = author_literal.split('<').collect::<Vec<_>>();
 
-                            name_and_email_raw.get(0).map_or_else(|| {
+                            name_and_email_raw.first().map_or_else(|| {
                                 lint_failure!(format!("{lint_prefix} is not in its right form. Example of a right form: \"An Author's Name <email@oftheauthor.com>\"."))
                             }, |maybe_name| if maybe_name.ends_with(' ') {
                                     let trimmed_maybe_name = maybe_name.trim();
@@ -80,7 +90,7 @@ impl Lint for HasRegistryAuthor {
                                         if maybe_email.len() == 1 {
                                             return lint_failure!(format!("The email field in {lint_prefix} should finish with a '>' character."));
                                         }
-                                        maybe_email.get(0).map_or_else(|| lint_failure!(format!(
+                                        maybe_email.first().map_or_else(|| lint_failure!(format!(
                                                 "The email field in {lint_prefix} can not be parsed."
                                             )), |maybe_email| {
                                             let email_valid = email_address::EmailAddress::is_valid(maybe_email);
@@ -104,12 +114,10 @@ impl Lint for HasRegistryAuthor {
                        return lint_failure!(format!("Some {lint_prefix} annotations are invalid. More info: {}", messages.join(", ")));
                     }
                 }
-                lint_success!("All {lint_prefix} annotations are valid.")
+                lint_success!(format!("All {lint_prefix} annotations are valid."))
             } else {
                 lint_failure!(NO_ROOT_PREFIX)
             }
-        } else {
-            lint_failure!(RDF_GRAPH_PARSE_ERROR)
-        }
+
     }
 }

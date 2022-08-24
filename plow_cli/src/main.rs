@@ -25,9 +25,10 @@
     clippy::non_ascii_literal,
     clippy::print_stdout,
     clippy::print_stderr,
-
+    clippy::exit,
     // We decided that we're ok with expect
     clippy::expect_used,
+    clippy::wildcard_imports,
 
     // Too restrictive for the current style
     clippy::missing_inline_in_public_items,
@@ -59,105 +60,52 @@
     clippy::negative_feature_names
 )]
 
-///! A premature version of a future cli for `ontology_tools`.
-///! It only collects ideas now and will be architected and re-written in the future.
-use anyhow::{anyhow, bail, Result};
-use clap::{App, Arg};
-use dialoguer::console::Emoji;
-use dialoguer::Input;
-use harriet::TurtleDocument;
-use nom::error::VerboseError;
-use plow_ontology::{initialize_ontology, validate_ontology_name};
-use plow_linter::lint::LintResult;
-// This is currently fine for this stage of this binary.
-#[allow(clippy::wildcard_imports)]
-use plow_linter::lints::*;
+pub mod config;
+mod error;
+mod feedback;
+pub mod manifest;
+mod subcommand;
 
-pub static SUCCESS: Emoji = Emoji("✅  ", "SUCCESS");
-pub static WARNING: Emoji = Emoji("⚠️  ", "MAYBE");
-pub static FAILURE: Emoji = Emoji("❌  ", "FAILURE");
+use clap::{App, AppSettings};
+use feedback::command_failed;
 
-// TODO: Make a scope and a development plan for this project, it is currently just a sketch.
-
-pub fn main() -> Result<()> {
-    let matches = App::new("Ontology Tools CLI")
+#[allow(clippy::missing_panics_doc)]
+pub fn main() {
+    let app = App::new("plow")
         .version("0.1.0")
-        .author("Maximilian Goisser <max@field33.com>, Ali Somay <ali@field33.com>")
-        .about("A command line application to apply certain operations to ontologies.")
-        .arg(
-            Arg::with_name("init")
-                .long("init")
-                .help("Initializes an ontology."),
-        )
-        .arg(
-            Arg::with_name("lint")
-                .short('l')
-                .value_name("PATH")
-                .long("lint")
-                .help("Lints a given ttl file.")
-                .takes_value(true),
-        )
-        .get_matches();
+        .about("Plowing the field of knowledge. Package management for ontologies.")
+        .subcommand(subcommand::lint::attach_as_sub_command())
+        .subcommand(subcommand::login::attach_as_sub_command())
+        .subcommand(subcommand::submit::attach_as_sub_command())
+        .subcommand(subcommand::init::attach_as_sub_command())
+        .setting(AppSettings::SubcommandRequiredElseHelp)
+        .setting(AppSettings::SubcommandPrecedenceOverArg);
 
-    if matches.is_present("lint") {
-        if let Some(file_path) = matches.value_of("lint") {
-            lint_file(file_path)?;
-        } else {
-            bail!("Please give a file path to a ttl file to lint.");
+    let mut app_for_help_reference = app.clone();
+
+    let matches = app.get_matches();
+    if match matches.subcommand() {
+        Some(("login", sub_matches)) => {
+            subcommand::login::run_command(sub_matches).feedback();
+            Some(())
         }
-    }
-    if matches.is_present("init") {
-        initialize()?;
-    }
-
-    Ok(())
-}
-
-// TODO: Some more explanation about what kind of input this function expects.
-fn initialize() -> Result<()> {
-    let ontology_name = Input::with_theme(&dialoguer::theme::ColorfulTheme::default())
-        .with_prompt(
-            "Name of the ontology? (internal name, only alphanumeric characters and underscores)",
-        )
-        .validate_with(|input: &String| validate_ontology_name(input))
-        .interact_text()?;
-    let ontology = initialize_ontology(&ontology_name)?;
-    print!("{ontology}");
-    Ok(())
-}
-fn lint_file(ontology_file_path: &str) -> Result<()> {
-    let ontology = std::fs::read_to_string(&ontology_file_path).expect("Unable to read the file");
-
-    let document = TurtleDocument::parse::<VerboseError<&str>>(&ontology)
-        .expect("Unable to parse the ontology")
-        .1;
-
-    let lints = all_lints();
-
-    let mut contains_err = false;
-    for lint in lints {
-        use LintResult::*;
-        let res = lint.lint(&document);
-        match res {
-            Success(message) => {
-                println!("{SUCCESS}{message}");
-            }
-            Warning(messages) => {
-                for message in messages {
-                    println!("{WARNING}{message}");
-                }
-            }
-            Failure(messages) => {
-                for message in messages {
-                    println!("{FAILURE}{message}");
-                }
-                contains_err = true;
-            }
+        Some(("lint", sub_matches)) => {
+            subcommand::lint::run_command(sub_matches).feedback();
+            Some(())
         }
+        Some(("submit", sub_matches)) => {
+            subcommand::submit::run_command(sub_matches).feedback();
+            Some(())
+        }
+        Some(("init", sub_matches)) => {
+            subcommand::init::run_command(sub_matches).feedback();
+            Some(())
+        }
+        _ => None,
     }
-
-    if contains_err {
-        return Err(anyhow!("The file contains errors."));
+    .is_none()
+        && app_for_help_reference.print_long_help().is_err()
+    {
+        command_failed("Please use a subcommand which is supported by this version of plow. You may consult plow --help.");
     }
-    Ok(())
 }

@@ -78,6 +78,15 @@
 //!
 //! For a full documentation of the package management process see [`doc_process`].
 
+use harriet::TurtleDocument;
+use lint::LintResult;
+use lints::{LintSet, PlowLint};
+use plow_graphify::document_to_graph;
+
+use field33_rdftk_core_temporary_fork::model::graph::GraphRef;
+// use rayon::prelude::IntoParallelRefIterator;
+// use rayon::prelude::ParallelIterator;
+
 pub mod lint;
 pub mod lints;
 
@@ -117,3 +126,164 @@ pub mod lints;
 ///     rWorkspace --> pWorkspace: constructWsProtege
 /// ```
 pub const fn doc_process() {}
+
+// We only read immutable data
+// We don't cast or transmute anything
+// We do not play with reference counting.
+// This wrapper type is only Sync to allow parallel execution of the linting process.
+// Underlying type is not sync because it's methods return `Rc<RefCell<..>>`
+// On the other hand we only read from that type by doing one borrow at a time so it is not much different than &.
+// TODO: Document this in a proper way.
+// Currently this is not in use.
+#[allow(clippy::undocumented_unsafe_blocks)]
+unsafe impl Sync for MultiReaderRdfGraph {}
+pub struct MultiReaderRdfGraph {
+    pub inner: GraphRef,
+}
+
+// TODO: This is an intermediate design which will improve asap when we have time.
+pub struct Linter<'linter> {
+    document: TurtleDocument<'linter>,
+    graph: MultiReaderRdfGraph,
+    lints: Vec<LintSet>,
+}
+
+impl<'linter> TryFrom<&'linter str> for Linter<'linter> {
+    type Error = anyhow::Error;
+    fn try_from(field_contents: &'linter str) -> Result<Self, Self::Error> {
+        let document = TurtleDocument::parse_full(field_contents)
+            .map_err(|_| anyhow::anyhow!("Parse error."))?;
+        let graph = document_to_graph(&document)?;
+        let multi_reader_graph = MultiReaderRdfGraph { inner: graph };
+        Ok(Self {
+            document,
+            graph: multi_reader_graph,
+            lints: vec![],
+        })
+    }
+}
+
+// TODO: Maybe implement builder pattern later?
+impl Linter<'_> {
+    // pub fn inject_lint_to_lint_set(&mut self, lint: PlowLint) {
+    //     self.lints.push(lint);
+    // }
+
+    // pub fn inject_sub_lint_to_lint_set(&mut self, sub_lint: PlowLint) {
+    //     if let Some(ref mut existing_sub_lints) = self.sub_lints {
+    //         existing_sub_lints.push(sub_lint);
+    //     } else {
+    //         self.sub_lints = Some(vec![sub_lint]);
+    //     }
+    // }
+
+    pub fn add_lint_as_set(
+        &mut self,
+        lints: Vec<PlowLint>,
+        sub_lints: Option<Vec<PlowLint>>,
+    ) -> uuid::Uuid {
+        let id = uuid::Uuid::new_v4();
+        let set = LintSet {
+            id,
+            description: "injected lint".to_owned(),
+            lints,
+            sub_lints,
+        };
+        self.lints.push(set);
+        id
+    }
+
+    pub fn add_lint_set(&mut self, lint_set: LintSet) -> String {
+        let description = String::from(&lint_set.description);
+        self.lints.push(lint_set);
+        description
+    }
+
+    pub fn remove_all_lints(&mut self) {
+        self.lints.clear();
+    }
+}
+
+impl Linter<'_> {
+    pub fn run_all_lints(&self) -> Vec<LintResult> {
+        let results = self.lints.iter().fold(vec![], |mut results, lint_set| {
+            let set_results = lint_set.lints.iter().fold(vec![], |mut set_results, lint| {
+                let result = lint.run(self);
+                set_results.push(result);
+                set_results
+            });
+            results.extend(set_results);
+            results
+        });
+        results
+    }
+
+    pub fn run_lint_set(&self, id: uuid::Uuid) -> Vec<LintResult> {
+        let set_results = self.lints.iter().fold(vec![], |set_results, lint_set| {
+            if lint_set.id == id {
+                let set_results = lint_set.lints.iter().fold(vec![], |mut set_results, lint| {
+                    let result = lint.run(self);
+                    set_results.push(result);
+                    set_results
+                });
+                return set_results;
+            }
+            set_results
+        });
+        set_results
+    }
+    pub fn run_lints_check_if_contains_any_failure(&self) -> bool {
+        self.lints.iter().any(|lint_set| {
+            lint_set
+                .lints
+                .iter()
+                .any(|lint| lint.run(self).is_failure())
+        })
+    }
+    // pub fn run_lints_in_parallel(&self) -> Vec<LintResult> {
+    //     let iterator = self.lints.par_iter();
+    //     iterator
+    //         .fold(std::vec::Vec::new, |mut results: Vec<LintResult>, lint| {
+    //             if lint.can_run_in_parallel() {
+    //                 let result = lint.run(self);
+    //                 results.push(result);
+    //             }
+    //             results
+    //         })
+    //         .collect::<LintResults>()
+    //         .results
+    // }
+    // pub fn run_lints_in_parallel_check_if_contains_any_failure(&self) -> bool {
+    //     let iterator = self.lints.par_iter();
+    //     iterator.any(|lint| {
+    //         if lint.can_run_in_parallel() {
+    //             lint.run(self).is_failure()
+    //         } else {
+    //             false
+    //         }
+    //     })
+    // }
+    // // TODO: These functions are a hack and intended to be removed later.
+    // pub fn run_lints_which_are_only_allowed_to_be_run_in_sequence(&self) -> Vec<LintResult> {
+    //     let sequential_run_results = self.lints.iter().fold(vec![], |mut results, lint| {
+    //         if !lint.can_run_in_parallel() {
+    //             results.push(lint.run(self));
+    //         }
+    //         results
+    //     });
+    //     sequential_run_results
+    // }
+    // pub fn run_lints_which_are_only_allowed_to_be_run_in_sequence_check_if_contains_any_failure(
+    //     &self,
+    // ) -> bool {
+    //     let there_are_failures_in_sequential_run = self.lints.iter().any(|lint| {
+    //         if lint.can_run_in_parallel() {
+    //             false
+    //         } else {
+    //             lint.run(self).is_failure()
+    //         }
+    //     });
+    //     there_are_failures_in_sequential_run
+    // }
+    //
+}

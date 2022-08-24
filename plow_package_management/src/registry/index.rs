@@ -5,7 +5,7 @@ use anyhow::{anyhow, Error};
 use serde::{Deserialize, Serialize};
 use std::convert::{TryFrom, TryInto};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct IndexContents {
     pub versions: Vec<IndexedPackageVersion>,
 }
@@ -18,6 +18,12 @@ pub struct IndexedPackageVersion {
     pub cksum: String,
     pub ontology_iri: Option<String>,
     pub deps: Vec<IndexedPackageDependency>,
+}
+
+impl PartialEq for IndexedPackageVersion {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.version == other.version && self.cksum == other.cksum
+    }
 }
 
 impl TryFrom<IndexedPackageVersion> for PackageVersionWithRegistryMetadata {
@@ -60,7 +66,7 @@ impl TryFrom<PackageVersionWithRegistryMetadata> for IndexedPackageVersion {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct IndexedPackageDependency {
     pub name: String,
     pub req: String,

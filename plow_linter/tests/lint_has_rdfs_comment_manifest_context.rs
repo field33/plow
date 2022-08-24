@@ -1,6 +1,7 @@
 use harriet::TurtleDocument;
-use plow_linter::lint::Lint;
-use plow_linter::lints::HasRdfsCommentManifestContext;
+
+use plow_linter::lints::{HasRdfsCommentManifestContext, PlowLint};
+use plow_linter::Linter;
 
 const RDFS_COMMENT_MANIFEST_CONTEXT_BASE: &str = concat!(
     include_str!("data/default_ttl_header"),
@@ -41,28 +42,51 @@ Duis et elit ac tellus facilisis venenatis eu ut mi. Etiam dapibus rhoncus lacus
     let ttl_document_with_rdfs_comment_f =
         format!("{RDFS_COMMENT_MANIFEST_CONTEXT_BASE} rdfs:comment \"Multiple long descriptions.\", \"Which are allowed because it uses a generic annotation on the other hand only the first one will be evaulated as a long description and later ones are ignored in this case this test case should FAIL because of a missing language tag.\"@en .");
 
-    let document_a = TurtleDocument::parse_full(&ttl_document_with_rdfs_comment_a).unwrap();
-    let document_b = TurtleDocument::parse_full(&ttl_document_with_rdfs_comment_b).unwrap();
-    let document_c = TurtleDocument::parse_full(&ttl_document_with_rdfs_comment_c).unwrap();
-    let document_d = TurtleDocument::parse_full(&ttl_document_with_rdfs_comment_d).unwrap();
-    let document_e = TurtleDocument::parse_full(&ttl_document_with_rdfs_comment_e).unwrap();
-    let document_f = TurtleDocument::parse_full(&ttl_document_with_rdfs_comment_f).unwrap();
+    let mut linter_a = Linter::try_from(ttl_document_with_rdfs_comment_a.as_ref()).unwrap();
+    linter_a.add_lint_as_set(
+        vec![Box::new(HasRdfsCommentManifestContext::default()) as PlowLint],
+        None,
+    );
+    let mut linter_b = Linter::try_from(ttl_document_with_rdfs_comment_b.as_ref()).unwrap();
+    linter_b.add_lint_as_set(
+        vec![Box::new(HasRdfsCommentManifestContext::default()) as PlowLint],
+        None,
+    );
+    let mut linter_c = Linter::try_from(ttl_document_with_rdfs_comment_c.as_ref()).unwrap();
+    linter_c.add_lint_as_set(
+        vec![Box::new(HasRdfsCommentManifestContext::default()) as PlowLint],
+        None,
+    );
+    let mut linter_d = Linter::try_from(ttl_document_with_rdfs_comment_d.as_ref()).unwrap();
+    linter_d.add_lint_as_set(
+        vec![Box::new(HasRdfsCommentManifestContext::default()) as PlowLint],
+        None,
+    );
+    let mut linter_e = Linter::try_from(ttl_document_with_rdfs_comment_e.as_ref()).unwrap();
+    linter_e.add_lint_as_set(
+        vec![Box::new(HasRdfsCommentManifestContext::default()) as PlowLint],
+        None,
+    );
+    let mut linter_f = Linter::try_from(ttl_document_with_rdfs_comment_f.as_ref()).unwrap();
+    linter_f.add_lint_as_set(
+        vec![Box::new(HasRdfsCommentManifestContext::default()) as PlowLint],
+        None,
+    );
 
-    let lint = HasRdfsCommentManifestContext::default();
-    let result_a = lint.lint(&document_a);
-    let result_b = lint.lint(&document_b);
-    let result_c = lint.lint(&document_c);
-    let result_d = lint.lint(&document_d);
-    let result_e = lint.lint(&document_e);
-    let result_f = lint.lint(&document_f);
-    assert!(result_a.is_success());
-    assert!(result_b.is_failure());
+    let result_a = linter_a.run_all_lints();
+    let result_b = linter_b.run_all_lints();
+    let result_c = linter_c.run_all_lints();
+    let result_d = linter_d.run_all_lints();
+    let result_e = linter_e.run_all_lints();
+    let result_f = linter_f.run_all_lints();
+    assert!(result_a.first().unwrap().is_success());
+    assert!(result_b.first().unwrap().is_failure());
     // Profanity filter turned off.
-    assert!(result_c.is_success());
+    assert!(result_c.first().unwrap().is_success());
     //
-    assert!(result_d.is_failure());
-    assert!(result_e.is_failure());
-    assert!(result_f.is_failure());
+    assert!(result_d.first().unwrap().is_failure());
+    assert!(result_e.first().unwrap().is_failure());
+    assert!(result_f.first().unwrap().is_failure());
 }
 
 #[test]

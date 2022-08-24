@@ -11,7 +11,7 @@
                                                        registry:packageName "@core/change_tracking" ;
                                                        registry:packageVersion "0.1.0" ;
                                                        registry:canonicalPrefix "core_change_tracking" ;
-                                                       registry:dependency "other_ontology =0.1.2" ;
+                                                       registry:dependency "@other/other_ontology =0.1.2" ;
                                                        registry:ontologyFormatVersion "v1" .
 
 #################################################################
