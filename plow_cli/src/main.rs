@@ -65,6 +65,7 @@ mod error;
 mod feedback;
 pub mod manifest;
 mod subcommand;
+mod sync;
 
 use clap::{App, AppSettings};
 use feedback::command_failed;
@@ -72,7 +73,7 @@ use feedback::command_failed;
 #[allow(clippy::missing_panics_doc)]
 pub fn main() {
     let app = App::new("plow")
-        .version("0.1.0")
+        .version("0.2.2")
         .about("Plowing the field of knowledge. Package management for ontologies.")
         .subcommand(subcommand::lint::attach_as_sub_command())
         .subcommand(subcommand::login::attach_as_sub_command())
