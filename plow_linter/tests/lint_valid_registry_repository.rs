@@ -24,9 +24,8 @@ fn lint_registry_repository_exists_and_valid() {
     let ttl_document_with_registry_repository_c =
         format!("{REGISTRY_REPOSITORY_BASE} registry:repository \"https://www.beloved-field.io\", \"http://www.another-beloved-field.io\" .");
 
-    // Limit is 63 chars in length.
     let ttl_document_with_registry_repository_d =
-        format!("{REGISTRY_REPOSITORY_BASE} registry:repository \"https://_i-am-a-very-long-long-string-of-text-that-should-not-be-allowed.example.com\" .");
+        format!("{REGISTRY_REPOSITORY_BASE} registry:repository \"https://github.com/field33/ontologies/tree/main/%40fld33/organization_communication\" .");
 
     let mut linter_a = Linter::try_from(ttl_document_with_registry_repository_a.as_ref()).unwrap();
     linter_a.add_lint_as_set(
@@ -57,7 +56,7 @@ fn lint_registry_repository_exists_and_valid() {
     assert!(result_a.first().unwrap().is_success());
     assert!(result_b.first().unwrap().is_success());
     assert!(result_c.first().unwrap().is_failure());
-    assert!(result_d.first().unwrap().is_failure());
+    assert!(result_d.first().unwrap().is_success());
 }
 
 #[test]

@@ -99,10 +99,12 @@ pub fn fail_if_domain_name_is_invalid(
 ) -> Option<LintResult> {
     let raw_literal = literal.lexical_form();
     parse_dns_name(raw_literal).map_or_else(
-        |_| {
-            Some(lint_failure!(&format!(
+        |err| match err.kind() {
+            // We do not validate the length with addr, it is too strict.
+            addr::error::Kind::LabelTooLong => None,
+            _ => Some(lint_failure!(&format!(
                 "The value of {related_field} is not a valid domain name."
-            )))
+            ))),
         },
         |_| None,
     )
