@@ -3731,7 +3731,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.4",
- "spdx",
+ "spdx 0.8.1",
  "thiserror",
  "tokio",
  "toml",
@@ -3751,7 +3751,7 @@ dependencies = [
  "fallible-iterator",
  "harriet 0.2.0",
  "nom",
- "plow_linter 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_linter 0.2.2",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_package_management 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon",
@@ -3841,38 +3841,9 @@ dependencies = [
  "semver 1.0.13",
  "serde",
  "serde_json",
- "spdx",
+ "spdx 0.8.1",
  "tempdir",
  "thiserror",
-]
-
-[[package]]
-name = "plow_linter"
-version = "0.2.2"
-dependencies = [
- "addr",
- "anyhow",
- "aquamarine",
- "chashmap",
- "darc",
- "email_address",
- "field33_rdftk_core_temporary_fork",
- "field33_rdftk_iri_temporary_fork",
- "harriet 0.2.0",
- "nom",
- "plow_graphify 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "rayon",
- "regex",
- "rustrict 0.5.0",
- "semver 1.0.13",
- "serde",
- "serde_json",
- "spdx",
- "tempdir",
- "thiserror",
- "uuid 1.1.2",
 ]
 
 [[package]]
@@ -3900,7 +3871,36 @@ dependencies = [
  "semver 1.0.13",
  "serde",
  "serde_json",
- "spdx",
+ "spdx 0.8.1",
+ "tempdir",
+ "thiserror",
+ "uuid 1.1.2",
+]
+
+[[package]]
+name = "plow_linter"
+version = "0.2.3"
+dependencies = [
+ "addr",
+ "anyhow",
+ "aquamarine",
+ "chashmap",
+ "darc",
+ "email_address",
+ "field33_rdftk_core_temporary_fork",
+ "field33_rdftk_iri_temporary_fork",
+ "harriet 0.2.0",
+ "nom",
+ "plow_graphify 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rayon",
+ "regex",
+ "rustrict 0.5.0",
+ "semver 1.0.13",
+ "serde",
+ "serde_json",
+ "spdx 0.9.0",
  "tempdir",
  "thiserror",
  "uuid 1.1.2",
@@ -3930,7 +3930,7 @@ dependencies = [
  "field33_rdftk_iri_temporary_fork",
  "harriet 0.2.0",
  "plow_graphify 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_linter 0.2.2",
  "serde",
  "serde_json",
 ]
@@ -3990,7 +3990,7 @@ dependencies = [
  "harriet 0.2.0",
  "itertools 0.10.3",
  "plow_graphify 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.2",
+ "plow_linter 0.2.3",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "pubgrub",
  "semver 1.0.13",
@@ -4979,6 +4979,15 @@ name = "spdx"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78bce5b26be49ead8eac0bbdec432b2c52ccfbfeff1ab814fc78bf53e003422e"
+dependencies = [
+ "smallvec 1.9.0",
+]
+
+[[package]]
+name = "spdx"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a346909b3fd07776f9b96b98d4a58e3666f831c9a672c279b10f795a34c36425"
 dependencies = [
  "smallvec 1.9.0",
 ]

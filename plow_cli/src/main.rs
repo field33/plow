@@ -65,7 +65,6 @@ mod error;
 mod feedback;
 pub mod manifest;
 mod subcommand;
-mod sync;
 
 use clap::{App, AppSettings};
 use feedback::command_failed;
