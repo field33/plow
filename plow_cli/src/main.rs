@@ -63,11 +63,14 @@
 pub mod config;
 mod error;
 mod feedback;
+pub mod git;
 pub mod manifest;
 mod subcommand;
+pub mod sync;
+pub mod utils;
 
 use clap::{App, AppSettings};
-use feedback::command_failed;
+use feedback::{command_failed, Feedback};
 
 #[allow(clippy::missing_panics_doc)]
 pub fn main() {
@@ -81,31 +84,47 @@ pub fn main() {
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .setting(AppSettings::SubcommandPrecedenceOverArg);
 
-    let mut app_for_help_reference = app.clone();
+    let custom_plow_home_path: Option<camino::Utf8PathBuf> = None;
+    // TODO: Check for --config flag to retrieve a custom config dir path later.
+    // So we can pass also Some values.
 
-    let matches = app.get_matches();
-    if match matches.subcommand() {
-        Some(("login", sub_matches)) => {
-            subcommand::login::run_command(sub_matches).feedback();
-            Some(())
-        }
-        Some(("lint", sub_matches)) => {
-            subcommand::lint::run_command(sub_matches).feedback();
-            Some(())
-        }
-        Some(("submit", sub_matches)) => {
-            subcommand::submit::run_command(sub_matches).feedback();
-            Some(())
-        }
-        Some(("init", sub_matches)) => {
-            subcommand::init::run_command(sub_matches).feedback();
-            Some(())
-        }
-        _ => None,
+    let mut registry_url_override_from_command: Option<String> = None;
+    let matches = app.clone().get_matches();
+    if let Some((_, matches)) = matches.subcommand() {
+        registry_url_override_from_command = matches.get_one::<String>("REGISTRY_URL").cloned();
     }
-    .is_none()
-        && app_for_help_reference.print_long_help().is_err()
-    {
-        command_failed("Please use a subcommand which is supported by this version of plow. You may consult plow --help.");
+
+    match config::configure(custom_plow_home_path, registry_url_override_from_command) {
+        Ok(ref config) => {
+            let mut app_for_help_reference = app.clone();
+
+            if match matches.subcommand() {
+                Some(("login", sub_matches)) => {
+                    subcommand::login::run_command(sub_matches, config).feedback();
+                    Some(())
+                }
+                Some(("lint", sub_matches)) => {
+                    subcommand::lint::run_command(sub_matches, config).feedback();
+                    Some(())
+                }
+                Some(("submit", sub_matches)) => {
+                    subcommand::submit::run_command(sub_matches, config).feedback();
+                    Some(())
+                }
+                Some(("init", sub_matches)) => {
+                    subcommand::init::run_command(sub_matches, config).feedback();
+                    Some(())
+                }
+                _ => None,
+            }
+            .is_none()
+                && app_for_help_reference.print_long_help().is_err()
+            {
+                command_failed("Please use a subcommand which is supported by this version of plow. You may consult plow --help.");
+            }
+        }
+        Err(cli_error) => {
+            cli_error.feedback();
+        }
     }
 }

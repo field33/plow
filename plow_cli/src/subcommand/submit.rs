@@ -1,9 +1,10 @@
 mod response;
 
+use crate::config::PlowConfig;
 use crate::error::CliError;
 use crate::error::SubmissionError::*;
 
-use crate::{config::get_registry_url, feedback::*};
+use crate::feedback::*;
 use anyhow::Result;
 use clap::{arg, App, AppSettings, Arg, ArgMatches, Command};
 use plow_linter::lints::field_manifest_lints;
@@ -11,7 +12,6 @@ use reqwest::blocking::multipart::Form;
 
 use self::response::{RegistryResponse, StatusInfo};
 use super::lint::lint_file;
-use super::login::get_saved_api_token;
 
 pub fn attach_as_sub_command() -> App<'static> {
     Command::new("submit")
@@ -19,7 +19,7 @@ pub fn attach_as_sub_command() -> App<'static> {
         .arg(
             Arg::with_name("registry")
                 .short('r')
-                .value_name("REGISTRY_PATH")
+                .value_name("REGISTRY_URL")
                 .long("registry")
                 .help("Specifies the target registry to submit.")
                 .takes_value(true),
@@ -39,14 +39,17 @@ pub fn attach_as_sub_command() -> App<'static> {
 }
 
 #[allow(clippy::as_conversions)]
-pub fn run_command(sub_matches: &ArgMatches) -> Box<dyn Feedback + '_> {
-    match run_command_flow(sub_matches) {
+pub fn run_command(sub_matches: &ArgMatches, config: &PlowConfig) -> Box<dyn Feedback + 'static> {
+    match run_command_flow(sub_matches, config) {
         Ok(feedback) => Box::new(feedback) as Box<dyn Feedback>,
         Err(feedback) => Box::new(feedback) as Box<dyn Feedback>,
     }
 }
 
-fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError> {
+fn run_command_flow(
+    sub_matches: &ArgMatches,
+    config: &PlowConfig,
+) -> Result<impl Feedback, CliError> {
     let field_file_path_arg = sub_matches
         .get_one::<String>("FIELD_PATH")
         .ok_or(FieldPathNotProvided)?;
@@ -64,15 +67,6 @@ fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError>
         let public = !sub_matches.is_present("private");
         let dry_run = sub_matches.is_present("dry-run");
 
-        let registry_url = if sub_matches.is_present("registry") {
-            sub_matches
-                .get_one::<String>("registry")
-                .ok_or(RegistryPathNotProvided)?
-                .clone()
-        } else {
-            get_registry_url()?
-        };
-
         let submission = reqwest::blocking::multipart::Form::new()
             .text("public", if public { "true" } else { "false" })
             .file("field", &field_file_path)
@@ -81,7 +75,8 @@ fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError>
             })?;
 
         // Read credentials
-        let token = get_saved_api_token()?;
+        let token = config.get_saved_api_token()?;
+        let registry_url = config.get_registry_url()?;
 
         let mut submission_url = format!("{registry_url}/v1/field/submit");
         if dry_run {

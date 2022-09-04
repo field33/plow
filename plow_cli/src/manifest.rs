@@ -1,15 +1,22 @@
 #![allow(dead_code)]
 
 use anyhow::{anyhow, Result};
+use camino::Utf8Path;
 use harriet::{Literal, Object, ParseError, Triples, TurtleDocument, Verb, IRI};
+use lazy_static::lazy_static;
 use plow_package_management::{
     package::FieldMetadata,
     registry::index::{IndexedPackageDependency, IndexedPackageVersion},
     resolve::Dependency,
     version::SemanticVersion,
 };
+use regex::Regex;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+
+lazy_static! {
+    static ref PACKAGE_FULL_NAME_REGEX: Regex = Regex::new(r#""(@.+/.+)""#).unwrap();
+}
 
 pub struct FieldManifest {
     extracted_annotations: HashMap<String, Result<Vec<String>, anyhow::Error>>,
@@ -18,6 +25,35 @@ pub struct FieldManifest {
 }
 
 impl FieldManifest {
+    pub fn quick_extract_field_full_name<P: AsRef<Utf8Path>>(field_path: &P) -> Result<String> {
+        let lines = crate::utils::read_lines(field_path.as_ref())?;
+        let mut package_name_annotation_matched = false;
+        for line in lines {
+            if let Ok(line) = line {
+                if package_name_annotation_matched {
+                    let captures = PACKAGE_FULL_NAME_REGEX.captures(&line);
+                    if let Some(captures) = captures {
+                        if let Some(package_full_name) = captures.get(1) {
+                            return Ok(package_full_name.as_str().to_string());
+                        }
+                    }
+                } else {
+                    let annotation_match = line.matches("registry:packageName").collect::<Vec<_>>();
+                    if !annotation_match.is_empty() {
+                        package_name_annotation_matched = true;
+                        let captures = PACKAGE_FULL_NAME_REGEX.captures(&line);
+                        if let Some(captures) = captures {
+                            if let Some(package_full_name) = captures.get(1) {
+                                return Ok(package_full_name.as_str().to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Err(anyhow!("Could not find package full name in field file"))
+    }
+
     #[allow(clippy::too_many_lines)]
     pub fn new(field_contents: String) -> Result<Self> {
         let mut ontology_iri = None;

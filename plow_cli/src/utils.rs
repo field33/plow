@@ -1,5 +1,9 @@
 use camino::Utf8PathBuf;
-use std::path::PathBuf;
+use std::{
+    fs::File,
+    io::{self, BufRead},
+    path::PathBuf,
+};
 
 fn dig_files(maybe_file_paths: &mut Vec<PathBuf>, path: PathBuf) -> anyhow::Result<()> {
     if path.is_dir() {
@@ -29,4 +33,14 @@ pub fn list_files<T: Into<PathBuf>>(
         })
         .map(|path| Utf8PathBuf::from(path.to_string_lossy().as_ref()))
         .collect())
+}
+
+// The output is wrapped in a Result to allow matching on errors
+// Returns an Iterator to the Reader of the lines of the file.
+pub fn read_lines<P>(path: P) -> io::Result<io::Lines<io::BufReader<File>>>
+where
+    P: std::convert::AsRef<std::path::Path>,
+{
+    let file = File::open::<P>(path)?;
+    Ok(io::BufReader::new(file).lines())
 }

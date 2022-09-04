@@ -1,6 +1,4 @@
-use crate::{
-    config::create_configuration_directory_if_not_exists, error::CliError, feedback::Feedback,
-};
+use crate::{config::PlowConfig, error::CliError, feedback::Feedback};
 
 use clap::{arg, App, AppSettings, ArgMatches, Command};
 use colored::*;
@@ -26,7 +24,7 @@ impl<'cred> CredentialsFile<'cred> {
 /// Registry table in credentials file (toml).
 #[derive(Serialize, Debug, Deserialize)]
 pub struct Registry<'reg> {
-    token: &'reg str,
+    pub token: &'reg str,
 }
 
 impl<'reg> Registry<'reg> {
@@ -54,41 +52,31 @@ pub fn attach_as_sub_command() -> App<'static> {
 }
 
 #[allow(clippy::as_conversions)]
-pub fn run_command(sub_matches: &ArgMatches) -> Box<dyn Feedback + '_> {
-    match run_command_flow(sub_matches) {
+pub fn run_command(sub_matches: &ArgMatches, config: &PlowConfig) -> Box<dyn Feedback + 'static> {
+    match run_command_flow(sub_matches, config) {
         Ok(feedback) => Box::new(feedback) as Box<dyn Feedback>,
         Err(feedback) => Box::new(feedback) as Box<dyn Feedback>,
     }
 }
 
-pub fn run_command_flow(sub_matches: &clap::ArgMatches) -> Result<impl Feedback, CliError> {
-    create_configuration_directory_if_not_exists()?;
-
+pub fn run_command_flow(
+    sub_matches: &clap::ArgMatches,
+    config: &PlowConfig,
+) -> Result<impl Feedback, CliError> {
     let token = sub_matches
         .get_one::<String>("API_TOKEN")
         .ok_or(NoTokenProvidedToSave)?;
 
-    save_credentials_replace_existing(token)?;
+    save_credentials_replace_existing(token, config)?;
     Ok(SuccessfulLogin)
 }
 
-pub fn save_credentials_replace_existing(token: &str) -> Result<(), CliError> {
+pub fn save_credentials_replace_existing(token: &str, config: &PlowConfig) -> Result<(), CliError> {
     let credentials_contents =
         toml::to_string::<CredentialsFile>(&CredentialsFile::with_token(token))
             .map_err(|_| FailedToReadCredentialsFile)?;
 
-    let config_dir = crate::config::get_config_dir()?;
-
-    std::fs::write(config_dir.join("credentials.toml"), credentials_contents)
+    std::fs::write(&config.credentials_path, credentials_contents)
         .map_err(|_| FailedToWriteCredentialsFile)?;
     Ok(())
-}
-
-pub fn get_saved_api_token() -> Result<String, CliError> {
-    let config_dir = crate::config::get_config_dir().map_err(|_| FailedToReadCredentialsFile)?;
-    let credentials_file_contents = std::fs::read_to_string(config_dir.join("credentials.toml"))
-        .map_err(|_| FailedToReadCredentialsFile)?;
-    let credentials = toml::from_str::<CredentialsFile>(&credentials_file_contents)
-        .map_err(|_| FailedToReadCredentialsFile)?;
-    Ok(credentials.registry.token.to_owned())
 }

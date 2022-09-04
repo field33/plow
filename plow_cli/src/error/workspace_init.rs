@@ -7,12 +7,34 @@ pub enum WorkspaceInitializationError {
     FailedRecursiveListingFields { reason: String },
     #[error("Please run this command in a directory containing fields (.ttl files) in any depth.")]
     NoFieldsInDirectory,
-    #[error("Failed to create fields directory in current directory. Details: {0}")]
+    #[error(
+        "Plow couldn't read the workspace manifest (./Plow.toml), either the file does not exist, not readable or corrupted. Details: {0}"
+    )]
+    FailedToReadWorkspaceManifestFile(String),
+    #[error(
+        "Plow couldn't write the workspace manifest (./Plow.toml), is your workspace read only? Details: {0}"
+    )]
+    FailedToWriteWorkspaceManifestFile(String),
+    #[error(
+        "Plow couldn't write the fields directory (fields), is your workspace read only? Details: {0}"
+    )]
     FailedToCreateFieldsDirectory(String),
-    #[error("Failed to write to fields directory. Details: {0}")]
-    FailedToWriteToFieldsDirectory(String),
-    #[error("Failed to create Plow.toml in the workspace. Details: {0}")]
-    FailedToCreatePlowToml(String),
+    #[error(
+        "Plow couldn't read the fields directory (fields), could there be permission issues? Details: {0}"
+    )]
+    FailedToReadFieldsDirectory(String),
+    #[error(
+        "Workspace is already initialized. You may run plow init --force to recreate the workspace."
+    )]
+    WorkspaceAlreadyInitialized,
+    #[error(
+        "Plow couldn't remove the workspace manifest (./Plow.toml), is your workspace read only? Details: {0}"
+    )]
+    FailedToRemoveWorkspaceManifestFile(String),
+    #[error(
+        "Plow couldn't remove the fields directory (fields), is your workspace read only? Details: {0}"
+    )]
+    FailedToRemoveFieldsDirectory(String),
 }
 
 impl Feedback for WorkspaceInitializationError {
@@ -21,9 +43,13 @@ impl Feedback for WorkspaceInitializationError {
         match self {
             FailedRecursiveListingFields { .. }
             | NoFieldsInDirectory
+            | WorkspaceAlreadyInitialized
             | FailedToCreateFieldsDirectory(_)
-            | FailedToWriteToFieldsDirectory(_)
-            | FailedToCreatePlowToml(_) => {
+            | FailedToReadFieldsDirectory(_)
+            | FailedToReadWorkspaceManifestFile(_)
+            | FailedToRemoveFieldsDirectory(_)
+            | FailedToRemoveWorkspaceManifestFile(_)
+            | FailedToWriteWorkspaceManifestFile(_) => {
                 command_failed(&format!("{self}"));
             }
         }

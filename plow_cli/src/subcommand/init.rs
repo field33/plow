@@ -1,7 +1,7 @@
-mod field;
-mod utils;
-mod workspace;
+pub mod field;
+pub mod workspace;
 
+use crate::config::PlowConfig;
 use crate::error::CliError;
 use crate::error::FieldInitializationError::*;
 use crate::feedback::Feedback;
@@ -44,19 +44,29 @@ pub fn attach_as_sub_command() -> App<'static> {
                 .help("Initializes a field.")
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("force")
+                .short('f')
+                .long("field")
+                .help("Forces re-initialization of the workspace.")
+                .takes_value(false),
+        )
 }
 
 #[allow(clippy::as_conversions)]
-pub fn run_command(sub_matches: &ArgMatches) -> Box<dyn Feedback + '_> {
-    match run_command_flow(sub_matches) {
+pub fn run_command(sub_matches: &ArgMatches, config: &PlowConfig) -> Box<dyn Feedback + 'static> {
+    match run_command_flow(sub_matches, config) {
         Ok(feedback) => Box::new(feedback) as Box<dyn Feedback>,
         Err(feedback) => Box::new(feedback) as Box<dyn Feedback>,
     }
 }
 
-pub fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError> {
+pub fn run_command_flow(
+    sub_matches: &ArgMatches,
+    config: &PlowConfig,
+) -> Result<impl Feedback, CliError> {
     if !sub_matches.args_present() {
-        workspace::prepare()?;
+        workspace::prepare(config, sub_matches.get_flag("force"))?;
 
         // TODO: Return Success here..
     }

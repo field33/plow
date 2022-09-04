@@ -5,6 +5,7 @@ use plow_linter::lint::LintResult;
 use plow_linter::lints::*;
 use plow_linter::Linter;
 
+use crate::config::PlowConfig;
 use crate::error::CliError;
 use crate::error::LintSubcommandError::*;
 use crate::feedback::{field_info, general_lint_success, lint_start, Feedback};
@@ -24,14 +25,17 @@ pub fn attach_as_sub_command() -> App<'static> {
 }
 
 #[allow(clippy::as_conversions)]
-pub fn run_command(sub_matches: &ArgMatches) -> Box<dyn Feedback + '_> {
-    match run_command_flow(sub_matches) {
+pub fn run_command(sub_matches: &ArgMatches, config: &PlowConfig) -> Box<dyn Feedback + 'static> {
+    match run_command_flow(sub_matches, config) {
         Ok(feedback) => Box::new(feedback) as Box<dyn Feedback>,
         Err(feedback) => Box::new(feedback) as Box<dyn Feedback>,
     }
 }
 
-pub fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError> {
+pub fn run_command_flow(
+    sub_matches: &ArgMatches,
+    _config: &PlowConfig,
+) -> Result<impl Feedback, CliError> {
     let field_file_path = sub_matches
         .get_one::<String>("FIELD_PATH")
         .ok_or(NoFieldProvidedToLint)?;

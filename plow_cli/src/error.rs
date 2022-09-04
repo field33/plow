@@ -16,7 +16,7 @@ pub use login::LoginError;
 pub use submission::SubmissionError;
 pub use workspace_init::WorkspaceInitializationError;
 
-use crate::feedback::{command_not_complete, Feedback};
+use crate::feedback::{command_failed, command_not_complete, Feedback};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -37,6 +37,8 @@ pub enum CliError {
     FieldAccess(FieldAccessError),
     #[error("The command line option you have provided is not in the list of options. Please run plow --help to see the list of options.")]
     UnknownOption,
+    #[error("Do not use when publishing, intended for fast development.")]
+    Dummy,
 }
 
 impl From<SubmissionError> for CliError {
@@ -93,6 +95,9 @@ impl Feedback for CliError {
             FieldAccess(error) => error.feedback(),
             UnknownOption => {
                 command_not_complete(&format!("{self}"));
+            }
+            Dummy => {
+                command_failed(&format!("{self}"));
             }
         }
     }
