@@ -195,6 +195,7 @@ impl PublicIndexRepository {
         let local_repository_path = try_cloning_to.as_ref();
 
         // Clone the project or open the repository
+        #[allow(clippy::if_not_else)]
         let repository = if local_repository_path.exists() {
             if !local_repository_path.join(".git").exists() {
                 repo_builder.clone(
@@ -312,7 +313,7 @@ impl PublicIndexRepository {
                 "Fast-Forward: Setting {} to id: {}",
                 name, annotated_commit_id
             );
-            println!("{}", msg);
+            // println!("{}", msg);
             reference.set_target(annotated_commit_id, &msg)?;
             repository.set_head(&name)?;
             repository.checkout_head(Some(

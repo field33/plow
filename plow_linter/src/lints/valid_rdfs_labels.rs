@@ -45,6 +45,12 @@ impl Lint for ValidRdfsLabels {
             let all_subject_iris_with_selected_owl_props = graph
                 .statements()
                 .filter(|statement| {
+                    if let Some(subject_iri) =  statement.subject().as_iri() {
+                        // TODO: Fast filter improve, this will not check validity of registry annotations for labels.
+                        if subject_iri.to_string().matches("REGISTRY").count() > 0 {
+                            return false;
+                        }
+                    }
                     if let Some(object_iri) = statement.object().as_iri() {
                         return object_iri == &RDFTK_IRI::from_str(OWL_CLASS).unwrap().into()
                             || object_iri

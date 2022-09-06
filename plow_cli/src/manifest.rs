@@ -24,30 +24,39 @@ pub struct FieldManifest {
     ontology_iri: Option<String>,
 }
 
+impl std::fmt::Debug for FieldManifest {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FieldManifest")
+            .field("extracted_annotations", &self.extracted_annotations)
+            .field("ontology_iri", &self.ontology_iri)
+            .finish()
+    }
+}
+
 impl FieldManifest {
     pub fn quick_extract_field_full_name<P: AsRef<Utf8Path>>(field_path: &P) -> Result<String> {
         let lines = crate::utils::read_lines(field_path.as_ref())?;
         let mut package_name_annotation_matched = false;
+        #[allow(clippy::manual_flatten)]
         for line in lines {
             if let Ok(line) = line {
                 if package_name_annotation_matched {
                     let captures = PACKAGE_FULL_NAME_REGEX.captures(&line);
                     if let Some(captures) = captures {
                         if let Some(package_full_name) = captures.get(1) {
-                            return Ok(package_full_name.as_str().to_string());
+                            return Ok(package_full_name.as_str().to_owned());
+                        }
+                    }
+                } else if line.matches("registry:packageName").next().is_some() {
+                    package_name_annotation_matched = true;
+                    let captures = PACKAGE_FULL_NAME_REGEX.captures(&line);
+                    if let Some(captures) = captures {
+                        if let Some(package_full_name) = captures.get(1) {
+                            return Ok(package_full_name.as_str().to_owned());
                         }
                     }
                 } else {
-                    let annotation_match = line.matches("registry:packageName").collect::<Vec<_>>();
-                    if !annotation_match.is_empty() {
-                        package_name_annotation_matched = true;
-                        let captures = PACKAGE_FULL_NAME_REGEX.captures(&line);
-                        if let Some(captures) = captures {
-                            if let Some(package_full_name) = captures.get(1) {
-                                return Ok(package_full_name.as_str().to_string());
-                            }
-                        }
-                    }
+                    continue;
                 }
             }
         }

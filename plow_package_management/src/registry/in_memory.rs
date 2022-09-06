@@ -12,7 +12,7 @@ pub struct InMemoryRegistry {
     /// Map of package versions to ontology file contents.
     packages: HashMap<PackageVersion, String>,
     /// Map of packages to their metadata (= index).
-    packages_metadata: HashMap<PackageVersion, PackageVersionWithRegistryMetadata>,
+    pub packages_metadata: HashMap<PackageVersion, PackageVersionWithRegistryMetadata>,
 }
 
 impl InMemoryRegistry {

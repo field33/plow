@@ -4,6 +4,7 @@ use crate::error::CliError;
 use crate::error::ConfigError::*;
 use crate::error::LoginError::*;
 use crate::subcommand::login::CredentialsFile;
+use camino::Utf8Path;
 use camino::Utf8PathBuf;
 use std::str::FromStr;
 
@@ -18,6 +19,7 @@ Signature: 8a477f597d28d172789f06886806bc55
 #	http://www.brynosaurus.com/cachedir/
 "#;
 
+// TODO: Change back
 pub const DEFAULT_REGISTRY_URL: &str = "https://api.plow.pm";
 
 #[derive(Debug)]
@@ -35,6 +37,20 @@ pub struct PlowConfig {
 }
 
 impl PlowConfig {
+    fn find_workspace_root(&self, path: &Utf8Path) -> Result<Utf8PathBuf, CliError> {
+        if path.join("Plow.toml").exists() {
+            return Ok(path.to_path_buf());
+        }
+        if let Some(parent) = path.parent() {
+            return self.find_workspace_root(parent);
+        }
+        Err(CliError::from(FailedToFindWorkspaceRoot))
+    }
+
+    pub fn get_workspace_root(&self) -> Result<Utf8PathBuf, CliError> {
+        self.find_workspace_root(&self.working_dir.path)
+    }
+
     pub fn get_registry_url(&self) -> Result<String, CliError> {
         // Check if user provided any with --registry
         if let Some(ref registry_url) = self.registry_url {
@@ -52,7 +68,7 @@ impl PlowConfig {
         }
 
         // Fall back to default registry url.
-        Ok(DEFAULT_REGISTRY_URL.to_string())
+        Ok(DEFAULT_REGISTRY_URL.to_owned())
     }
 
     pub fn get_saved_api_token(&self) -> Result<String, CliError> {
@@ -102,6 +118,8 @@ impl From<Utf8PathBuf> for WorkingDirectory {
 // TODO: Currently Plow does not support multiple registries.
 // There is one central remote registry which is owned by Field33.
 // Although there are plans to expand support for custom registries in the future.
+#[allow(clippy::unwrap_used)]
+#[allow(clippy::missing_panics_doc)]
 pub fn configure(
     custom_path: Option<Utf8PathBuf>,
     registry_url: Option<String>,
@@ -120,7 +138,8 @@ pub fn configure(
     let mut workspace_config_file = None;
 
     let plow_home = if let Some(custom_path) = custom_path {
-        let mut new_workspace_config_file = WorkspaceConfigFile::try_from(&working_dir)?;
+        let mut new_workspace_config_file =
+            WorkspaceConfigFile::create_in_working_dir(&working_dir)?;
         new_workspace_config_file.set_plow_home(&custom_path);
         new_workspace_config_file.write()?;
         workspace_config_file = Some(new_workspace_config_file);

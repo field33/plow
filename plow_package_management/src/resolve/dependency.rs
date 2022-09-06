@@ -474,7 +474,7 @@ where
     V: Version + From<SemanticVersion>,
 {
     type Error = anyhow::Error;
-    fn try_from(input: &str) -> Result<Self> {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         let (dependency_name, version_requirement) = Self::split_string_dependency_spec(input)?;
         Self::try_new(&dependency_name, &version_requirement)
     }

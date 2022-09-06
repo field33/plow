@@ -41,6 +41,7 @@ impl TryFrom<IndexedPackageVersion> for PackageVersionWithRegistryMetadata {
                     ontology_iri: indexed_package_version.ontology_iri,
                     dependencies,
                     cksum: Some(indexed_package_version.cksum),
+                    private: false,
                 })
             })
     }

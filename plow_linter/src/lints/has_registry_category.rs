@@ -15,7 +15,7 @@ const RELATED_FIELD: &str = "`registry:category`";
 /// Maximum allowed categories.
 const MAX_CATEGORIES: usize = 5;
 /// Available categories to choose from.
-const CATEGORY_ALLOW_LIST: [&str; 30] = [
+pub const CATEGORY_ALLOW_LIST: [&str; 34] = [
     "Benchmark",
     "Design",
     "Enterprise",
@@ -46,6 +46,10 @@ const CATEGORY_ALLOW_LIST: [&str; 30] = [
     "Change Tracking",
     "Graph Style",
     "Interoperability",
+    "APQC",
+    "Business",
+    "Payment",
+    "Purchase",
 ];
 /// Ensures that a value for `registry:category` is specified as annotation on the ontology.
 #[derive(Debug, Default)]

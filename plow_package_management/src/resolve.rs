@@ -290,6 +290,7 @@ impl<'req_resolver> Resolver for VersionRequestResolver<'req_resolver> {
                 ontology_iri: None,
                 dependencies: organization_to_resolve_for.dependencies,
                 cksum: None,
+                private: false,
             }],
         );
 

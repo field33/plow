@@ -1,8 +1,13 @@
 pub mod fields;
 
+use plow_package_management::lock::LockFile;
+use plow_package_management::package::PackageVersionWithRegistryMetadata;
+use plow_package_management::registry::Registry;
+
 use self::fields::FieldsDirectory;
 use crate::config::files::workspace_manifest::WorkspaceManifestFile;
 use crate::config::PlowConfig;
+use crate::resolve::resolve;
 use crate::{error::CliError, error::WorkspaceInitializationError::*};
 
 pub fn prepare(config: &PlowConfig, force: bool) -> Result<(), CliError> {
@@ -11,7 +16,7 @@ pub fn prepare(config: &PlowConfig, force: bool) -> Result<(), CliError> {
     }
 
     if force {
-        // Clean up before creation
+        // Clean up before creation if running in a workspace
         let manifest_file_path = config.working_dir.path.join("Plow.toml");
 
         if manifest_file_path.exists() {
@@ -29,16 +34,19 @@ pub fn prepare(config: &PlowConfig, force: bool) -> Result<(), CliError> {
     }
 
     let fields_dir_path = config.working_dir.path.join("fields");
-    if fields_dir_path.exists() {
-        FieldsDirectory::explode(&fields_dir_path, config)?;
-    }
+    let maybe_backed_up_fields_dir_path =
+        FieldsDirectory::backup_if_already_exists(&fields_dir_path, config)?;
 
-    let mut fields_dir = FieldsDirectory::empty_with_path(&fields_dir_path);
-
-    fields_dir.children =
-        crate::utils::list_files(".", "ttl").map_err(|err| FailedRecursiveListingFields {
-            reason: err.to_string(),
-        })?;
+    let mut fields_dir =
+        if let Some(ref backed_up_fields_dir_path) = maybe_backed_up_fields_dir_path {
+            let mut dir = FieldsDirectory::fill_from_backup(backed_up_fields_dir_path)?;
+            // We also extend from the working dir, not only checking backups dir, maybe new fields are added.
+            // TODO: Do we need to check workspace root also?
+            dir.extend_from_root_excluding_fields_dir(&config.working_dir.path)?;
+            dir
+        } else {
+            FieldsDirectory::fill_from_root(&config.working_dir.path)?
+        };
 
     if fields_dir.children.is_empty() && !fields_dir.exists_in_filesystem() {
         return Err(NoFieldsInDirectory.into());
@@ -50,7 +58,16 @@ pub fn prepare(config: &PlowConfig, force: bool) -> Result<(), CliError> {
     if let Some((ref failed_paths, _)) = linting_failures {
         fields_dir
             .children
-            .retain(|path| !failed_paths.contains(&path.to_string()));
+            .retain(|path| !failed_paths.contains(&path.as_path().to_string()));
+    }
+
+    // Remove if there are duplicate paths. Which is unlikely and probably this is unnecessary.
+    fields_dir.dedup();
+
+    if force && fields_dir.exists_in_filesystem() {
+        // It is backed up in an earlier stage.
+        // Safe to remove.
+        fields_dir.remove()?;
     }
 
     // Create fields directory and fill with children if not exists already.
@@ -62,21 +79,49 @@ pub fn prepare(config: &PlowConfig, force: bool) -> Result<(), CliError> {
     let workspace_manifest_file = WorkspaceManifestFile::from(&fields_dir);
     workspace_manifest_file.write()?;
 
-    // -------
+    if let Some(ref backed_up_fields_dir_path) = maybe_backed_up_fields_dir_path {
+        // Remove the backed up fields directory.
+        std::fs::remove_dir_all(backed_up_fields_dir_path)
+            .map_err(|err| FailedToRemoveBackupFieldsDirectory(err.to_string()))?;
+    }
 
-    // TODO:  Here we'd need to create initial entrypoint index like structures (Organizations~)
-    // To feed to the dependency resolution.
-    // It is just an easy iteration.
+    let registry = crate::sync::sync(config)?;
 
-    // ------- Dependency resolution ------- may start
-    // But actually the real workspace construction starts here.
-    // We're done with the first phase of gathering information and writing files.
+    let lock_file = fields_dir
+        .children
+        .iter()
+        .fold(LockFile::default(), |mut lock_file, child| {
+            if let Ok(Some(fresh_lock_file)) =
+                resolve(config, child.as_path(), &registry as &dyn Registry)
+            {
+                lock_file
+                    .locked_dependencies
+                    .packages
+                    .extend(fresh_lock_file.locked_dependencies.packages);
 
-    // let _organizations_to_resolve_for = field_metadata_in_fields_dir
-    //     .iter()
-    //     .cloned()
-    //     .map(std::convert::Into::into)
-    //     .collect::<Vec<OrganizationToResolveFor>>();
+                return lock_file;
+            }
+
+            // Add the current package to the registry?
+
+            lock_file
+        });
+
+    let resolved_dependencies_with_metadata: Vec<PackageVersionWithRegistryMetadata> = lock_file
+        .locked_dependencies
+        .packages
+        .iter()
+        .map(|package_version| registry.get_package_version_metadata(package_version))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|err| CliError::Wip(err.to_string()))?;
+
+    if !resolved_dependencies_with_metadata.is_empty() {
+        LockFile::write(
+            Some(config.working_dir.path.clone()),
+            &resolved_dependencies_with_metadata,
+        )
+        .map_err(|err| CliError::Wip(err.to_string()))?;
+    }
 
     if let Some((_, err)) = linting_failures {
         return Err(err);

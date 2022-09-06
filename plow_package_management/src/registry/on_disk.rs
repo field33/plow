@@ -295,6 +295,7 @@ impl Registry for OnDiskRegistry {
                     ontology_iri: Some(metadata.root_prefix),
                     dependencies: metadata.dependencies,
                     cksum: Some(cksum),
+                    private: false,
                 };
 
                 self.submit_package_version_metadata(&new_package_version)?;

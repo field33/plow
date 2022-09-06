@@ -1,5 +1,6 @@
 #![allow(clippy::restriction, clippy::useless_vec)]
 #![allow(unused_assignments)]
+use camino::Utf8PathBuf;
 use plow_package_management::{
     lock::LOCK_FILE_NAME, registry::on_disk::OnDiskRegistry, workspace::OntologyWorkspace,
 };
@@ -8,13 +9,7 @@ use std::path::PathBuf;
 #[allow(dead_code)]
 #[ignore = "Creates problems with Bazel: The test writes a file but there are privilege issues when running under Bazel. Could be fixed later."]
 fn lock_read_write() {
-    let mut data_dir = PathBuf::from("../data");
-    for var in std::env::vars() {
-        // Running in bazel test
-        if var.0 == "RUN_UNDER_RUNFILES" {
-            data_dir = PathBuf::from("./ontology_tools/data/");
-        }
-    }
+    let mut data_dir = Utf8PathBuf::from("../data");
 
     let selected_file_path = data_dir
         .join("example_ontologies")

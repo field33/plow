@@ -5,6 +5,7 @@ use crate::{
     registry::Registry,
 };
 use anyhow::anyhow;
+use camino::{Utf8Path, Utf8PathBuf};
 use harriet::TurtleDocument;
 
 use sha2::{Digest, Sha256};
@@ -12,7 +13,6 @@ use std::{
     fs::{create_dir_all, hard_link, read_to_string, File},
     io::Write,
     os::unix::ffi::OsStrExt,
-    path::{Path, PathBuf},
 };
 
 /// The name of the main directory in the platform-defined documents directory where we place our data.
@@ -29,8 +29,8 @@ const PROTEGE_CATALOG_FILE_FILENAME: &str = "catalog-v001.xml";
 
 #[derive(Debug, Clone)]
 pub struct OntologyWorkspace {
-    pub workspace_dir: PathBuf,
-    pub ontology_file: PathBuf,
+    pub workspace_dir: Utf8PathBuf,
+    pub ontology_file: Utf8PathBuf,
 }
 
 impl OntologyWorkspace {
@@ -39,15 +39,20 @@ impl OntologyWorkspace {
     /// The workspace directory will contain a symlink to the original file (so changes propagate
     /// back to the original file), and can also be used to place e.g. a catalog file and resolved
     /// dependencies for the file.
-    pub fn mirror_file_to_workspace(original_ontology_path: &Path) -> Result<Self, anyhow::Error> {
+    pub fn mirror_file_to_workspace(
+        original_ontology_path: &Utf8Path,
+    ) -> Result<Self, anyhow::Error> {
         let mut sha256 = Sha256::new();
         sha256.update(original_ontology_path.as_os_str().as_bytes());
         let original_path_hash: String = format!("{:X}", sha256.finalize());
-        let workspace_dir = dirs::document_dir()
-            .ok_or_else(|| anyhow!("No document dir known for platform"))?
-            .join(TOOLS_MAIN_DIR)
-            .join(WORKSPACES_SUBDIR)
-            .join(original_path_hash);
+        let workspace_dir = Utf8PathBuf::from_path_buf(
+            dirs::document_dir()
+                .ok_or_else(|| anyhow!("No document dir known for platform"))?
+                .join(TOOLS_MAIN_DIR)
+                .join(WORKSPACES_SUBDIR)
+                .join(original_path_hash),
+        )
+        .expect("Documents directory is not a valid path.");
         let symlinked_ontology_path = workspace_dir.join(
             original_ontology_path
                 .file_name()
@@ -71,7 +76,7 @@ impl OntologyWorkspace {
     pub fn lock(
         self,
         registry: &dyn Registry,
-        selected_file: Option<PathBuf>,
+        workspace_root: Option<Utf8PathBuf>,
     ) -> Result<OntologyWorkspaceLocked, anyhow::Error> {
         let contents_str = read_to_string(&self.ontology_file)?;
         let document = TurtleDocument::parse_full(&contents_str)
@@ -84,20 +89,20 @@ impl OntologyWorkspace {
             lockfile: LockFile::lock_with_registry(
                 ontology_metadata.into(),
                 registry,
-                selected_file,
+                workspace_root,
             )?,
         })
     }
 
-    pub const fn ontology_file(&self) -> &PathBuf {
+    pub const fn ontology_file(&self) -> &Utf8PathBuf {
         &self.ontology_file
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct OntologyWorkspaceLocked {
-    workspace_dir: PathBuf,
-    ontology_file: PathBuf,
+    workspace_dir: Utf8PathBuf,
+    ontology_file: Utf8PathBuf,
     lockfile: LockFile,
 }
 
@@ -146,8 +151,8 @@ impl OntologyWorkspaceLocked {
 
 #[derive(Debug, Clone)]
 pub struct OntologyWorkspaceWithRetrievedDeps {
-    workspace_dir: PathBuf,
-    ontology_file: PathBuf,
+    workspace_dir: Utf8PathBuf,
+    ontology_file: Utf8PathBuf,
     lockfile: LockFile,
     dependencies: RetrievedPackageSet,
 }
@@ -173,8 +178,8 @@ impl OntologyWorkspaceWithRetrievedDeps {
 #[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct OntologyWorkspaceWithCatalog {
-    workspace_dir: PathBuf,
-    ontology_file: PathBuf,
+    workspace_dir: Utf8PathBuf,
+    ontology_file: Utf8PathBuf,
     lockfile: LockFile,
     dependencies: RetrievedPackageSet,
     catalog_file: CatalogFile,
@@ -183,7 +188,7 @@ pub struct OntologyWorkspaceWithCatalog {
 #[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct CatalogFile {
-    path: PathBuf,
+    path: Utf8PathBuf,
 }
 
 impl CatalogFile {
@@ -200,7 +205,7 @@ impl CatalogFile {
     const CATALOG_FILE_SOURCE_NOTE: &'static str = "Added via ontology_tools";
 
     pub fn generate_catalog_file(
-        workspace_dir: &Path,
+        workspace_dir: &Utf8Path,
         package_set: &RetrievedPackageSet,
     ) -> Result<Self, anyhow::Error> {
         let catalog_file_path = workspace_dir.join(PROTEGE_CATALOG_FILE_FILENAME);

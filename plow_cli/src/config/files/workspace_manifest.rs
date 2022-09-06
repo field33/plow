@@ -98,13 +98,14 @@ pub struct Workspace {
     pub member_map: std::collections::HashMap<String, Utf8PathBuf>,
 }
 
+// TODO:
 impl From<&FieldsDirectory> for Workspace {
     fn from(fields_dir: &FieldsDirectory) -> Self {
         let mut member_map = std::collections::HashMap::new();
         let mut members = vec![];
         for path in &fields_dir.children {
-            if let Ok(name) = FieldManifest::quick_extract_field_full_name(&path) {
-                member_map.insert(name.clone(), path.clone());
+            if let Ok(name) = FieldManifest::quick_extract_field_full_name(&path.as_path()) {
+                member_map.insert(name.clone(), path.as_path_buf());
                 members.push(name);
                 continue;
             }
@@ -119,11 +120,16 @@ impl From<&FieldsDirectory> for Workspace {
     }
 }
 
-// TODO: Handle failure here converting to try from.
 impl From<&FieldsDirectory> for WorkspaceManifestFile {
     fn from(fields_dir: &FieldsDirectory) -> Self {
         let workspace = Some(Workspace::from(fields_dir));
-        let path = fields_dir.path.parent().unwrap().to_path_buf();
+        let path = fields_dir
+            .path
+            .parent()
+            // Pretty handle failure here converting to try from.
+            .expect("Fields directory is in os root, probably you didn't want this to happen.")
+            .to_path_buf()
+            .join("Plow.toml");
         Self { workspace, path }
     }
 }

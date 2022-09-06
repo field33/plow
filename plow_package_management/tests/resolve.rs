@@ -44,6 +44,7 @@ macro_rules! package {
             ontology_iri: None,
             dependencies: $deps,
             cksum: None,
+            private: false,
         }
     };
 }

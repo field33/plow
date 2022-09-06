@@ -4,7 +4,7 @@ use crate::feedback::{command_failed, Feedback};
 
 #[derive(Error, Debug)]
 pub enum FieldInitializationError {
-    #[error("The provided field name is invalid. Details: {reason:?}")]
+    #[error("The provided field name is invalid.\n\tDetails: {reason:?}")]
     InvalidFieldNameProvided { reason: String },
     #[error("Please provide a valid field name to create. e.g. @my_fields/precious_field")]
     NoFieldNameProvided,

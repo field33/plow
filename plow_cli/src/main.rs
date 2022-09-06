@@ -29,6 +29,7 @@
     // We decided that we're ok with expect
     clippy::expect_used,
     clippy::wildcard_imports,
+    clippy::as_conversions,
 
     // Too restrictive for the current style
     clippy::missing_inline_in_public_items,
@@ -65,11 +66,13 @@ mod error;
 mod feedback;
 pub mod git;
 pub mod manifest;
+pub mod resolve;
 mod subcommand;
 pub mod sync;
 pub mod utils;
 
-use clap::{App, AppSettings};
+use camino::Utf8PathBuf;
+use clap::{App, AppSettings, Arg};
 use feedback::{command_failed, Feedback};
 
 #[allow(clippy::missing_panics_doc)]
@@ -77,24 +80,35 @@ pub fn main() {
     let app = App::new("plow")
         .version("0.2.2")
         .about("Plowing the field of knowledge. Package management for ontologies.")
+        .arg(
+            Arg::with_name("registry")
+                .value_name("url")
+                .long("registry")
+                .help("Specifies the target registry for subcommands which interact with it.")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("config")
+                .value_name("directory")
+                .long("config")
+                .help("Specify a different home for plow. The path specified here will override the default config directory (~/.plow).")
+                .takes_value(true),
+        )
         .subcommand(subcommand::lint::attach_as_sub_command())
         .subcommand(subcommand::login::attach_as_sub_command())
         .subcommand(subcommand::submit::attach_as_sub_command())
         .subcommand(subcommand::init::attach_as_sub_command())
+        .subcommand(subcommand::update::attach_as_sub_command())
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .setting(AppSettings::SubcommandPrecedenceOverArg);
 
-    let custom_plow_home_path: Option<camino::Utf8PathBuf> = None;
-    // TODO: Check for --config flag to retrieve a custom config dir path later.
-    // So we can pass also Some values.
+    let options = app.clone().get_matches();
 
-    let mut registry_url_override_from_command: Option<String> = None;
+    let custom_plow_home_path = options.get_one::<String>("config").map(Utf8PathBuf::from);
+    let custom_registry_url = options.get_one::<String>("registry").cloned();
+
     let matches = app.clone().get_matches();
-    if let Some((_, matches)) = matches.subcommand() {
-        registry_url_override_from_command = matches.get_one::<String>("REGISTRY_URL").cloned();
-    }
-
-    match config::configure(custom_plow_home_path, registry_url_override_from_command) {
+    match config::configure(custom_plow_home_path, custom_registry_url) {
         Ok(ref config) => {
             let mut app_for_help_reference = app.clone();
 
@@ -113,6 +127,10 @@ pub fn main() {
                 }
                 Some(("init", sub_matches)) => {
                     subcommand::init::run_command(sub_matches, config).feedback();
+                    Some(())
+                }
+                Some(("update", sub_matches)) => {
+                    subcommand::update::run_command(sub_matches, config).feedback();
                     Some(())
                 }
                 _ => None,

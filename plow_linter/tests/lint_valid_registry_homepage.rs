@@ -54,7 +54,7 @@ fn lint_registry_homepage_exists_and_valid() {
     assert!(result_a.first().unwrap().is_success());
     assert!(result_b.first().unwrap().is_success());
     assert!(result_c.first().unwrap().is_failure());
-    assert!(result_d.first().unwrap().is_failure());
+    assert!(result_d.first().unwrap().is_success());
 }
 
 #[test]

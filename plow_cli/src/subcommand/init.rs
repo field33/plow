@@ -38,38 +38,41 @@ pub fn attach_as_sub_command() -> App<'static> {
         .about("Initializes and prepares a workspace.")
         .arg(
             Arg::with_name("field")
-                .short('f')
-                .value_name("FIELD_NAME")
+                .value_name("name")
                 .long("field")
                 .help("Initializes a field.")
                 .takes_value(true),
         )
         .arg(
             Arg::with_name("force")
+                .long("force")
                 .short('f')
-                .long("field")
                 .help("Forces re-initialization of the workspace.")
-                .takes_value(false),
+                .takes_value(false)
+                .action(clap::ArgAction::SetTrue),
         )
+        .arg_required_else_help(false)
 }
 
 #[allow(clippy::as_conversions)]
 pub fn run_command(sub_matches: &ArgMatches, config: &PlowConfig) -> Box<dyn Feedback + 'static> {
     match run_command_flow(sub_matches, config) {
-        Ok(feedback) => Box::new(feedback) as Box<dyn Feedback>,
+        Ok(feedback) => feedback,
         Err(feedback) => Box::new(feedback) as Box<dyn Feedback>,
+    }
+}
+
+pub struct SuccessfulWorkspaceInitialization;
+impl Feedback for SuccessfulWorkspaceInitialization {
+    fn feedback(&self) {
+        println!("\t{} created successfully. ", "Workspace".green().bold(),);
     }
 }
 
 pub fn run_command_flow(
     sub_matches: &ArgMatches,
     config: &PlowConfig,
-) -> Result<impl Feedback, CliError> {
-    if !sub_matches.args_present() {
-        workspace::prepare(config, sub_matches.get_flag("force"))?;
-
-        // TODO: Return Success here..
-    }
+) -> Result<Box<dyn Feedback>, CliError> {
     if sub_matches.is_present("field") {
         let field_name = sub_matches
             .get_one::<String>("field")
@@ -77,7 +80,9 @@ pub fn run_command_flow(
 
         let success = initialize_field(field_name)?;
 
-        return Ok(success);
+        return Ok(Box::new(success) as Box<dyn Feedback>);
     }
-    Err(CliError::UnknownOption)
+
+    workspace::prepare(config, sub_matches.get_flag("force"))?;
+    Ok(Box::new(SuccessfulWorkspaceInitialization) as Box<dyn Feedback>)
 }

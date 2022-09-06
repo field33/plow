@@ -1,6 +1,7 @@
 use crate::resolve::Dependency;
 use crate::version::SemanticVersion;
 use crate::{metadata::OntologyMetadata, ORGANIZATION_NAME};
+use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 use std::{fmt::Formatter, path::PathBuf};
 
@@ -43,6 +44,7 @@ pub struct PackageVersionWithRegistryMetadata {
     pub ontology_iri: Option<String>,
     pub dependencies: Vec<Dependency<SemanticVersion>>,
     pub cksum: Option<String>,
+    pub private: bool,
 }
 
 impl PartialEq for PackageVersionWithRegistryMetadata {
@@ -60,7 +62,7 @@ impl std::fmt::Display for PackageVersionWithRegistryMetadata {
 }
 
 /// A flat list of package versions (e.g. dependencies).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PackageSet {
     pub packages: Vec<PackageVersion>,
 }
@@ -70,7 +72,7 @@ pub struct PackageSet {
 pub struct RetrievedPackageVersion {
     pub ontology_iri: String,
     pub package: PackageVersion,
-    pub file_path: PathBuf,
+    pub file_path: Utf8PathBuf,
 }
 
 #[derive(Debug, Clone)]

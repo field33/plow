@@ -38,6 +38,12 @@ pub fn command_failed(advice: &str) {
     std::process::exit(0xFF);
 }
 
+pub fn dependency_resolution_failed(reason: &str) {
+    println!("\t{}", "Failed to resolve dependencies".red().bold(),);
+    println!("\t{} {reason}", "Reason".yellow().bold(),);
+    std::process::exit(0xFF);
+}
+
 pub fn linting_failed() {
     println!("\t{}", "Linting failed".red().bold(),);
     println!(

@@ -68,12 +68,7 @@ impl WorkspaceConfigFile {
             .map_err(|err| FailedToWriteWorkspaceConfigFile(err.to_string()))?;
         Ok(())
     }
-}
-
-impl TryFrom<&WorkingDirectory> for WorkspaceConfigFile {
-    type Error = CliError;
-
-    fn try_from(working_dir: &WorkingDirectory) -> Result<Self, Self::Error> {
+    pub fn create_in_working_dir(working_dir: &WorkingDirectory) -> Result<Self, CliError> {
         working_dir.fail_if_not_workspace()?;
         let workspace_config_dir_path = working_dir.path.join(".plow");
         let workspace_config_file_path = workspace_config_dir_path.join("config.toml");

@@ -17,14 +17,6 @@ pub fn attach_as_sub_command() -> App<'static> {
     Command::new("submit")
         .about("Submits a field to the specified registry.")
         .arg(
-            Arg::with_name("registry")
-                .short('r')
-                .value_name("REGISTRY_URL")
-                .long("registry")
-                .help("Specifies the target registry to submit.")
-                .takes_value(true),
-        )
-        .arg(
             Arg::with_name("dry-run")
                 .long("dry-run")
                 .help("Will go through all operations of a submission locally and in remote but not persist the results.")
