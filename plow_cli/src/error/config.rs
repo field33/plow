@@ -16,7 +16,7 @@ pub enum ConfigError {
     FailedToReadOrCreateConfigDirectory(String, String),
     #[error("Failed to retrieve the current working directory,\n\tDetails: {0}")]
     FailedToGetWorkingDirectory(String),
-    #[error("This command could only be run in an initialized workspace, please either run plow init or create a Plow.toml file in the root of your workspace.")]
+    #[error("This command could only be run in an initialized workspace, please either run plow init in the root of your desired workspace to create it.")]
     DirectoryNotWorkspace,
     #[error(
         "Plow couldn't create a workspace config (.plow) directory in your workspace root.\n\tDetails: {0}"

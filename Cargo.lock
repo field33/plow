@@ -3750,6 +3750,7 @@ dependencies = [
  "dialoguer",
  "dirs",
  "fallible-iterator",
+ "fs_extra",
  "git2",
  "harriet 0.2.0",
  "itertools 0.10.3",

@@ -110,7 +110,7 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
     );
 
     // TODO: Move these somewhere else?
-    let clone_from = "git@github.com:field33/test-public-registry-index.git";
+    let clone_from = "git@github.com:field33/plow-registry-index.git";
     let public_index_git_repo_path = &config.index_dir.join("plow-registry-index");
 
     let ssh_key_path = Utf8PathBuf::from("/Users/vallahiboyle/.ssh/id_rsa");

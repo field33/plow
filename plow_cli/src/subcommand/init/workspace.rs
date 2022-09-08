@@ -13,27 +13,21 @@ use crate::resolve::resolve;
 use crate::{error::CliError, error::FieldAccessError::*, error::WorkspaceInitializationError::*};
 
 #[allow(clippy::too_many_lines)]
-pub fn prepare(config: &PlowConfig, force: bool) -> Result<(), CliError> {
-    if config.working_dir.path.join("Plow.toml").exists() && !force {
-        return Err(WorkspaceAlreadyInitialized.into());
+pub fn prepare(config: &PlowConfig) -> Result<(), CliError> {
+    // Clean up before creation if running in a workspace
+    let manifest_file_path = config.working_dir.path.join("Plow.toml");
+
+    if manifest_file_path.exists() {
+        std::fs::remove_file(&manifest_file_path)
+            .map_err(|err| FailedToRemoveWorkspaceManifestFile(err.to_string()))?;
     }
 
-    if force {
-        // Clean up before creation if running in a workspace
-        let manifest_file_path = config.working_dir.path.join("Plow.toml");
+    // Clean up before creation
+    let lock_file_path = config.working_dir.path.join("Plow.lock");
 
-        if manifest_file_path.exists() {
-            std::fs::remove_file(&manifest_file_path)
-                .map_err(|err| FailedToRemoveWorkspaceManifestFile(err.to_string()))?;
-        }
-
-        // Clean up before creation
-        let lock_file_path = config.working_dir.path.join("Plow.lock");
-
-        if lock_file_path.exists() {
-            std::fs::remove_file(&lock_file_path)
-                .map_err(|err| FailedToRemoveWorkspaceManifestFile(err.to_string()))?;
-        }
+    if lock_file_path.exists() {
+        std::fs::remove_file(&lock_file_path)
+            .map_err(|err| FailedToRemoveWorkspaceManifestFile(err.to_string()))?;
     }
 
     let fields_dir_path = config.working_dir.path.join("fields");
@@ -45,7 +39,7 @@ pub fn prepare(config: &PlowConfig, force: bool) -> Result<(), CliError> {
             let mut dir = FieldsDirectory::fill_from_backup(backed_up_fields_dir_path)?;
             // We also extend from the working dir, not only checking backups dir, maybe new fields are added.
             // TODO: Do we need to check workspace root also?
-            dir.extend_from_root_excluding_fields_dir(&config.working_dir.path)?;
+            dir.extend_from_root_excluding_fields_dir_and_plow_backup(&config.working_dir.path)?;
             dir
         } else {
             FieldsDirectory::fill_from_root(&config.working_dir.path)?
@@ -67,7 +61,7 @@ pub fn prepare(config: &PlowConfig, force: bool) -> Result<(), CliError> {
     // Remove if there are duplicate paths. Which is unlikely and probably this is unnecessary.
     fields_dir.dedup();
 
-    if force && fields_dir.exists_in_filesystem() {
+    if fields_dir.exists_in_filesystem() {
         // It is backed up in an earlier stage.
         // Safe to remove.
         fields_dir.remove()?;
@@ -194,6 +188,9 @@ pub fn prepare(config: &PlowConfig, force: bool) -> Result<(), CliError> {
     // TODO: DO THE PROTEGE PART
     // TODO: ONTOLOGY IRI CHECK IN RESOLVER
     // TODO: ONTOLOGY OWL IMPORT INJECTION
+    // TODO: Backup the earlier folder structure and ignore that for everything. (Easy to implement)
+    // TODO: Git ssh, fetch with cli?
+
     // Always update the index with some plow commands.
     Ok(())
 }

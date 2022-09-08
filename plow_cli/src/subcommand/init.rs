@@ -6,6 +6,8 @@ use crate::error::CliError;
 use crate::error::FieldInitializationError::*;
 use crate::feedback::Feedback;
 use anyhow::Result;
+use camino::Utf8Path;
+use camino::Utf8PathBuf;
 use clap::{App, Command};
 use clap::{Arg, ArgMatches};
 use colored::Colorize;
@@ -27,9 +29,23 @@ impl Feedback for SuccessfulWorkspaceCreation {
     }
 }
 
-fn initialize_field(field_name: &str) -> Result<impl Feedback, CliError> {
-    let field = self::field::new(field_name)?;
-    field.split('\n').for_each(|line| println!("\t{}", line));
+fn initialize_field(
+    field_name: &str,
+    workspace_root: &Utf8Path,
+) -> Result<impl Feedback, CliError> {
+    // Overwrites existing
+
+    let field = self::field::new(field_name);
+
+    let file_name = format!("{}.ttl", field_name.split('/').last().unwrap());
+
+    let p = workspace_root.join("fields").join(field_name);
+
+    std::fs::create_dir_all(&p).map_err(|err| FailedToWriteField(err.to_string()))?;
+    std::fs::write(p.join(file_name), field.as_bytes())
+        .map_err(|err| FailedToWriteField(err.to_string()))?;
+
+    field.split('\n').for_each(|line| println!("\t\t{}", line));
     Ok(SuccessfulFieldInitialization)
 }
 
@@ -42,14 +58,6 @@ pub fn attach_as_sub_command() -> App<'static> {
                 .long("field")
                 .help("Initializes a field.")
                 .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("force")
-                .long("force")
-                .short('f')
-                .help("Forces re-initialization of the workspace.")
-                .takes_value(false)
-                .action(clap::ArgAction::SetTrue),
         )
         .arg_required_else_help(false)
 }
@@ -78,11 +86,13 @@ pub fn run_command_flow(
             .get_one::<String>("field")
             .ok_or(NoFieldNameProvided)?;
 
-        let success = initialize_field(field_name)?;
+        let workspace_root = config.working_dir.fail_if_not_under_a_workspace()?;
+
+        let success = initialize_field(field_name, &workspace_root)?;
 
         return Ok(Box::new(success) as Box<dyn Feedback>);
     }
 
-    workspace::prepare(config, sub_matches.get_flag("force"))?;
+    workspace::prepare(config)?;
     Ok(Box::new(SuccessfulWorkspaceInitialization) as Box<dyn Feedback>)
 }
