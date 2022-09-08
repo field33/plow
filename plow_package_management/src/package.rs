@@ -3,7 +3,7 @@ use crate::version::SemanticVersion;
 use crate::{metadata::OntologyMetadata, ORGANIZATION_NAME};
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
-use std::{fmt::Formatter, path::PathBuf};
+use std::fmt::Formatter;
 
 /// A single version of a package with enough information to serve as input for the dependency resolution process.
 ///
@@ -22,7 +22,11 @@ impl PackageVersion {
         }
     }
 }
-
+impl ToString for PackageVersion {
+    fn to_string(&self) -> String {
+        format!("{} {}", self.package_name, self.version)
+    }
+}
 // This unusual From implementation is a convenience implementation
 // when using it in resolver when working with iterators of maps.
 //
@@ -32,6 +36,24 @@ impl From<(&String, &SemanticVersion)> for PackageVersion {
         Self {
             package_name: tuple.0.clone(),
             version: tuple.1.to_string(),
+        }
+    }
+}
+
+impl From<PackageVersionWithRegistryMetadata> for PackageVersion {
+    fn from(metadata: PackageVersionWithRegistryMetadata) -> Self {
+        Self {
+            package_name: metadata.package_name,
+            version: metadata.version.to_string(),
+        }
+    }
+}
+
+impl From<&PackageVersionWithRegistryMetadata> for PackageVersion {
+    fn from(metadata: &PackageVersionWithRegistryMetadata) -> Self {
+        Self {
+            package_name: metadata.package_name.clone(),
+            version: metadata.version.to_string(),
         }
     }
 }
@@ -106,6 +128,7 @@ pub struct RetrievedPackageSet {
 }
 
 /// The type which resolver directly expects
+#[derive(Debug)]
 pub struct OrganizationToResolveFor {
     pub package_name: String,
     pub package_version: SemanticVersion,

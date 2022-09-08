@@ -125,3 +125,7 @@ pub fn general_lint_success() {
     println!();
     println!("\t{} successful.", "Linting".green().bold(),);
 }
+pub fn general_update_success() {
+    println!();
+    println!("\t{} successful.", "Update".green().bold(),);
+}

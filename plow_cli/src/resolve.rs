@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
-use camino::Utf8Path;
 use colored::Colorize;
+
 use plow_package_management::{
     lock::LockFile, package::OrganizationToResolveFor, registry::Registry, resolve::Dependency,
     version::SemanticVersion,
@@ -11,7 +11,7 @@ use reqwest::StatusCode;
 use crate::{
     config::PlowConfig,
     error::CliError,
-    error::{FieldAccessError::*, FieldDownloadError::*, ResolveError::*},
+    error::{FieldDownloadError::*, ResolveError::*},
     manifest::FieldManifest,
 };
 
@@ -20,22 +20,12 @@ use crate::{
 #[allow(clippy::too_many_lines)]
 pub fn resolve(
     config: &PlowConfig,
-    path: &Utf8Path,
+    _: &str,
+    root_field_manifest: &FieldManifest,
+    respect_existing_lock_file: bool,
     registry: &dyn Registry,
 ) -> Result<Option<LockFile>, CliError> {
     let workspace_root = config.get_workspace_root().ok();
-
-    let root_field_contents = std::fs::read_to_string(&path).map_err(|_| {
-        CliError::from(FailedToFindFieldAtPath {
-            field_path: path.to_string(),
-        })
-    })?;
-
-    let root_field_manifest = FieldManifest::new(root_field_contents).map_err(|_| {
-        CliError::from(FailedToReadFieldManifest {
-            field_path: path.to_string(),
-        })
-    })?;
 
     println!(
         "\t{} to resolve dependencies of {} ..",
@@ -60,14 +50,21 @@ pub fn resolve(
         // Read it and rewrite it after resolution.
         // Update command needs to be created to update the lock file.
 
+        // Here.. we extend the entry with the initial package we resolve the deps for. Let's give it a try.
+
         let entry = OrganizationToResolveFor {
             package_name: "@root/root".to_owned(),
             package_version: SemanticVersion::default(),
             dependencies: deps,
         };
 
-        let locked_and_resolved = LockFile::lock_with_registry(entry, registry, workspace_root)
-            .map_err(|err| CliError::from(FailedToResolveDependencies(err.to_string())))?;
+        let locked_and_resolved = LockFile::lock_with_registry(
+            entry,
+            registry,
+            workspace_root,
+            respect_existing_lock_file,
+        )
+        .map_err(|err| CliError::from(FailedToResolveDependencies(err.to_string())))?;
 
         let metadatas = locked_and_resolved
             .locked_dependencies
@@ -98,9 +95,10 @@ pub fn resolve(
             .map(|path| path.file_stem().unwrap())
             .collect::<Vec<&str>>();
 
+        // Cache check.
         let cksums_to_download = cksums
             .iter()
-            .filter(|cksum| !stems.contains(&cksum.as_str()))
+            .filter(|cksum| stems.contains(&cksum.as_str()))
             .collect::<Vec<_>>();
 
         let client = reqwest::blocking::Client::new();

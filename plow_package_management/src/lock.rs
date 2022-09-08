@@ -3,12 +3,12 @@
 use crate::package::OrganizationToResolveFor;
 use anyhow::bail;
 use camino::{Utf8Path, Utf8PathBuf};
-use itertools::Itertools;
+
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use crate::{
-    package::{PackageSet, PackageVersion, PackageVersionWithRegistryMetadata},
+    package::{PackageSet, PackageVersion},
     registry::Registry,
     resolve::Resolver,
 };
@@ -36,7 +36,7 @@ impl LockFile {
     /// version = "0.2.15"
     /// # Currently left empty
     /// source = ""
-    /// checksum = "24606928a235e73cdef55a0c909719cadd72fce573e5713d58cb2952d8f5794c"
+    /// cksum = "24606928a235e73cdef55a0c909719cadd72fce573e5713d58cb2952d8f5794c"
     /// # Set of dependencies with corresponding versions.
     /// dependencies = [
     ///  "@x/y 0.24.0",
@@ -45,11 +45,11 @@ impl LockFile {
     /// ```
     pub fn write(
         workspace_root: Option<Utf8PathBuf>,
-        package_set: &[PackageVersionWithRegistryMetadata],
+        package_set: &[PackageInLockFile],
     ) -> Result<Utf8PathBuf, anyhow::Error> {
         let packages = PackagesInLockFile {
             version: FileVersion::V1,
-            packages: package_set.iter().cloned().map_into().collect(),
+            packages: package_set.to_vec(),
         };
 
         let serialized = toml::to_string_pretty(&packages)?;
@@ -87,18 +87,36 @@ impl LockFile {
         package_to_resolve: OrganizationToResolveFor,
         registry: &dyn Registry,
         workspace_root: Option<Utf8PathBuf>,
+        respect_existing_lock_file: bool,
     ) -> Result<Self, anyhow::Error> {
         // TODO: Either this or another entry point will be expanded to support db based locks in the future.
 
-        let (resolved_dependencies, previously_locked_path) =
+        let (resolved_dependencies, _previously_locked_path) =
             if let Some(lock_file_path) = Self::previous_lock_file_exists(workspace_root) {
-                // With existing lock file input
-                let packages = Self::deserialize_lock_file(&lock_file_path)?.packages;
-                (
-                    Into::<crate::resolve::VersionRequestResolver>::into(registry)
-                        .resolve_dependencies(package_to_resolve, Some(&packages))?,
-                    Some(lock_file_path),
-                )
+                if respect_existing_lock_file {
+                    // With existing lock file input
+                    let packages = Self::deserialize_lock_file(&lock_file_path)?
+                        .packages
+                        .iter()
+                        .cloned()
+                        // TODO:
+                        // Currently filter the local resolutions out.
+                        // Will be addressed soon.
+                        .filter(|p| !p.root)
+                        .collect::<Vec<_>>();
+
+                    (
+                        Into::<crate::resolve::VersionRequestResolver>::into(registry)
+                            .resolve_dependencies(package_to_resolve, Some(&packages))?,
+                        Some(lock_file_path),
+                    )
+                } else {
+                    (
+                        Into::<crate::resolve::VersionRequestResolver>::into(registry)
+                            .resolve_dependencies(package_to_resolve, None)?,
+                        None,
+                    )
+                }
             } else {
                 // No lockfile input
                 (
@@ -162,13 +180,14 @@ impl PackagesInLockFile {
 }
 
 /// A package in the form to be serialized to or to be deserialized to or from the lock file.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct PackageInLockFile {
+    pub root: bool,
     pub name: String,
     pub version: String,
-    source: Option<String>,
-    ontology_iri: Option<String>,
-    checksum: Option<String>,
+    pub source: Option<String>,
+    pub ontology_iri: Option<String>,
+    pub cksum: Option<String>,
     pub dependencies: Vec<String>,
 }
 
@@ -183,20 +202,20 @@ impl Into<PackageVersion> for &PackageInLockFile {
     }
 }
 
-impl From<PackageVersionWithRegistryMetadata> for PackageInLockFile {
-    fn from(package: PackageVersionWithRegistryMetadata) -> Self {
-        Self {
-            name: package.package_name,
-            version: package.version.to_string(),
-            // TODO: For example, source = "registry+https://github.com/rust-lang/crates.io-index" ??
-            source: None,
-            ontology_iri: package.ontology_iri,
-            checksum: package.cksum,
-            dependencies: package
-                .dependencies
-                .iter()
-                .map(std::string::ToString::to_string)
-                .collect_vec(),
-        }
-    }
-}
+// impl From<PackageVersionWithRegistryMetadata> for PackageInLockFile {
+//     fn from(package: PackageVersionWithRegistryMetadata) -> Self {
+//         Self {
+//             name: package.package_name,
+//             version: package.version.to_string(),
+//             // TODO: For example, source = "registry+https://github.com/rust-lang/crates.io-index" ??
+//             source: None,
+//             ontology_iri: package.ontology_iri,
+//             cksum: package.cksum,
+//             dependencies: package
+//                 .dependencies
+//                 .iter()
+//                 .map(std::string::ToString::to_string)
+//                 .collect_vec(),
+//         }
+//     }
+// }

@@ -10,10 +10,6 @@ pub enum SubmissionError {
         "Please provide a valid registry path to submit to or do not use --registry command line option."
     )]
     RegistryPathNotProvided,
-    #[error("The field you've provided at {field_path:?} was not found, you may check that if the file exists.")]
-    FailedToFindFieldAtPath { field_path: String },
-    #[error("The field you've provided at {field_path:?} is not readable, you may check that if the file is readable in a normal text editor first.")]
-    FailedToReadFieldAtPath { field_path: String },
     #[error("")]
     LintingFailed,
     #[error("The registry url \"{url:?}\" is invalid. Try providing a valid registry url either in Plow.toml or with a command line argument.")]
@@ -31,9 +27,7 @@ impl Feedback for SubmissionError {
     fn feedback(&self) {
         use SubmissionError::*;
         match self {
-            FailedToFindFieldAtPath { .. }
-            | FailedToReadFieldAtPath { .. }
-            | InvalidResponseFromRegistry { .. }
+            InvalidResponseFromRegistry { .. }
             | RequestFailed { .. }
             | NoValidBodyInResponse { .. } => {
                 submission_failed(&format!("{self}"));

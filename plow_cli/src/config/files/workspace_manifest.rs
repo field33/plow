@@ -83,7 +83,10 @@ impl WorkspaceManifestFile {
     }
 
     pub fn write(&self) -> Result<(), CliError> {
-        let contents = toml::to_vec(&self)
+        // let mut buffer = "".to_owned();
+        // let serializer = toml::Serializer::new(&mut buffer).pretty_array(true);
+
+        let contents = toml::to_string_pretty(&self)
             .map_err(|err| FailedToWriteWorkspaceManifestFile(err.to_string()))?;
         std::fs::write(&self.path, contents)
             .map_err(|err| FailedToWriteWorkspaceManifestFile(err.to_string()))?;
@@ -98,20 +101,27 @@ pub struct Workspace {
     pub member_map: std::collections::HashMap<String, Utf8PathBuf>,
 }
 
-// TODO:
+// TODO: Implement a way to not use paths but names.
+// Unwrap will not fail here on the other hand this implementation will change
+// in the upcoming architectural changes soon.
+#[allow(clippy::unwrap_used)]
+#[allow(clippy::fallible_impl_from)]
 impl From<&FieldsDirectory> for Workspace {
     fn from(fields_dir: &FieldsDirectory) -> Self {
         let mut member_map = std::collections::HashMap::new();
         let mut members = vec![];
-        for path in &fields_dir.children {
-            if let Ok(name) = FieldManifest::quick_extract_field_full_name(&path.as_path()) {
-                member_map.insert(name.clone(), path.as_path_buf());
-                members.push(name);
+        for child in &fields_dir.children {
+            if let Ok(name) = FieldManifest::quick_extract_field_full_name(&child.as_path()) {
+                let absolute_path = child.as_path_buf();
+                member_map.insert(name.clone(), child.as_path_buf());
+                members.push(
+                    absolute_path
+                        .strip_prefix(&fields_dir.path)
+                        .unwrap()
+                        .to_string(),
+                );
                 continue;
             }
-            // TODO:
-            // Give some feedback to the user that names couldn't be extracted and workspace does not recognize these fields.
-            // Do not fail the command.
         }
         Self {
             members: Some(members),

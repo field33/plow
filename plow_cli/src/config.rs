@@ -107,6 +107,24 @@ impl WorkingDirectory {
         }
         Ok(())
     }
+    pub fn fail_if_not_under_a_workspace(&self) -> Result<Utf8PathBuf, CliError> {
+        self.get_workspace_root()
+            .map_or_else(|_| Err(CliError::from(DirectoryNotWorkspace)), Ok)
+    }
+
+    fn find_workspace_root(&self, path: &Utf8Path) -> Result<Utf8PathBuf, CliError> {
+        if path.join("Plow.toml").exists() {
+            return Ok(path.to_path_buf());
+        }
+        if let Some(parent) = path.parent() {
+            return self.find_workspace_root(parent);
+        }
+        Err(CliError::from(FailedToFindWorkspaceRoot))
+    }
+
+    pub fn get_workspace_root(&self) -> Result<Utf8PathBuf, CliError> {
+        self.find_workspace_root(&self.path)
+    }
 }
 
 impl From<Utf8PathBuf> for WorkingDirectory {

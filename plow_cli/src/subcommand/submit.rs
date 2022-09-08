@@ -2,12 +2,18 @@ mod response;
 
 use crate::config::PlowConfig;
 use crate::error::CliError;
+use crate::error::FieldAccessError::*;
 use crate::error::SubmissionError::*;
 
 use crate::feedback::*;
+use crate::manifest::FieldManifest;
+use crate::resolve::resolve;
 use anyhow::Result;
+use camino::Utf8PathBuf;
 use clap::{arg, App, AppSettings, Arg, ArgMatches, Command};
+use colored::Colorize;
 use plow_linter::lints::field_manifest_lints;
+use plow_package_management::registry::Registry;
 use reqwest::blocking::multipart::Form;
 
 use self::response::{RegistryResponse, StatusInfo};
@@ -54,6 +60,45 @@ fn run_command_flow(
             .map_err(|_| LintingFailed)?;
 
         general_lint_success();
+
+        let path = Utf8PathBuf::from(&field_file_path);
+
+        let registry = crate::sync::sync(config).map_err(|err| CliError::Wip(err.to_string()))?;
+
+        let root_field_contents = std::fs::read_to_string(&path).map_err(|_| {
+            CliError::from(FailedToFindFieldAtPath {
+                field_path: path.to_string(),
+            })
+        })?;
+        let root_field_manifest =
+            FieldManifest::new(root_field_contents.clone()).map_err(|_| {
+                CliError::from(FailedToReadFieldManifest {
+                    field_path: path.to_string(),
+                })
+            })?;
+
+        if let Some(lock_file) = resolve(
+            config,
+            &root_field_contents,
+            &root_field_manifest,
+            true,
+            &registry as &dyn Registry,
+        )? {
+            // Leave an empty line in between.
+            println!();
+            println!("\t{}", "Dependencies".bold().green());
+            lock_file
+                .locked_dependencies
+                .packages
+                .iter()
+                .for_each(|package_version| {
+                    println!(
+                        "\t\t{} {}",
+                        package_version.package_name.bold(),
+                        package_version.version
+                    );
+                });
+        }
 
         // File linted and ready to submit.
         let public = !sub_matches.is_present("private");

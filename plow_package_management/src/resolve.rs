@@ -63,7 +63,7 @@ pub struct VersionRequestResolver<'req_resolver> {
     valid_versions_intermediate_cache: std::cell::RefCell<ValidPackagesIntermediateCache>,
     // A cache to use across resolver iterations.
     available_packages_cache: std::cell::RefCell<AvailablePackagesCache>,
-    locked_dependencies: std::cell::RefCell<Option<BTreeMap<String, SemanticVersionAndRangePair>>>,
+    locked_dependencies: std::cell::RefCell<Option<BTreeMap<String, SemanticVersion>>>,
 }
 
 impl<'req_resolver> From<&'req_resolver dyn Registry> for VersionRequestResolver<'req_resolver> {
@@ -295,30 +295,29 @@ impl<'req_resolver> Resolver for VersionRequestResolver<'req_resolver> {
         );
 
         // Collect locked dependencies if there are some.
+        // Derives versions assuming there can only be one version of a dependency in a lock file.
         if let Some(packages) = locked_dependencies {
-            *self.locked_dependencies.borrow_mut() =
-                Some(
-                    packages.iter().try_fold(
-                        BTreeMap::new(),
-                        |mut locked_dependencies,
-                         package|
-                         -> Result<
-                            BTreeMap<String, SemanticVersionAndRangePair>,
-                            ResolverError,
-                        > {
-                            let intermediate = Dependency::<SemanticVersion>::try_from(package)
-                                .map_err(|err| ResolverError::InvalidLockFile(err.to_string()))?;
-                            locked_dependencies.insert(
-                                intermediate.full_name,
-                                (
-                                    semver!(&intermediate.version_requirement),
-                                    intermediate.version_range,
-                                ),
-                            );
-                            Ok(locked_dependencies)
-                        },
-                    )?,
-                );
+            *self.locked_dependencies.borrow_mut() = Some(packages.iter().fold(
+                BTreeMap::new(),
+                |mut locked_dependencies: BTreeMap<String, SemanticVersion>,
+                 package: &PackageInLockFile|
+                 -> BTreeMap<String, SemanticVersion> {
+                    // Dependencies of a single package in a lock file.
+                    let deps = &package.dependencies;
+                    // Find the right versions in the lock file.
+                    for dep_name in deps {
+                        for package in packages {
+                            if &package.name == dep_name
+                                && locked_dependencies.get(&package.name).is_none()
+                            {
+                                locked_dependencies
+                                    .insert(package.name.clone(), semver!(&package.version));
+                            }
+                        }
+                    }
+                    locked_dependencies
+                },
+            ));
         }
 
         // Now we are ready to start the resolution.
@@ -329,6 +328,7 @@ impl<'req_resolver> Resolver for VersionRequestResolver<'req_resolver> {
         )
         .map_or_else(Err, |solved| {
             // Transform to PackageVersion structs.
+
             Ok(solved.iter().map_into().collect::<Vec<PackageVersion>>())
         })
         .map_or_else(
@@ -367,22 +367,34 @@ impl<'req_resolver> DependencyProvider<String, SemanticVersion>
             // TODO: A way to update individual packages in the lock file.
             // Ignore this for the package if it has an update flag.
             // Change package type to include update flags.
-            if let Some(ref locked_dependencies) = *self.locked_dependencies.borrow() {
-                if let Some((locked_dependency_version, locked_dependency_range)) =
-                    locked_dependencies.get(package.borrow())
-                {
-                    if locked_dependency_range.intersection(range.borrow()) != Range::none() {
-                        self.valid_versions_intermediate_cache.borrow_mut().insert(
-                            package.borrow().clone(),
-                            // We know that this is always a valid, single, complete and exact version.
-                            vec![*locked_dependency_version],
-                        );
 
-                        // Pick only one valid version since we exactly want that version.
-                        return Ok(1);
-                    }
+            if let Some(ref locked_dependencies) = *self.locked_dependencies.borrow() {
+                if let Some(locked_dependency_version) = locked_dependencies.get(package.borrow()) {
+                    self.valid_versions_intermediate_cache.borrow_mut().insert(
+                        package.borrow().clone(),
+                        // We know that this is always a valid, single, complete and exact version.
+                        vec![*locked_dependency_version],
+                    );
+                    // Pick only one valid version since we exactly want that version.
+                    return Ok(1);
                 }
             }
+            // if let Some(ref locked_dependencies) = *self.locked_dependencies.borrow() {
+            //     if let Some((locked_dependency_version, locked_dependency_range)) =
+            //         locked_dependencies.get(package.borrow())
+            //     {
+            //         if locked_dependency_range.intersection(range.borrow()) != Range::none() {
+            //             self.valid_versions_intermediate_cache.borrow_mut().insert(
+            //                 package.borrow().clone(),
+            //                 // We know that this is always a valid, single, complete and exact version.
+            //                 vec![*locked_dependency_version],
+            //             );
+
+            //             // Pick only one valid version since we exactly want that version.
+            //             return Ok(1);
+            //         }
+            //     }
+            // }
 
             // TODO: In future iterations we'll add other resources for checking for dependencies such as the local file system.
             // Currently we only check registry.

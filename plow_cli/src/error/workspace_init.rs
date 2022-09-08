@@ -39,6 +39,10 @@ pub enum WorkspaceInitializationError {
         "Failed to remove temporary fields directory. Please remove it manually.\n\tDetails: {0}"
     )]
     FailedToRemoveBackupFieldsDirectory(String),
+    #[error(
+        "Workspace does not support having a field with the same name multiple times. Please remove or rename the following field: {0}"
+    )]
+    DuplicateFieldInWorkspace(String),
 }
 
 impl Feedback for WorkspaceInitializationError {
@@ -49,6 +53,7 @@ impl Feedback for WorkspaceInitializationError {
             | NoFieldsInDirectory
             | WorkspaceAlreadyInitialized
             | FailedToCreateFieldsDirectory(_)
+            | DuplicateFieldInWorkspace(_)
             | FailedToRemoveBackupFieldsDirectory(_)
             | FailedToReadFieldsDirectory(_)
             | FailedToReadWorkspaceManifestFile(_)

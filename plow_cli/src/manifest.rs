@@ -484,6 +484,22 @@ impl FieldManifest {
         }
         None
     }
+    #[allow(clippy::restriction)]
+    #[allow(clippy::missing_panics_doc)]
+    pub fn field_dependency_names(&self) -> Option<Vec<String>> {
+        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:dependency") {
+            let names = literals
+                .iter()
+                .map(|l| l.split(' ').next())
+                .collect::<Vec<Option<&str>>>();
+            if names.iter().any(std::option::Option::is_none) {
+                return None;
+            }
+            let names: Vec<String> = names.iter().map(|n| n.unwrap().to_owned()).collect();
+            return Some(names);
+        }
+        None
+    }
 }
 
 /// Generates a sha256 hash from field name, namespace and version.

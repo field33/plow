@@ -90,6 +90,7 @@ impl OntologyWorkspace {
                 ontology_metadata.into(),
                 registry,
                 workspace_root,
+                true,
             )?,
         })
     }

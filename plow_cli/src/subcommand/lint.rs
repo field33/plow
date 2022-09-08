@@ -9,10 +9,11 @@ use plow_package_management::registry::Registry;
 
 use crate::config::PlowConfig;
 use crate::error::CliError;
+use crate::error::FieldAccessError::*;
 use crate::error::LintSubcommandError::*;
 use crate::feedback::{field_info, general_lint_success, lint_start, Feedback};
+use crate::manifest::FieldManifest;
 use crate::resolve::resolve;
-
 pub struct SuccessfulLint;
 impl Feedback for SuccessfulLint {
     fn feedback(&self) {
@@ -23,7 +24,7 @@ impl Feedback for SuccessfulLint {
 pub fn attach_as_sub_command() -> App<'static> {
     Command::new("lint")
         .about("Lints a field.")
-        .arg(arg!([FIELD_PATH_OR_NAME]))
+        .arg(arg!([FIELD_PATH]))
         .setting(AppSettings::ArgRequiredElseHelp)
 }
 
@@ -40,17 +41,8 @@ pub fn run_command_flow(
     config: &PlowConfig,
 ) -> Result<impl Feedback, CliError> {
     let field_file_path = sub_matches
-        .get_one::<String>("FIELD_PATH_OR_NAME")
+        .get_one::<String>("FIELD_PATH")
         .ok_or(NoFieldProvidedToLint)?;
-
-    // TODO: From here..
-
-    // let maybe_field_path = camino::Utf8PathBuf::from(field_file_path_or_name);
-    // let field = if maybe_field_path.exists() {
-    //     maybe_field_path
-    // } else {
-    //     config.
-    // };
 
     let field = camino::Utf8PathBuf::from(field_file_path);
 
@@ -62,20 +54,40 @@ pub fn run_command_flow(
         let path = Utf8PathBuf::from(field_file_path);
 
         let registry = crate::sync::sync(config).map_err(|err| CliError::Wip(err.to_string()))?;
-        if let Some(lock_file) = resolve(config, &path, &registry as &dyn Registry)? {
+
+        let root_field_contents = std::fs::read_to_string(&path).map_err(|_| {
+            CliError::from(FailedToFindFieldAtPath {
+                field_path: path.to_string(),
+            })
+        })?;
+        let root_field_manifest =
+            FieldManifest::new(root_field_contents.clone()).map_err(|_| {
+                CliError::from(FailedToReadFieldManifest {
+                    field_path: path.to_string(),
+                })
+            })?;
+
+        if let Some(lock_file) = resolve(
+            config,
+            &root_field_contents,
+            &root_field_manifest,
+            true,
+            &registry as &dyn Registry,
+        )? {
             // Leave an empty line in between.
             println!();
-            println!("\t{}", "Dependencies".bold());
+            println!("\t{}", "Dependencies".bold().green());
 
             lock_file
                 .locked_dependencies
                 .packages
                 .iter()
                 .for_each(|package_version| {
-                    let data = registry.get_package_version_metadata(package_version);
-                    if let Ok(data) = data {
-                        println!("\t\t{} {}", data.package_name.bold(), data.version);
-                    }
+                    println!(
+                        "\t\t{} {}",
+                        package_version.package_name.bold(),
+                        package_version.version
+                    );
                 });
         }
 

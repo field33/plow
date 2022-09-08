@@ -43,6 +43,9 @@ impl FieldPath {
     pub fn as_path_buf(&self) -> Utf8PathBuf {
         self.inner.clone()
     }
+    pub fn update_path(&mut self, path: Utf8PathBuf) {
+        self.inner = path;
+    }
 }
 
 impl std::fmt::Display for FieldPath {
@@ -149,6 +152,8 @@ impl FieldsDirectory {
             .collect();
         Ok(fields_dir)
     }
+
+    #[allow(clippy::unwrap_used)]
     pub fn extend_from_root_excluding_fields_dir(
         &mut self,
         root: &Utf8Path,
@@ -158,12 +163,16 @@ impl FieldsDirectory {
                 reason: err.to_string(),
             })?
             .iter()
-            .filter(|path| {
-                !path
+            .filter_map(|path| {
+                if !path
                     .canonicalize_utf8()
                     .unwrap()
                     .components()
                     .contains(&camino::Utf8Component::Normal("fields"))
+                {
+                    return Some(path.clone());
+                }
+                None
             })
             .map(std::convert::Into::into)
             .collect();
@@ -215,12 +224,12 @@ impl FieldsDirectory {
     #[allow(clippy::unwrap_in_result)]
     #[allow(clippy::indexing_slicing)]
     #[allow(clippy::unwrap_used)]
-    pub fn write_with_children(&self) -> Result<(), CliError> {
+    pub fn write_with_children(&mut self) -> Result<(), CliError> {
         std::fs::create_dir_all(&self.path)
             .map_err(|err| FailedToCreateFieldsDirectory(err.to_string()))?;
 
         let mut copy_number = 1;
-        for child in &self.children {
+        for child in &mut self.children {
             // We're safe here, we've linted before.
             if let Ok(full_name) = FieldManifest::quick_extract_field_full_name(&child.as_path()) {
                 let full_name: Vec<&str> = full_name.split('/').collect();
@@ -248,6 +257,8 @@ impl FieldsDirectory {
 
                 std::fs::copy(child.as_path(), &new_field_destination)
                     .map_err(|err| FailedToCreateFieldsDirectory(err.to_string()))?;
+
+                child.update_path(new_field_destination);
             }
         }
         Ok(())
