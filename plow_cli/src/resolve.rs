@@ -98,7 +98,7 @@ pub fn resolve(
         // Cache check.
         let cksums_to_download = cksums
             .iter()
-            .filter(|cksum| stems.contains(&cksum.as_str()))
+            .filter(|cksum| !stems.contains(&cksum.as_str()))
             .collect::<Vec<_>>();
 
         let client = reqwest::blocking::Client::new();

@@ -278,7 +278,6 @@ impl FieldsDirectory {
             let dir = path.unwrap();
             let path = Utf8PathBuf::from_path_buf(dir.path()).unwrap();
             if path.is_dir() {
-                dbg!(dir.file_name());
                 if dir
                     .file_name()
                     .to_string_lossy()
