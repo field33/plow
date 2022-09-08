@@ -113,19 +113,23 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
     let clone_from = "git@github.com:field33/plow-registry-index.git";
     let public_index_git_repo_path = &config.index_dir.join("plow-registry-index");
 
-    let ssh_key_path = Utf8PathBuf::from("/Users/vallahiboyle/.ssh/id_rsa");
-    let repository = PublicIndexRepository::clone_or_open(
-        clone_from,
-        &public_index_git_repo_path,
-        "main",
-        Some(&&ssh_key_path),
-        None,
-    )
-    .map_err(|err| FailedToGetRepository(err.to_string()))?;
-
-    repository
-        .pull_from_origin_fast_forward()
+    if let Some(ref user_home) = config.user_home {
+        let ssh_key_path = user_home.join(".ssh/id_rsa");
+        let repository = PublicIndexRepository::clone_or_open(
+            clone_from,
+            &public_index_git_repo_path,
+            "main",
+            Some(&&ssh_key_path),
+            None,
+        )
         .map_err(|err| FailedToGetRepository(err.to_string()))?;
+
+        repository
+            .pull_from_origin_fast_forward()
+            .map_err(|err| FailedToGetRepository(err.to_string()))?;
+    } else {
+        todo!("Fetch with cli will be implemented.")
+    }
 
     let paths = crate::utils::list_files(&public_index_git_repo_path, "json")
         .map_err(|err| FailedToReadIndexDirectory(err.to_string()))?;

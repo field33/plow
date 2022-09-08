@@ -24,7 +24,7 @@ pub enum WorkspaceInitializationError {
     )]
     FailedToReadFieldsDirectory(String),
     #[error(
-        "Workspace is already initialized. You may run plow init --force to recreate the workspace."
+        "Workspace is already initialized. You may run plow init again to recreate the workspace."
     )]
     WorkspaceAlreadyInitialized,
     #[error(

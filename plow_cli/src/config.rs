@@ -25,6 +25,7 @@ pub const DEFAULT_REGISTRY_URL: &str = "https://api.plow.pm";
 #[derive(Debug)]
 pub struct PlowConfig {
     pub plow_home: Utf8PathBuf,
+    pub user_home: Option<Utf8PathBuf>,
     pub credentials_path: Utf8PathBuf,
     pub registry_dir: Utf8PathBuf,
     pub field_cache_dir: Utf8PathBuf,
@@ -155,6 +156,7 @@ pub fn configure(
 
     let mut workspace_config_file = None;
 
+    let mut user_home: Option<Utf8PathBuf> = None;
     let plow_home = if let Some(custom_path) = custom_path {
         let mut new_workspace_config_file =
             WorkspaceConfigFile::create_in_working_dir(&working_dir)?;
@@ -175,6 +177,7 @@ pub fn configure(
                 "The path to the home directory is not UTF8 encoded.".to_owned(),
             )
         })?;
+        user_home = Some(homedir.clone());
         homedir.join(".plow")
     };
 
@@ -225,6 +228,7 @@ pub fn configure(
     }
 
     Ok(PlowConfig {
+        user_home,
         plow_home,
         credentials_path: credentials_file,
         registry_dir,

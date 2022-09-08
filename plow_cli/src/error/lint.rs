@@ -41,11 +41,11 @@ impl Feedback for LintSubcommandError {
             }
             SingleLintContainsFailure { .. } => { /* Omit feedback */ }
             LintsContainFailures { field_paths } => {
-                println!("\t{} couldn't pass the linting phase thus ignored and not included in the workspace and fields directory.\n\tPlease lint them individually, correct them and run plow init --force to recreate the workspace.", "Paths listed below".yellow().bold());
+                println!("\t{} couldn't pass the linting phase thus ignored and not included in the workspace and fields directory.\n\tPlease lint them individually, correct them and run plow init one more time to recreate the workspace.", "Paths listed below".yellow().bold());
                 for field_path in field_paths {
                     println!("\t\t{}", field_path);
                 }
-                println!("\t{} created successfully but partially.\n\tTo include the fields left out from the workspace, fix them and run plow init --force to recreate the workspace.", "Workspace".yellow().bold(),);
+                println!("\t{} created successfully but partially.\n\tTo include the fields left out from the workspace, fix them and run plow init one more time to recreate the workspace.", "Workspace".yellow().bold(),);
 
                 std::process::exit(0x0);
             }
