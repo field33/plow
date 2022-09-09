@@ -66,6 +66,7 @@ mod error;
 mod feedback;
 pub mod git;
 pub mod manifest;
+
 pub mod resolve;
 mod subcommand;
 pub mod sync;
@@ -78,7 +79,7 @@ use feedback::{command_failed, Feedback};
 #[allow(clippy::missing_panics_doc)]
 pub fn main() {
     let app = App::new("plow")
-        .version("0.2.2")
+        .version("0.3.2")
         .about("Plowing the field of knowledge. Package management for ontologies.")
         .arg(
             Arg::with_name("registry")
@@ -86,6 +87,13 @@ pub fn main() {
                 .long("registry")
                 .help("Specifies the target registry for subcommands which interact with it.")
                 .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("fetch-with-cli")
+                .long("fetch-with-cli")
+                .help("Uses the host git application to fetch private index.")
+                .takes_value(false)
+                .action(clap::ArgAction::SetTrue),
         )
         .arg(
             Arg::with_name("config")
@@ -99,6 +107,7 @@ pub fn main() {
         .subcommand(subcommand::submit::attach_as_sub_command())
         .subcommand(subcommand::init::attach_as_sub_command())
         .subcommand(subcommand::update::attach_as_sub_command())
+        // .subcommand(subcommand::protege::attach_as_sub_command())
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .setting(AppSettings::SubcommandPrecedenceOverArg);
 
@@ -106,9 +115,10 @@ pub fn main() {
 
     let custom_plow_home_path = options.get_one::<String>("config").map(Utf8PathBuf::from);
     let custom_registry_url = options.get_one::<String>("registry").cloned();
+    let fetch_with_cli = options.get_flag("fetch-with-cli");
 
     let matches = app.clone().get_matches();
-    match config::configure(custom_plow_home_path, custom_registry_url) {
+    match config::configure(custom_plow_home_path, custom_registry_url, fetch_with_cli) {
         Ok(ref config) => {
             let mut app_for_help_reference = app.clone();
 
@@ -133,6 +143,10 @@ pub fn main() {
                     subcommand::update::run_command(sub_matches, config).feedback();
                     Some(())
                 }
+                // Some(("protege", sub_matches)) => {
+                //     subcommand::protege::run_command(sub_matches, config).feedback();
+                //     Some(())
+                // }
                 _ => None,
             }
             .is_none()

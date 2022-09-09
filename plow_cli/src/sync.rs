@@ -62,6 +62,7 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
                             continue;
                         }
                         let (_name, versions) = parse(line)?;
+
                         for version in versions {
                             let ver = PackageVersion {
                                 package_name: version.package_name.clone(),
@@ -70,6 +71,7 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
                             registry.packages_metadata.insert(ver, version);
                         }
                     }
+                    dbg!("hey");
                     println!(
                         "\t{} is updated successfully.",
                         "Private index".green().bold(),
@@ -83,7 +85,7 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
             }
             StatusCode::UNAUTHORIZED => {
                 println!(
-                    "\t{} try authenticating with plow --login, skipping update ..",
+                    "\t{} try authenticating with plow login <api-token>, skipping update ..",
                     "Unauthorized get updates from the private index"
                         .red()
                         .bold(),
@@ -114,21 +116,35 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
     let public_index_git_repo_path = &config.index_dir.join("plow-registry-index");
 
     if let Some(ref user_home) = config.user_home {
-        let ssh_key_path = user_home.join(".ssh/id_rsa");
-        let repository = PublicIndexRepository::clone_or_open(
-            clone_from,
-            &public_index_git_repo_path,
-            "main",
-            Some(&&ssh_key_path),
-            None,
-        )
-        .map_err(|err| FailedToGetRepository(err.to_string()))?;
-
-        repository
-            .pull_from_origin_fast_forward()
+        if config.fetch_with_cli {
+            // TODO: Proper error handling
+            std::process::Command::new("sh")
+                .arg("-c")
+                .arg("cd ~/.plow/registry/index/plow-registry-index && git pull")
+                .output()
+                .expect("failed to execute process");
+        } else {
+            let ssh_key_path = user_home.join(".ssh").join("id_rsa");
+            let repository = PublicIndexRepository::clone_or_open(
+                clone_from,
+                &public_index_git_repo_path,
+                "main",
+                Some(&&ssh_key_path),
+                None,
+            )
             .map_err(|err| FailedToGetRepository(err.to_string()))?;
+
+            repository
+                .pull_from_origin_fast_forward()
+                .map_err(|err| FailedToGetRepository(err.to_string()))?;
+        }
     } else {
-        todo!("Fetch with cli will be implemented.")
+        // TODO: Proper error handling
+        std::process::Command::new("sh")
+            .arg("-c")
+            .arg("cd ~/.plow/registry/index/plow-registry-index && git pull")
+            .output()
+            .expect("failed to execute process");
     }
 
     let paths = crate::utils::list_files(&public_index_git_repo_path, "json")

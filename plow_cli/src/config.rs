@@ -35,6 +35,7 @@ pub struct PlowConfig {
     workspace_config_file: Option<WorkspaceConfigFile>,
     // Fill this if it is provided with a command.
     registry_url: Option<String>,
+    pub fetch_with_cli: bool,
 }
 
 impl PlowConfig {
@@ -142,6 +143,7 @@ impl From<Utf8PathBuf> for WorkingDirectory {
 pub fn configure(
     custom_path: Option<Utf8PathBuf>,
     registry_url: Option<String>,
+    fetch_with_cli: bool,
 ) -> Result<PlowConfig, CliError> {
     let working_dir = WorkingDirectory::from(
         Utf8PathBuf::from_path_buf(
@@ -238,6 +240,7 @@ pub fn configure(
         working_dir,
         workspace_config_file,
         registry_url,
+        fetch_with_cli,
     })
 }
 

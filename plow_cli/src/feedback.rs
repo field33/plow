@@ -32,9 +32,9 @@ pub fn submission_remote_linting_failed(failures: &[String]) {
     std::process::exit(0xFF);
 }
 
-pub fn command_failed(advice: &str) {
+pub fn command_failed(info: &str) {
     println!("\t{}", "Command failed".red().bold(),);
-    println!("\t{} {advice}", "Advice".yellow().bold(),);
+    println!("\t{} {info}", "Info".yellow().bold(),);
     std::process::exit(0xFF);
 }
 
