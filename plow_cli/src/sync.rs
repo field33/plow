@@ -1,9 +1,8 @@
 //! This module is temporary to provide field consumption and dependency resolution functionality for the CLI.
 //! It is an initial implementation to bring the functionality and  most likely to be rewritten very soon.
 
-use std::str::FromStr;
+use std::{convert::TryFrom, str::FromStr};
 
-use camino::Utf8PathBuf;
 use colored::Colorize;
 use plow_package_management::{
     package::{PackageVersion, PackageVersionWithRegistryMetadata},
@@ -24,6 +23,29 @@ use crate::{
 #[derive(Serialize, Deserialize, Default)]
 pub struct DifferenceQuery {
     pub existing_local_field_hashes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DependencyRequirement {
+    pub name: String,
+    pub req: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PrivateIndex {
+    pub name: String,
+    pub version: String,
+    pub cksum: String,
+    pub ontology_iri: Option<String>,
+    pub deps: Vec<DependencyRequirement>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PrivateIndexes(Vec<PrivateIndex>);
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PrivateIndexResponse {
+    status: String,
+    data: Vec<PrivateIndex>,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -56,26 +78,79 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
 
         match status {
             StatusCode::OK => {
+                // Get the response
                 if let Ok(response_body) = response.bytes() {
-                    for line in response_body.split(|byte| byte == &b'\n') {
-                        if line.is_empty() {
-                            continue;
-                        }
-                        let (_name, versions) = parse(line)?;
+                    // dbg!(String::from_utf8(response_body.to_vec()));
+                    let priv_indexes: Result<PrivateIndexResponse, _> =
+                        serde_json::from_slice(&response_body);
 
-                        for version in versions {
-                            let ver = PackageVersion {
-                                package_name: version.package_name.clone(),
-                                version: version.version.clone().to_string(),
+                    // dbg!(&priv_indexes);
+
+                    if let Ok(priv_indexes) = priv_indexes {
+                        let priv_indexes = priv_indexes.data;
+                        for index in priv_indexes {
+                            let deps = index
+                                .deps
+                                .into_iter()
+                                .map(|dep| {
+                                    Dependency::<SemanticVersion>::try_from(
+                                        format!("{} {}", dep.name, dep.req).as_str(),
+                                    )
+                                    .unwrap()
+                                })
+                                .collect::<Vec<_>>();
+
+                            let metadata = PackageVersionWithRegistryMetadata {
+                                package_name: index.name.clone(),
+                                version: SemanticVersion::from_str(&index.version.clone()).unwrap(),
+                                ontology_iri: index.ontology_iri,
+                                dependencies: deps,
+                                cksum: Some(index.cksum),
+                                private: true,
                             };
-                            registry.packages_metadata.insert(ver, version);
+                            if registry
+                                .packages_metadata
+                                .get(&PackageVersion {
+                                    package_name: index.name.clone(),
+                                    version: index.version.clone(),
+                                })
+                                .is_none()
+                            {
+                                registry.packages_metadata.insert(
+                                    PackageVersion {
+                                        package_name: index.name,
+                                        version: index.version,
+                                    },
+                                    metadata,
+                                );
+                            }
                         }
+                        // dbg!(&registry.packages_metadata);
+                        println!(
+                            "\t{} is updated successfully.",
+                            "Private index".green().bold(),
+                        );
+                    } else {
+                        println!(
+                            "\t{} skipping update ..",
+                            "Remote private index fetch failed.".red().bold(),
+                        );
                     }
-                    dbg!("hey");
-                    println!(
-                        "\t{} is updated successfully.",
-                        "Private index".green().bold(),
-                    );
+                    // for line in response_body.split(|byte| byte == &b'\n') {
+                    //     if line.is_empty() {
+                    //         continue;
+                    //     }
+
+                    //     let (_name, versions) = parse(line)?;
+
+                    //     for version in versions {
+                    //         let ver = PackageVersion {
+                    //             package_name: version.package_name.clone(),
+                    //             version: version.version.clone().to_string(),
+                    //         };
+                    //         registry.packages_metadata.insert(ver, version);
+                    //     }
+                    // }
                 } else {
                     println!(
                         "\t{} skipping update ..",
@@ -274,15 +349,21 @@ fn parse(data: &[u8]) -> Result<(String, Vec<PackageVersionWithRegistryMetadata>
 
     let mut versions = vec![];
     while let Some(version) = iter.next() {
+        println!("Start");
+        println!("{}", String::from_utf8(version.to_owned()).unwrap());
         let version =
             std::str::from_utf8(version).map_err(|err| FailedToParseIndex(err.to_string()))?;
         let semantic_version = SemanticVersion::try_from(version)
             .map_err(|err| FailedToParseIndex(err.to_string()))?;
+
         match iter.next() {
             Some(version_type) => {
+                println!("{}", String::from_utf8(version_type.to_owned()).unwrap());
                 let content = iter.next().ok_or_else(|| {
                     CliError::from(FailedToParseIndex("index content missing".to_owned()))
                 })?;
+                println!("{}", String::from_utf8(content.to_owned()).unwrap());
+
                 let IndexedPackageVersion {
                     name,
                     ontology_iri,

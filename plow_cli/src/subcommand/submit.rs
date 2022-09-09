@@ -63,7 +63,7 @@ fn run_command_flow(
 
         let path = Utf8PathBuf::from(&field_file_path);
 
-        let registry = crate::sync::sync(config).map_err(|err| CliError::Wip(err.to_string()))?;
+        let registry = crate::sync::sync(config)?;
 
         let root_field_contents = std::fs::read_to_string(&path).map_err(|_| {
             CliError::from(FailedToFindFieldAtPath {
