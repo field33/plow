@@ -57,19 +57,17 @@
 )]
 
 use field33_rdftk_core_temporary_fork::model::graph::GraphRef;
-use field33_rdftk_core_temporary_fork::model::literal::LanguageTag;
-use field33_rdftk_core_temporary_fork::model::statement::{ObjectNodeRef, StatementList};
+use field33_rdftk_core_temporary_fork::model::literal::{LiteralFactoryRef, LiteralRef};
+use field33_rdftk_core_temporary_fork::model::statement::StatementList;
 use field33_rdftk_core_temporary_fork::simple;
 use field33_rdftk_core_temporary_fork::simple::indexed::graph_factory;
 use field33_rdftk_iri_temporary_fork::IRI;
-use harriet::{
-    Directive, IRIReference, Literal, Object, PrefixedName, Statement as HarrietStatement, Subject,
-    Triples, TurtleDocument, Verb, IRI as HarrietIRI,
+use harriet::triple_production::{
+    RdfIri, RdfLiteral, RdfObject, RdfPredicate, RdfSubject, TripleProducer,
 };
-use std::borrow::Cow;
-use std::collections::HashMap;
+use harriet::TurtleDocument;
 use std::str::FromStr;
-use std::string::ToString;
+use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -88,119 +86,40 @@ pub fn document_to_graph(document: &TurtleDocument) -> Result<GraphRef, RDFParse
     let factory = simple::statement::statement_factory();
     let literal_factory = simple::literal::literal_factory();
 
-    let mut prefix_map: HashMap<Option<String>, IRIReference> = HashMap::new();
+    let triples = TripleProducer::produce_for_document(&document).unwrap();
 
-    for statement in &document.statements {
-        match statement {
-            HarrietStatement::Directive(directive) => {
-                // TODO: Ignoring @base, etc. for now
-                if let Directive::Prefix(prefix) = directive {
-                    prefix_map.insert(
-                        prefix.prefix.as_ref().map(ToString::to_string),
-                        prefix.iri.clone(),
-                    );
-                }
+    // TODO: implement blank nodes
+    // let blank_node_counter = 0;
+    // let blank_nodes_map = HashMap::<RdfBlankNode, String>::default();
+
+    for triple in triples {
+        let subject = match triple.subject {
+            RdfSubject::IRI(iri) => factory.named_subject(rdf_iri_to_rdftk_iri(iri).into()),
+            RdfSubject::BlankNode(_) => {
+                // TODO: implement blank nodes
+                continue;
             }
-            HarrietStatement::Triples(triples) => match triples {
-                Triples::Labeled(_, subject, predicate_object_list) => match subject {
-                    Subject::IRI(subject) => {
-                        let subject = resolve_iri(&prefix_map, subject)?;
-                        for (_, verb, object_list, _) in &predicate_object_list.list {
-                            match verb {
-                                Verb::IRI(predicate) => {
-                                    let predicate = resolve_iri(&prefix_map, predicate)?;
-                                    for (_, _, object) in &object_list.list {
-                                        match object {
-                                            Object::IRI(object) => {
-                                                let object = resolve_iri(&prefix_map, object)?;
-                                                // We know the input is valid because `harriet_to_rdftk_iri` only accepts valid input.
-                                                #[allow(clippy::unwrap_used)]
-                                                statements.push(
-                                                    factory
-                                                        .statement(
-                                                            factory.named_subject(
-                                                                harriet_to_rdftk_iri(&subject)
-                                                                    .into(),
-                                                            ),
-                                                            harriet_to_rdftk_iri(&predicate).into(),
-                                                            factory.named_object(
-                                                                harriet_to_rdftk_iri(&object)
-                                                                    .into(),
-                                                            ),
-                                                        )
-                                                        .unwrap(),
-                                                );
-                                            }
-                                            Object::Literal(literal) => match literal {
-                                                Literal::RDFLiteral(rdf_literal) => {
-                                                    let string = rdf_literal.string.to_string();
-                                                    let object_node: ObjectNodeRef;
-                                                    if let Some(ref language_tag) =
-                                                        rdf_literal.language_tag
-                                                    {
-                                                        // Does not check or report errors on malformed language tags
-                                                        // Instead it would just ignore it.
-                                                        if let Ok(tag) =
-                                                            LanguageTag::from_str(language_tag)
-                                                        {
-                                                            object_node = factory.literal_object(
-                                                                literal_factory
-                                                                    .with_language(&string, tag),
-                                                            );
-                                                        } else {
-                                                            object_node = factory.literal_object(
-                                                                literal_factory.string(&string),
-                                                            );
-                                                        }
-                                                    } else {
-                                                        object_node = factory.literal_object(
-                                                            literal_factory.string(&string),
-                                                        );
-                                                    }
-                                                    // We know the input is valid because `harriet_to_rdftk_iri` only accepts valid input.
-                                                    // Also `object_node` variable will always be a valid `ObjectNodeRef`.
-                                                    #[allow(clippy::unwrap_used)]
-                                                    statements.push(
-                                                        factory
-                                                            .statement(
-                                                                factory.named_subject(
-                                                                    harriet_to_rdftk_iri(&subject)
-                                                                        .into(),
-                                                                ),
-                                                                harriet_to_rdftk_iri(&predicate)
-                                                                    .into(),
-                                                                object_node,
-                                                            )
-                                                            .unwrap(),
-                                                    );
-                                                }
-                                                Literal::BooleanLiteral(_)
-                                                | Literal::NumericLiteral(_) => {
-                                                    return Err(
-                                                        RDFParseError::UnsupportedStructure,
-                                                    );
-                                                }
-                                            },
-                                            _ => {
-                                                // TODO
-                                                // return Err(RDFParseError::UnsupportedStructure);
-                                            }
-                                        }
-                                    }
-                                }
-                                Verb::A => {
-                                    return Err(RDFParseError::UnsupportedStructure);
-                                }
-                            }
-                        }
-                    }
-                    Subject::Collection(_) | Subject::BlankNode(_) => {
-                        // TODO
-                        return Err(RDFParseError::UnsupportedStructure);
-                    }
-                },
-            },
-        }
+        };
+        let predciate = match triple.predicate {
+            RdfPredicate::IRI(iri) => rdf_iri_to_rdftk_iri(iri),
+        };
+        let object = match triple.object {
+            RdfObject::IRI(iri) => factory.named_object(rdf_iri_to_rdftk_iri(iri).into()),
+            RdfObject::BlankNode(_) => {
+                // TODO: implement blank nodes
+                continue;
+            }
+            RdfObject::Literal(literal) => factory.literal_object(rdf_literal_to_rdftk_literal(
+                literal_factory.clone(),
+                literal,
+            )?),
+        };
+
+        statements.push(
+            factory
+                .statement(subject, predciate.into(), object)
+                .unwrap(),
+        )
     }
 
     let graph_factory = graph_factory();
@@ -209,47 +128,30 @@ pub fn document_to_graph(document: &TurtleDocument) -> Result<GraphRef, RDFParse
     Ok(graph)
 }
 
-fn harriet_to_rdftk_iri(iri: &IRIReference) -> IRI {
-    // We know that our input is a valid IRI, so we can unwrap
-    #[allow(clippy::unwrap_used)]
-    IRI::from_str(&iri.iri).unwrap()
+fn rdf_iri_to_rdftk_iri(iri: RdfIri) -> IRI {
+    IRI::from_str(iri.iri.as_ref()).unwrap()
 }
 
-fn resolve_iri<'iri>(
-    prefix_map: &HashMap<Option<String>, IRIReference>,
-    iri: &'iri HarrietIRI<'iri>,
-) -> Result<IRIReference<'iri>, RDFParseError> {
-    match iri {
-        HarrietIRI::IRIReference(iri_ref) => Ok(iri_ref.clone()),
-        HarrietIRI::PrefixedName(prefixed_name) => resolve_prefixed_name(prefix_map, prefixed_name),
-    }
-}
-
-fn resolve_prefixed_name<'iri>(
-    prefix_map: &HashMap<Option<String>, IRIReference>,
-    prefixed_name: &PrefixedName<'iri>,
-) -> Result<IRIReference<'iri>, RDFParseError> {
-    let prefix_mapping = prefix_map.get(&prefixed_name.prefix.as_ref().map(ToString::to_string));
-    prefix_mapping
-        .map(|prefix| {
-            let joined_iri = format!(
-                "{}{}",
-                prefix.iri,
-                prefixed_name.name.as_ref().unwrap_or(&Cow::Borrowed(""))
-            );
-            IRIReference {
-                iri: Cow::Owned(joined_iri),
-            }
-        })
-        .ok_or_else(|| {
-            RDFParseError::UnresolvablePrefix(
-                prefixed_name
-                    .name
-                    .as_ref()
-                    .unwrap_or(&Cow::Borrowed(""))
-                    .to_string(),
-            )
-        })
+fn rdf_literal_to_rdftk_literal(
+    literal_factory: LiteralFactoryRef,
+    literal: RdfLiteral,
+) -> Result<LiteralRef, RDFParseError> {
+    Ok(
+        match (
+            literal.lexical_form,
+            literal.datatype_iri,
+            literal.language_tag,
+        ) {
+            (lexical_form, _, Some(language_tag)) => literal_factory
+                .with_language_str(lexical_form.as_ref(), language_tag.as_ref())
+                .map_err(|_| RDFParseError::UnsupportedStructure)?,
+            (lexical_form, Some(data_type), _) => literal_factory.with_data_type(
+                lexical_form.as_ref(),
+                Arc::new(rdf_iri_to_rdftk_iri(data_type)).into(),
+            ),
+            (lexical_form, None, None) => literal_factory.literal(lexical_form.as_ref()),
+        },
+    )
 }
 
 // #[cfg(test)]
