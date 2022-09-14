@@ -5,17 +5,10 @@ Plow is package management solution for OWL ontologies, with support for specify
 
 ## Getting started - Installation
 
-### GUI
-
-To install, run:
-
-```shell
-cargo install plow_gui
-```
-
-[Prebuilt binaries are coming soon!](https://github.com/field33/plow/issues/2)
-
 ### CLI
+The CLI supports basic commands related to consuming and producing ontologies. It is suitable for both manual and automated workflows (e.g. [metadata linting in CI](https://github.com/field33/ontologies/blob/12ede2b557fde94f6a768e8b65c84929a58c05ce/.github/workflows/lint.yml#L33))
+
+Coming soon: [open in Protégé](https://github.com/field33/plow/issues/10)
 
 To install, run:
 
@@ -24,6 +17,65 @@ cargo install plow_cli
 ```
 
 [Prebuilt binaries are coming soon!](https://github.com/field33/plow/issues/1)
+
+### GUI
+
+Coming soon
+
+> You can install a preview version with limited functionality via `cargo install plow_cli`
+
+[Prebuilt binaries are coming soon!](https://github.com/field33/plow/issues/2)
+
+## Basic usage
+### Login with Plow
+The tooling currently expects you to be authenticated with the public plow registry ([open issue](https://github.com/field33/plow/issues/11)). Please sign in, creating an account [here](plow.pm) and [create a new User Token in your account settings](https://staging-registry.field33.com/home#user-tokens).
+
+
+```shell
+plow login <YOUR_TOKEN>
+```
+
+### Initialize workspace
+Create the directory you want to organize your *fields* (= ontologies) in.
+```shell
+# Create workspace directory
+mkdir example_workspace && cd example_workspace
+
+# Workaround: plow init currently expects a .ttl file to be present
+touch test.ttl
+
+# Initializes the workspace in your directory
+plow init
+```
+
+
+### Initialize a new *field* (= ontology)
+To create a new *field* with all the necessary metadata run:
+```shell
+plow init --field @example_namespace/example_fieldname
+```
+This will create the relevant folder structure:
+```
+├── Plow.toml
+└── fields
+    └── @example_namespace
+        └── example_fieldname.ttl
+```
+
+### Submit an *field* to the registry
+To prepare for submitting a new *field* run the following command:
+```shell
+plow submit --dry-run fields/@example_namespace/example_fieldname.ttl
+```
+
+If all checks pass you can omit the `--dry-run` flag and propperly submit your *field* by running:
+```shell
+# Public submission
+plow submit fields/@example_namespace/example_fieldname.ttl
+
+# Private submission
+plow submit --private fields/@example_namespace/example_fieldname.ttl
+```
 
 ## Repository contents
 
