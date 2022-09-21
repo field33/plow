@@ -32,15 +32,18 @@ impl Feedback for SuccessfulWorkspaceCreation {
 fn initialize_field(
     field_name: &str,
     workspace_root: &Utf8Path,
+    workspace_initialized: bool,
 ) -> Result<impl Feedback, CliError> {
     // Overwrites existing
 
     let field = self::field::new(field_name);
 
     let file_name = format!("{}.ttl", field_name.split('/').last().unwrap());
-
-    let p = workspace_root.join("fields").join(field_name);
-
+    let p = if workspace_initialized {
+        workspace_root.join("fields").join(field_name)
+    } else {
+        workspace_root.to_path_buf()
+    };
     std::fs::create_dir_all(&p).map_err(|err| FailedToWriteField(err.to_string()))?;
     std::fs::write(p.join(file_name), field.as_bytes())
         .map_err(|err| FailedToWriteField(err.to_string()))?;
@@ -86,9 +89,15 @@ pub fn run_command_flow(
             .get_one::<String>("field")
             .ok_or(NoFieldNameProvided)?;
 
-        let workspace_root = config.working_dir.fail_if_not_under_a_workspace()?;
+        let mut workspace_initialized = false;
+        let workspace_root = if let Ok(root) = config.working_dir.fail_if_not_under_a_workspace() {
+            workspace_initialized = true;
+            root
+        } else {
+            config.working_dir.path.clone()
+        };
 
-        let success = initialize_field(field_name, &workspace_root)?;
+        let success = initialize_field(field_name, &workspace_root, workspace_initialized)?;
 
         return Ok(Box::new(success) as Box<dyn Feedback>);
     }

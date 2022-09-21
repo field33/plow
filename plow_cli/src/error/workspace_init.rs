@@ -5,7 +5,7 @@ use thiserror::Error;
 pub enum WorkspaceInitializationError {
     #[error("Discovering fields in directory was not successful. Details: {reason:?}")]
     FailedRecursiveListingFields { reason: String },
-    #[error("Please run this command in a directory containing fields (.ttl files) in any depth.")]
+    #[error("Please run plow init --field @field_namespace/field_name to initialize a field or copy existing fields to this folder then run plow init to initialize the workspace.")]
     NoFieldsInDirectory,
     #[error(
         "Plow couldn't read the workspace manifest (./Plow.toml), either the file does not exist, not readable or corrupted.\n\tDetails: {0}"

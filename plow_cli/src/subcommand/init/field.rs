@@ -154,63 +154,72 @@ pub fn new(name: &str) -> std::string::String {
                         whitespace: " ".into(),
                     }),
                 ),
-                make_predicate_stringy_object("registry", "fieldFormatVersion", "v1", None),
+                make_predicate_stringy_object("registry", "ontologyFormatVersion", "v1", None, None),
                 make_predicate_stringy_object("registry", "author", "John Doe <john@example.com>", Some(
                     "\n\n# Specifies the field author in a format as in the example.\n"
-                    )),
+                    ),None),
                 make_predicate_stringy_object("registry", "packageName", name, Some(
                     "\n\n# Name of your field in the form of @namespace/name.\n"
-                    )),
+                    ),None),
                 make_predicate_stringy_object("registry", "packageVersion", "0.1.0", Some(
                     "\n\n# A bare semantic version for your field.\n"
-                    )),
+                    ),None),
                 make_predicate_stringy_object(
                     "registry",
                     "category",
                     "Communication\", \"Core\", \"Design", Some(
                     "\n\n# You may specify a maximum of 5 categories to categorize your field as in the example. Available categories could be viewed in <https://registry.field33.com>\n"
-                    )
+                    ),None,
                 ),
                 make_predicate_stringy_object(
                     "registry",
                     "keyword",
                     "some\", \"key\", \"words",Some(
                     "\n\n# You may specify a maximum of 5 keywords to describe your field as in the example.\n"
-                    )
+                    ),
+                    None,
                 ),
                 make_predicate_stringy_object(
                     "registry",
                     "shortDescription",
                     "A short description for the field",Some(
                     "\n\n# Specify a short description for your field to be viewed in registry.field33.com. The value requires a language tag \"My short description.\"@en\n"
-                    )
+                    ),
+                    Some(
+                        "en"
+                    ),
                 ),
                 make_predicate_stringy_object("rdfs", "comment", "A description for the field",  Some(
                     "\n\n# Specify a description for your field to be viewed in registry.field33.com. The value requires a language tag \"My Description\"@en\n"
-                    ),),
+                    ),  Some(
+                        "en"
+                    )),
                 make_predicate_stringy_object("rdfs", "label", "A title for the field", Some(
                     "\n\n# Specify a title for your field to be viewed in registry.field33.com. The value requires a language tag \"My title\"@en\n"
                     ),
+                      Some(
+                        "en"
+                    )
                 ),
 
                 make_predicate_stringy_object("registry", "dependency", "@namespace/name <version requirement>\", \"@namespace/name <version requirement>\" and so on..", Some(
                     "\n\n# If the field has dependencies you may comment the following section out and specify them as in the example.\n# "
-                )),
+                ),None),
                 make_predicate_stringy_object("registry", "repository", "<a valid domain name>", Some(
                     "\n\n# Specifying a repository url could be helpful to lead the user to your workspace in github, gitlab etc.\n# "
-                )),
+                ),None),
                 make_predicate_stringy_object("registry", "homepage", "<a valid domain name>", Some(
                     "\n\n# Specifying a homepage url could be helpful to give more info about your project to the user.\n# "
-                )),
+                ),None),
                 make_predicate_stringy_object("registry", "documentation", "<a valid domain name>", Some(
                     "\n\n# Specifying a documentation url could be helpful to for the user to learn more about your field.\n# "
-                )),
+                ),None),
                 make_predicate_stringy_object("registry", "license", "<a license description>", Some(
                     "\n\n# You may specify an additional license description here. \n# "
-                )),
+                ),None),
                 make_predicate_stringy_object("registry", "licenseSPDX", "MIT", Some(
                     "\n\n# Specify a valid SPDX license for your field, valid licenses could be viewed in <https://spdx.org/licenses>.\n"
-                    )),
+                    ), None),
 
             ],
         },
@@ -251,6 +260,7 @@ fn make_predicate_stringy_object<'list>(
     predicate_name: &'list str,
     object_literal: &'list str,
     comment_out_with_explanation: Option<&'list str>,
+    language_tag: Option<&'list str>,
 ) -> (
     Whitespace<'list>,
     harriet::Verb<'list>,
@@ -280,7 +290,7 @@ fn make_predicate_stringy_object<'list>(
                     string: TurtleString::StringLiteralQuote(StringLiteralQuote {
                         string: Cow::Borrowed(object_literal),
                     }),
-                    language_tag: None,
+                    language_tag: language_tag.map(|inner| inner.into()),
                     iri: None,
                 })),
             )],

@@ -155,6 +155,7 @@ impl FieldsDirectory {
             })
             .map(std::convert::Into::into)
             .collect();
+
         Ok(fields_dir)
     }
 
