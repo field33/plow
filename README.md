@@ -102,7 +102,16 @@ the registry publicly, but that may change in the future.
 
 If you use Plow in the context of a published academic piece of work, please consider citing:
 ```
-TODO: Add citation upon publication
+@incollection{Plow,
+  title = {Plow: A Novel Approach to Interlinking Modular Ontologies Based on Software Package Management},
+  doi = {10.3233/ssw220015},
+  url = {https://doi.org/10.3233/ssw220015},
+  year = {2022},
+  month = sep,
+  publisher = {{IOS} Press},
+  author = {Maximilian Goisser and Daniel Fiebig and Sebastian Wohlrapp and Georg Rehm},
+  booktitle = {Towards a Knowledge-Aware {AI}}
+}
 ```
 
 ## Contributing
