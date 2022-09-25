@@ -17,7 +17,8 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    config::PlowConfig, error::CliError, error::IndexSyncError::*, git::PublicIndexRepository,
+    config::PlowConfig, error::CliError, error::IndexSyncError::*, feedback::command_failed,
+    git::PublicIndexRepository,
 };
 
 #[derive(Serialize, Deserialize, Default)]
@@ -191,7 +192,7 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
     let public_index_git_repo_path = &config.index_dir.join("plow-registry-index");
 
     if let Some(ref user_home) = config.user_home {
-        if config.fetch_with_cli {
+        if which::which("git").is_ok() {
             // TODO: Proper error handling
             std::process::Command::new("sh")
                 .arg("-c")
@@ -214,12 +215,16 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
                 .map_err(|err| FailedToGetRepository(err.to_string()))?;
         }
     } else {
-        // TODO: Proper error handling
-        std::process::Command::new("sh")
-            .arg("-c")
-            .arg("cd ~/.plow/registry/index/plow-registry-index && git pull")
-            .output()
-            .expect("failed to execute process");
+        if which::which("git").is_ok() {
+            // TODO: Proper error handling
+            std::process::Command::new("sh")
+                .arg("-c")
+                .arg("cd ~/.plow/registry/index/plow-registry-index && git pull")
+                .output()
+                .expect("failed to execute process");
+        } else {
+            command_failed("Please install git to update the public index.");
+        }
     }
 
     let paths = crate::utils::list_files(&public_index_git_repo_path, "json")

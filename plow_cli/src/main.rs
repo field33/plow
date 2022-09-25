@@ -79,7 +79,7 @@ use feedback::{command_failed, Feedback};
 #[allow(clippy::missing_panics_doc)]
 pub fn main() {
     let app = App::new("plow")
-        .version("0.3.7")
+        .version("0.3.8")
         .about("Plowing the field of knowledge. Package management for ontologies.")
         // .arg(
         //     Arg::with_name("registry")
@@ -88,13 +88,13 @@ pub fn main() {
         //         .help("Specifies the target registry for subcommands which interact with it.")
         //         .takes_value(true),
         // )
-        .arg(
-            Arg::with_name("fetch-with-cli")
-                .long("fetch-with-cli")
-                .help("Uses the host git application to fetch private index.")
-                .takes_value(false)
-                .action(clap::ArgAction::SetTrue),
-        )
+        // .arg(
+        //     Arg::with_name("fetch-with-cli")
+        //         .long("fetch-with-cli")
+        //         .help("Uses the host git application to fetch private index.")
+        //         .takes_value(false)
+        //         .action(clap::ArgAction::SetTrue),
+        // )
         .arg(
             Arg::with_name("config")
                 .value_name("directory")
