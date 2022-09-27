@@ -7,7 +7,6 @@ use crate::error::FieldInitializationError::*;
 use crate::feedback::Feedback;
 use anyhow::Result;
 use camino::Utf8Path;
-use camino::Utf8PathBuf;
 use clap::{App, Command};
 use clap::{Arg, ArgMatches};
 use colored::Colorize;
@@ -38,6 +37,9 @@ fn initialize_field(
 
     let field = self::field::new(field_name);
 
+    // This is validated before
+    #[allow(clippy::unwrap_in_result)]
+    #[allow(clippy::unwrap_used)]
     let file_name = format!("{}.ttl", field_name.split('/').last().unwrap());
     let p = if workspace_initialized {
         workspace_root.join("fields").join(field_name)

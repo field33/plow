@@ -2,7 +2,10 @@
 
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
-use harriet::{Literal, Object, ParseError, Triples, TurtleDocument, Verb, IRI};
+use colored::Colorize;
+use harriet::{
+    Literal, Object, ObjectList, ParseError, Statement, Triples, TurtleDocument, Verb, IRI,
+};
 use lazy_static::lazy_static;
 use plow_package_management::{
     package::FieldMetadata,
@@ -18,13 +21,14 @@ lazy_static! {
     static ref PACKAGE_FULL_NAME_REGEX: Regex = Regex::new(r#""(@.+/.+)""#).unwrap();
 }
 
-pub struct FieldManifest {
+pub struct FieldManifest<'manifest> {
     extracted_annotations: HashMap<String, Result<Vec<String>, anyhow::Error>>,
     field_contents: String,
     ontology_iri: Option<String>,
+    statements: Vec<Statement<'manifest>>,
 }
 
-impl std::fmt::Debug for FieldManifest {
+impl<'manifest> std::fmt::Debug for FieldManifest<'manifest> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("FieldManifest")
             .field("extracted_annotations", &self.extracted_annotations)
@@ -33,7 +37,7 @@ impl std::fmt::Debug for FieldManifest {
     }
 }
 
-impl FieldManifest {
+impl<'manifest> FieldManifest<'manifest> {
     pub fn quick_extract_field_full_name<P: AsRef<Utf8Path>>(field_path: &P) -> Result<String> {
         let lines = crate::utils::read_lines(field_path.as_ref())?;
         let mut package_name_annotation_matched = false;
@@ -64,13 +68,13 @@ impl FieldManifest {
     }
 
     #[allow(clippy::too_many_lines)]
-    pub fn new(field_contents: String) -> Result<Self> {
+    pub fn new(field_contents: &'manifest str) -> Result<Self> {
         let mut ontology_iri = None;
         // File name -> (prefixed_name -> values as vec of string)
         let mut prefixed_name_to_values_in_ttl: HashMap<String, Result<Vec<String>, _>> =
             HashMap::new();
 
-        let statements = TurtleDocument::parse_full(field_contents.as_ref())
+        let statements = TurtleDocument::parse_full(field_contents)
             .map_err(|err| match err {
                 ParseError::ParseError(nom_err) => {
                     anyhow::anyhow!("{}", nom_err.to_string())
@@ -80,14 +84,15 @@ impl FieldManifest {
                 }
             })?
             .statements;
-        for statement in statements {
+
+        for statement in &statements {
             match statement {
                 harriet::Statement::Triples(Triples::Labeled(
                     _,
                     subject,
                     predicate_object_list,
                 )) => {
-                    for (_, verb, object_list, _) in predicate_object_list.list {
+                    for (_, verb, object_list, _) in &predicate_object_list.list {
                         if let harriet::Subject::IRI(IRI::IRIReference(ref subject_iri)) = subject {
                             if let Some(base_iri) = &ontology_iri {
                                 if subject_iri.iri.as_ref() == base_iri {
@@ -95,17 +100,14 @@ impl FieldManifest {
                                         Verb::IRI(IRI::PrefixedName(prefixed_name)) => {
                                             let prefixed_name = format!(
                                                 "{}:{}",
-                                                prefixed_name.prefix.unwrap_or_else(|| {
-                                                    std::borrow::Cow::from("".to_owned())
-                                                }),
-                                                prefixed_name.name.unwrap_or_else(|| {
-                                                    std::borrow::Cow::from("".to_owned())
-                                                })
+                                                prefixed_name.prefix.as_ref().unwrap(),
+                                                prefixed_name.name.as_ref().unwrap()
                                             );
 
                                             // Only get necessary fields from the ttl related to manifest
                                             match prefixed_name.as_str() {
-                                                "registry:author"
+                                                "owl:imports"
+                                                | "registry:author"
                                                 | "registry:category"
                                                 | "registry:dependency"
                                                 | "registry:keyword"
@@ -173,8 +175,9 @@ impl FieldManifest {
 
         Ok(Self {
             extracted_annotations: prefixed_name_to_values_in_ttl,
-            field_contents,
+            field_contents: field_contents.to_owned(),
             ontology_iri,
+            statements,
         })
     }
 
@@ -484,6 +487,136 @@ impl FieldManifest {
         }
         None
     }
+
+    pub fn update_owl_imports_and_serialize(
+        &self,
+        new_object_list: ObjectList<'manifest>,
+        mut statements: Vec<Statement<'manifest>>,
+        target_path: &Utf8Path,
+    ) {
+        for statement in &mut statements {
+            match statement {
+                harriet::Statement::Triples(Triples::Labeled(
+                    _,
+                    subject,
+                    predicate_object_list,
+                )) => {
+                    for (_, verb, object_list, _) in &mut predicate_object_list.list {
+                        match verb {
+                            Verb::IRI(IRI::PrefixedName(prefixed_name)) => {
+                                let prefixed_name = format!(
+                                    "{}:{}",
+                                    prefixed_name.prefix.as_ref().unwrap(),
+                                    prefixed_name.name.as_ref().unwrap(),
+                                );
+
+                                if prefixed_name == "owl:imports" {
+                                    std::mem::replace(
+                                        &mut object_list.list,
+                                        new_object_list.list.clone(),
+                                    );
+                                    break;
+                                }
+                            }
+                            _ => continue,
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        let new_doc = TurtleDocument {
+            statements: statements.clone(),
+            trailing_whitespace: None,
+        };
+        std::fs::write(target_path, new_doc.to_string()).unwrap();
+    }
+
+    pub fn dependencies_stated_in_owl_imports(
+        &self,
+    ) -> (ObjectList, Vec<String>, String, Vec<Statement>) {
+        let mut base_iri: Option<String> = None;
+        let stuff = self
+            .statements
+            .iter()
+            .fold(vec![], |mut acc, statement| match statement {
+                harriet::Statement::Triples(Triples::Labeled(
+                    _,
+                    subject,
+                    predicate_object_list,
+                )) => {
+                    for (_, verb, object_list, _) in &predicate_object_list.list {
+                        if let harriet::Subject::IRI(IRI::IRIReference(ref subject_iri)) = subject {
+                            if let Some(base_iri) = &base_iri {
+                                if subject_iri.iri.as_ref() == base_iri {
+                                    match verb {
+                                        Verb::IRI(IRI::PrefixedName(prefixed_name)) => {
+                                            let prefixed_name = format!(
+                                                "{}:{}",
+                                                prefixed_name.prefix.as_ref().unwrap(),
+                                                prefixed_name.name.as_ref().unwrap(),
+                                            );
+
+                                            if prefixed_name == "owl:imports" {
+                                                let mut dep_names = vec![];
+                                                let mut object_iris = vec![];
+                                                for (_, _, object) in &object_list.list {
+                                                    if let Object::IRI(IRI::IRIReference(
+                                                        ref object_iri,
+                                                    )) = object
+                                                    {
+                                                        object_iris.push(object_iri);
+                                                    }
+                                                }
+
+                                                for object_iri in &object_iris {
+                                                    let iri_literal =
+                                                        object_iri.iri.as_ref().to_owned();
+                                                    let iris = iri_literal
+                                                        .split("/")
+                                                        .collect::<Vec<&str>>();
+                                                    let mut it = iris.iter().rev();
+                                                    it.next();
+                                                    let name = it.next().unwrap().to_owned();
+                                                    let namespace = it.next().unwrap().to_owned();
+                                                    let dep_name = format!("{namespace}/{name}");
+                                                    dep_names.push(dep_name);
+                                                }
+                                                let base_iri_parts =
+                                                    base_iri.split("/").collect::<Vec<&str>>();
+                                                let base_iri_beginning = base_iri_parts
+                                                    [..base_iri_parts.len() - 3]
+                                                    .join("/");
+
+                                                acc.push((
+                                                    object_list.clone(),
+                                                    dep_names,
+                                                    base_iri_beginning,
+                                                    self.statements.clone(),
+                                                ));
+                                            }
+                                        }
+                                        _ => continue,
+                                    }
+                                }
+                                continue;
+                            }
+                            continue;
+                        }
+                        continue;
+                    }
+                    acc
+                }
+                harriet::Statement::Directive(harriet::Directive::Base(base)) => {
+                    base_iri = Some(base.iri.iri.to_string());
+                    acc
+                }
+                _ => acc,
+            });
+        stuff[0].clone()
+    }
+
     #[allow(clippy::restriction)]
     #[allow(clippy::missing_panics_doc)]
     pub fn field_dependency_names(&self) -> Option<Vec<String>> {
@@ -571,7 +704,7 @@ registry:dependency rdf:type owl:AnnotationProperty .
 
     #[test]
     fn manifest_getters_and_extraction() {
-        let field_manifest = FieldManifest::new(VALID_FIELD.to_owned()).unwrap();
+        let field_manifest = FieldManifest::new(VALID_FIELD).unwrap();
         assert_eq!(field_manifest.field_name(), Some("test".to_owned()));
         assert_eq!(field_manifest.field_namespace(), Some("@fld33".to_owned()));
         assert_eq!(

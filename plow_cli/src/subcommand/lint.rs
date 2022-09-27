@@ -60,12 +60,11 @@ pub fn run_command_flow(
                 field_path: path.to_string(),
             })
         })?;
-        let root_field_manifest =
-            FieldManifest::new(root_field_contents.clone()).map_err(|_| {
-                CliError::from(FailedToReadFieldManifest {
-                    field_path: path.to_string(),
-                })
-            })?;
+        let root_field_manifest = FieldManifest::new(&root_field_contents).map_err(|_| {
+            CliError::from(FailedToReadFieldManifest {
+                field_path: path.to_string(),
+            })
+        })?;
 
         if let Some(lock_file) = resolve(
             config,

@@ -65,12 +65,11 @@ pub fn run_command_flow(_: &ArgMatches, config: &PlowConfig) -> Result<impl Feed
                 field_path: child.as_path().to_string(),
             })
         })?;
-        let root_field_manifest =
-            FieldManifest::new(root_field_contents.clone()).map_err(|_| {
-                CliError::from(FailedToReadFieldManifest {
-                    field_path: child.as_path().to_string(),
-                })
-            })?;
+        let root_field_manifest = FieldManifest::new(&root_field_contents).map_err(|_| {
+            CliError::from(FailedToReadFieldManifest {
+                field_path: child.as_path().to_string(),
+            })
+        })?;
 
         #[allow(clippy::unwrap_used)]
         let root_field_name = root_field_manifest.field_namespace_and_name().unwrap();

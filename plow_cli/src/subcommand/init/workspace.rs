@@ -103,7 +103,7 @@ pub fn prepare(config: &PlowConfig) -> Result<(), CliError> {
                 })
             })?;
             let root_field_manifest =
-                FieldManifest::new(root_field_contents.clone()).map_err(|_| {
+                FieldManifest::new(&root_field_contents).map_err(|_| {
                     CliError::from(FailedToReadFieldManifest {
                         field_path: child.as_path().to_string(),
                     })

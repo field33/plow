@@ -7,6 +7,7 @@ mod field_init;
 mod index_sync;
 mod lint;
 mod login;
+mod protege;
 mod resolve;
 mod submission;
 mod workspace_init;
@@ -18,6 +19,7 @@ pub use field_init::FieldInitializationError;
 pub use index_sync::IndexSyncError;
 pub use lint::LintSubcommandError;
 pub use login::LoginError;
+pub use protege::ProtegeSubcommandError;
 pub use resolve::ResolveError;
 pub use submission::SubmissionError;
 pub use workspace_init::WorkspaceInitializationError;
@@ -47,6 +49,8 @@ pub enum CliError {
     Resolve(ResolveError),
     #[error("")]
     FieldAccess(FieldAccessError),
+    #[error("")]
+    Protege(ProtegeSubcommandError),
     #[error("The command line option you have provided is not in the list of options. Please run plow --help to see the list of options.")]
     UnknownOption,
     #[error("Do not use when publishing, intended for fast development.")]
@@ -114,6 +118,12 @@ impl From<ResolveError> for CliError {
     }
 }
 
+impl From<ProtegeSubcommandError> for CliError {
+    fn from(error: ProtegeSubcommandError) -> Self {
+        Self::Protege(error)
+    }
+}
+
 impl Feedback for CliError {
     fn feedback(&self) {
         use CliError::*;
@@ -128,6 +138,7 @@ impl Feedback for CliError {
             Resolve(error) => error.feedback(),
             WorkspaceInitialization(error) => error.feedback(),
             FieldAccess(error) => error.feedback(),
+            Protege(error) => error.feedback(),
             UnknownOption => {
                 command_not_complete(&format!("{self}"));
             }

@@ -65,7 +65,7 @@ pub fn field_info(local_path: &Utf8Path) -> Result<(), CliError> {
         })
     })?;
 
-    let manifest = FieldManifest::new(contents).map_err(|_| {
+    let manifest = FieldManifest::new(&contents).map_err(|_| {
         CliError::from(FieldAccessError::FailedToReadFieldManifest {
             field_path: local_path.to_string(),
         })

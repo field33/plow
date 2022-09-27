@@ -290,7 +290,7 @@ fn make_predicate_stringy_object<'list>(
                     string: TurtleString::StringLiteralQuote(StringLiteralQuote {
                         string: Cow::Borrowed(object_literal),
                     }),
-                    language_tag: language_tag.map(|inner| inner.into()),
+                    language_tag: language_tag.map(std::convert::Into::into),
                     iri: None,
                 })),
             )],

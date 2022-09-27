@@ -107,16 +107,18 @@ pub fn main() {
         .subcommand(subcommand::submit::attach_as_sub_command())
         .subcommand(subcommand::init::attach_as_sub_command())
         .subcommand(subcommand::update::attach_as_sub_command())
-        // .subcommand(subcommand::protege::attach_as_sub_command())
+        .subcommand(subcommand::protege::attach_as_sub_command())
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .setting(AppSettings::SubcommandPrecedenceOverArg);
 
     let options = app.clone().get_matches();
 
     let custom_plow_home_path = options.get_one::<String>("config").map(Utf8PathBuf::from);
-    // let custom_registry_url = options.get_one::<String>("registry").cloned();\
+    // let custom_registry_url = options.get_one::<String>("registry").cloned();
     let custom_registry_url = None;
-    let fetch_with_cli = options.get_flag("fetch-with-cli");
+    // let fetch_with_cli = options.get_flag("fetch-with-cli");
+    // TODO: This option is not read anymore. And will be removed soon.
+    let fetch_with_cli = false;
 
     let matches = app.clone().get_matches();
     match config::configure(custom_plow_home_path, custom_registry_url, fetch_with_cli) {
@@ -144,10 +146,10 @@ pub fn main() {
                     subcommand::update::run_command(sub_matches, config).feedback();
                     Some(())
                 }
-                // Some(("protege", sub_matches)) => {
-                //     subcommand::protege::run_command(sub_matches, config).feedback();
-                //     Some(())
-                // }
+                Some(("protege", sub_matches)) => {
+                    subcommand::protege::run_command(sub_matches, config).feedback();
+                    Some(())
+                }
                 _ => None,
             }
             .is_none()
