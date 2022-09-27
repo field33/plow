@@ -32,9 +32,15 @@ pub fn submission_remote_linting_failed(failures: &[String]) {
     std::process::exit(0xFF);
 }
 
-pub fn command_failed(advice: &str) {
+pub fn command_failed(info: &str) {
     println!("\t{}", "Command failed".red().bold(),);
-    println!("\t{} {advice}", "Advice".yellow().bold(),);
+    println!("\t{} {info}", "Info".yellow().bold(),);
+    std::process::exit(0xFF);
+}
+
+pub fn dependency_resolution_failed(reason: &str) {
+    println!("\t{}", "Failed to resolve dependencies".red().bold(),);
+    println!("\t{} {reason}", "Reason".yellow().bold(),);
     std::process::exit(0xFF);
 }
 
@@ -59,7 +65,7 @@ pub fn field_info(local_path: &Utf8Path) -> Result<(), CliError> {
         })
     })?;
 
-    let manifest = FieldManifest::new(contents).map_err(|_| {
+    let manifest = FieldManifest::new(&contents).map_err(|_| {
         CliError::from(FieldAccessError::FailedToReadFieldManifest {
             field_path: local_path.to_string(),
         })
@@ -118,4 +124,8 @@ pub fn general_lint_start() {
 pub fn general_lint_success() {
     println!();
     println!("\t{} successful.", "Linting".green().bold(),);
+}
+pub fn general_update_success() {
+    println!();
+    println!("\t{} successful.", "Update".green().bold(),);
 }

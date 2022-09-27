@@ -3744,23 +3744,31 @@ version = "0.2.2"
 dependencies = [
  "anyhow",
  "camino",
+ "chrono",
  "clap",
  "colored",
  "dialoguer",
  "dirs",
  "fallible-iterator",
+ "fs_extra",
+ "git2",
  "harriet 0.2.0",
+ "itertools 0.10.3",
+ "lazy_static",
+ "memchr",
  "nom",
- "plow_linter 0.2.2",
+ "plow_linter 0.2.4",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.2.5",
  "rayon",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
  "sha2 0.10.4",
  "thiserror",
  "toml",
+ "uuid 1.1.2",
 ]
 
 [[package]]
@@ -3879,7 +3887,7 @@ dependencies = [
 
 [[package]]
 name = "plow_linter"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "addr",
  "anyhow",
@@ -3981,6 +3989,7 @@ name = "plow_package_management"
 version = "0.2.5"
 dependencies = [
  "anyhow",
+ "camino",
  "dirs",
  "fallible-iterator",
  "field33_rdftk_core_temporary_fork",
@@ -3990,7 +3999,7 @@ dependencies = [
  "harriet 0.2.0",
  "itertools 0.10.3",
  "plow_graphify 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.3",
+ "plow_linter 0.2.4",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "pubgrub",
  "semver 1.0.13",

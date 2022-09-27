@@ -113,6 +113,10 @@ impl SemanticVersion {
         }
     }
 
+    pub const fn as_sum(&self) -> u64 {
+        self.major + self.minor + self.patch
+    }
+
     /// Version 0.0.0.
     pub const fn zero() -> Self {
         Self::new(0, 0, 0)

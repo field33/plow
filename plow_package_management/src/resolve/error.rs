@@ -14,6 +14,6 @@ pub enum ResolverError {
     #[error("The package {0} was not found in registry.")]
     NotFoundInRegistry(String),
     /// Resolution error.
-    #[error("Error resolving dependencies:\n\t{0}")]
+    #[error("{0}")]
     SolutionError(String),
 }

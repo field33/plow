@@ -1,29 +1,27 @@
 mod response;
 
+use crate::config::PlowConfig;
 use crate::error::CliError;
+use crate::error::FieldAccessError::*;
 use crate::error::SubmissionError::*;
 
-use crate::{config::get_registry_url, feedback::*};
+use crate::feedback::*;
+use crate::manifest::FieldManifest;
+use crate::resolve::resolve;
 use anyhow::Result;
+use camino::Utf8PathBuf;
 use clap::{arg, App, AppSettings, Arg, ArgMatches, Command};
+use colored::Colorize;
 use plow_linter::lints::field_manifest_lints;
+use plow_package_management::registry::Registry;
 use reqwest::blocking::multipart::Form;
 
 use self::response::{RegistryResponse, StatusInfo};
 use super::lint::lint_file;
-use super::login::get_saved_api_token;
 
 pub fn attach_as_sub_command() -> App<'static> {
     Command::new("submit")
         .about("Submits a field to the specified registry.")
-        .arg(
-            Arg::with_name("registry")
-                .short('r')
-                .value_name("REGISTRY_PATH")
-                .long("registry")
-                .help("Specifies the target registry to submit.")
-                .takes_value(true),
-        )
         .arg(
             Arg::with_name("dry-run")
                 .long("dry-run")
@@ -39,14 +37,17 @@ pub fn attach_as_sub_command() -> App<'static> {
 }
 
 #[allow(clippy::as_conversions)]
-pub fn run_command(sub_matches: &ArgMatches) -> Box<dyn Feedback + '_> {
-    match run_command_flow(sub_matches) {
+pub fn run_command(sub_matches: &ArgMatches, config: &PlowConfig) -> Box<dyn Feedback + 'static> {
+    match run_command_flow(sub_matches, config) {
         Ok(feedback) => Box::new(feedback) as Box<dyn Feedback>,
         Err(feedback) => Box::new(feedback) as Box<dyn Feedback>,
     }
 }
 
-fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError> {
+fn run_command_flow(
+    sub_matches: &ArgMatches,
+    config: &PlowConfig,
+) -> Result<impl Feedback, CliError> {
     let field_file_path_arg = sub_matches
         .get_one::<String>("FIELD_PATH")
         .ok_or(FieldPathNotProvided)?;
@@ -60,18 +61,47 @@ fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError>
 
         general_lint_success();
 
+        let path = Utf8PathBuf::from(&field_file_path);
+
+        let registry = crate::sync::sync(config)?;
+
+        let root_field_contents = std::fs::read_to_string(&path).map_err(|_| {
+            CliError::from(FailedToFindFieldAtPath {
+                field_path: path.to_string(),
+            })
+        })?;
+        let root_field_manifest = FieldManifest::new(&root_field_contents).map_err(|_| {
+            CliError::from(FailedToReadFieldManifest {
+                field_path: path.to_string(),
+            })
+        })?;
+
+        if let Some(lock_file) = resolve(
+            config,
+            &root_field_contents,
+            &root_field_manifest,
+            true,
+            &registry as &dyn Registry,
+        )? {
+            // Leave an empty line in between.
+            println!();
+            println!("\t{}", "Dependencies".bold().green());
+            lock_file
+                .locked_dependencies
+                .packages
+                .iter()
+                .for_each(|package_version| {
+                    println!(
+                        "\t\t{} {}",
+                        package_version.package_name.bold(),
+                        package_version.version
+                    );
+                });
+        }
+
         // File linted and ready to submit.
         let public = !sub_matches.is_present("private");
         let dry_run = sub_matches.is_present("dry-run");
-
-        let registry_url = if sub_matches.is_present("registry") {
-            sub_matches
-                .get_one::<String>("registry")
-                .ok_or(RegistryPathNotProvided)?
-                .clone()
-        } else {
-            get_registry_url()?
-        };
 
         let submission = reqwest::blocking::multipart::Form::new()
             .text("public", if public { "true" } else { "false" })
@@ -81,7 +111,8 @@ fn run_command_flow(sub_matches: &ArgMatches) -> Result<impl Feedback, CliError>
             })?;
 
         // Read credentials
-        let token = get_saved_api_token()?;
+        let token = config.get_saved_api_token()?;
+        let registry_url = config.get_registry_url()?;
 
         let mut submission_url = format!("{registry_url}/v1/field/submit");
         if dry_run {

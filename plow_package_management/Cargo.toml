@@ -27,6 +27,7 @@ semver = "1"
 itertools = "0.10"
 fallible-iterator = "0.2"
 toml = "0.5"
+camino = "1"
 
 [dev-dependencies]
 tempdir = "0.3"

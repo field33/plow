@@ -1,154 +1,254 @@
-use serde::{Deserialize, Serialize};
+pub mod files;
 
 use crate::error::CliError;
 use crate::error::ConfigError::*;
+use crate::error::LoginError::*;
+use crate::subcommand::login::CredentialsFile;
+use camino::Utf8Path;
+use camino::Utf8PathBuf;
+use std::str::FromStr;
 
-#[derive(Serialize, Debug, Deserialize, Default)]
-pub struct PlowConfigFile<'cred> {
-    pub workspace: Workspace,
-    #[serde(borrow)]
-    pub registry: Registry<'cred>,
-}
-
-impl PlowConfigFile<'_> {
-    /// Returns the token for the registry.
-    pub fn with_workspace(workspace: &Workspace) -> Self {
-        PlowConfigFile {
-            registry: Registry::default(),
-            workspace: workspace.clone(),
-        }
-    }
-}
-
-#[derive(Serialize, Debug, Deserialize, Default, Clone)]
-pub struct Workspace {
-    pub members: Vec<String>,
-}
-
-impl From<Vec<std::path::PathBuf>> for Workspace {
-    fn from(paths: Vec<std::path::PathBuf>) -> Self {
-        Self {
-            members: paths
-                .iter()
-                .map(|path| path.to_string_lossy().to_string())
-                .collect(),
-        }
-    }
-}
-impl From<Vec<camino::Utf8PathBuf>> for Workspace {
-    fn from(paths: Vec<camino::Utf8PathBuf>) -> Self {
-        Self {
-            members: paths.iter().map(std::string::ToString::to_string).collect(),
-        }
-    }
-}
-
-/// Registry table in credentials file (toml).
-#[derive(Serialize, Debug, Deserialize)]
-pub struct Registry<'reg> {
-    url: &'reg str,
-}
-
-impl<'reg> Registry<'reg> {
-    /// Returns the token for the registry.
-    pub const fn new(url: &'reg str) -> Self {
-        Registry { url }
-    }
-}
-
-impl Default for Registry<'_> {
-    fn default() -> Self {
-        Registry {
-            url: "https://staging-api.plow.pm",
-        }
-    }
-}
+use self::files::workspace_config::WorkspaceConfigFile;
 
 // For more information: <http://www.brynosaurus.com/cachedir/>
-const CACHE_DIRECTORY_TAG_FILE_NAME: &str = "CACHEDIR.TAG";
-const CACHE_DIRECTORY_TAG_FILE_CONTENTS: &str = r#"
+pub const CACHE_DIRECTORY_TAG_FILE_NAME: &str = "CACHEDIR.TAG";
+pub const CACHE_DIRECTORY_TAG_FILE_CONTENTS: &str = r#"
 Signature: 8a477f597d28d172789f06886806bc55
 # This file is a cache directory tag created by plow.
 # For information about cache directory tags, see:
 #	http://www.brynosaurus.com/cachedir/
 "#;
 
-pub fn get_config_dir() -> Result<std::path::PathBuf, CliError> {
-    let homedir = dirs::home_dir().ok_or_else(|| {
-        FailedToGetConfigDirectory("User home directory could not be found.".to_owned())
-    })?;
-    Ok(homedir.join(".plow"))
+// TODO: Change back
+pub const DEFAULT_REGISTRY_URL: &str = "https://api.plow.pm";
+
+#[derive(Debug)]
+pub struct PlowConfig {
+    pub plow_home: Utf8PathBuf,
+    pub user_home: Option<Utf8PathBuf>,
+    pub credentials_path: Utf8PathBuf,
+    pub registry_dir: Utf8PathBuf,
+    pub field_cache_dir: Utf8PathBuf,
+    pub index_dir: Utf8PathBuf,
+    pub index_cache_dir: Utf8PathBuf,
+    pub working_dir: WorkingDirectory,
+    workspace_config_file: Option<WorkspaceConfigFile>,
+    // Fill this if it is provided with a command.
+    registry_url: Option<String>,
+    pub fetch_with_cli: bool,
 }
 
-pub fn get_registry_url() -> Result<String, CliError> {
-    let config_file_path = camino::Utf8PathBuf::from("./Plow.toml");
-    let config_file_contents =
-        std::fs::read_to_string(&config_file_path).map_err(|_| FailedToReadWorkspaceConfigFile)?;
-    let config_file = toml::from_str::<PlowConfigFile>(&config_file_contents)
-        .map_err(|_| FailedToReadWorkspaceConfigFile)?;
-    Ok(config_file.registry.url.to_owned())
-}
-
-// TODO: Revisit initial structure
-// config.toml file?
-// credentials.toml file instead of credentials?
-pub fn create_configuration_directory_if_not_exists() -> Result<camino::Utf8PathBuf, CliError> {
-    let config_dir = get_config_dir()?;
-    if config_dir.exists() {
-        return Ok(config_dir.to_string_lossy().as_ref().into());
+impl PlowConfig {
+    fn find_workspace_root(&self, path: &Utf8Path) -> Result<Utf8PathBuf, CliError> {
+        if path.join("Plow.toml").exists() {
+            return Ok(path.to_path_buf());
+        }
+        if let Some(parent) = path.parent() {
+            return self.find_workspace_root(parent);
+        }
+        Err(CliError::from(FailedToFindWorkspaceRoot))
     }
 
-    std::fs::create_dir_all(&config_dir)
-        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
-    std::fs::write(
-        config_dir.join("credentials.toml"),
-        "# `plow login <your-api-token>` will store your api token in this file.\n",
-    )
-    .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    pub fn get_workspace_root(&self) -> Result<Utf8PathBuf, CliError> {
+        self.find_workspace_root(&self.working_dir.path)
+    }
 
-    let registry_dir = config_dir.join("registry");
-    std::fs::create_dir_all(&registry_dir)
+    pub fn get_registry_url(&self) -> Result<String, CliError> {
+        // Check if user provided any with --registry
+        if let Some(ref registry_url) = self.registry_url {
+            return Ok(registry_url.clone());
+        }
+
+        // Check for .plow folder in the workspace for config.toml which might have a registry url.
+        if let Some(ref workspace_config_file) = self.workspace_config_file {
+            let workspace_config_file = workspace_config_file.fetch()?;
+            if let Some(registry) = workspace_config_file.registry {
+                if let Some(url) = registry.index {
+                    return Ok(url);
+                }
+            }
+        }
+
+        // Fall back to default registry url.
+        Ok(DEFAULT_REGISTRY_URL.to_owned())
+    }
+
+    pub fn get_saved_api_token(&self) -> Result<String, CliError> {
+        // Check for .plow folder in the workspace for config.toml which might have a token to override.
+        if let Some(ref workspace_config_file) = self.workspace_config_file {
+            let workspace_config_file = workspace_config_file.fetch()?;
+            // TODO: This place should modify if we wish to support multiple registries.
+            if let Some(registry) = workspace_config_file.registry {
+                if let Some(token) = registry.token {
+                    return Ok(token);
+                }
+            }
+        }
+
+        let credentials_file_contents = std::fs::read_to_string(&self.credentials_path)
+            .map_err(|_| FailedToReadCredentialsFile)?;
+        let credentials = toml::from_str::<CredentialsFile>(&credentials_file_contents)
+            .map_err(|_| FailedToReadCredentialsFile)?;
+
+        Ok(credentials.registry.token.to_owned())
+    }
+}
+
+#[derive(Debug)]
+pub struct WorkingDirectory {
+    pub path: Utf8PathBuf,
+}
+
+impl WorkingDirectory {
+    pub fn is_workspace(&self) -> bool {
+        self.path.join("Plow.toml").exists()
+    }
+    pub fn fail_if_not_workspace(&self) -> Result<(), CliError> {
+        if !self.path.join("Plow.toml").exists() {
+            return Err(CliError::from(DirectoryNotWorkspace));
+        }
+        Ok(())
+    }
+    pub fn fail_if_not_under_a_workspace(&self) -> Result<Utf8PathBuf, CliError> {
+        self.get_workspace_root()
+            .map_or_else(|_| Err(CliError::from(DirectoryNotWorkspace)), Ok)
+    }
+
+    fn find_workspace_root(&self, path: &Utf8Path) -> Result<Utf8PathBuf, CliError> {
+        if path.join("Plow.toml").exists() {
+            return Ok(path.to_path_buf());
+        }
+        if let Some(parent) = path.parent() {
+            return self.find_workspace_root(parent);
+        }
+        Err(CliError::from(FailedToFindWorkspaceRoot))
+    }
+
+    pub fn get_workspace_root(&self) -> Result<Utf8PathBuf, CliError> {
+        self.find_workspace_root(&self.path)
+    }
+}
+
+impl From<Utf8PathBuf> for WorkingDirectory {
+    fn from(path: Utf8PathBuf) -> Self {
+        Self { path }
+    }
+}
+
+// TODO: Currently Plow does not support multiple registries.
+// There is one central remote registry which is owned by Field33.
+// Although there are plans to expand support for custom registries in the future.
+#[allow(clippy::unwrap_used)]
+#[allow(clippy::missing_panics_doc)]
+pub fn configure(
+    custom_path: Option<Utf8PathBuf>,
+    registry_url: Option<String>,
+    fetch_with_cli: bool,
+) -> Result<PlowConfig, CliError> {
+    let working_dir = WorkingDirectory::from(
+        Utf8PathBuf::from_path_buf(
+            std::env::current_dir().map_err(|err| FailedToGetWorkingDirectory(err.to_string()))?,
+        )
+        .map_err(|_| {
+            FailedToGetWorkingDirectory(
+                "The path to the home directory is not UTF8 encoded.".to_owned(),
+            )
+        })?,
+    );
+
+    let mut workspace_config_file = None;
+
+    let mut user_home: Option<Utf8PathBuf> = None;
+    let plow_home = if let Some(custom_path) = custom_path {
+        let mut new_workspace_config_file =
+            WorkspaceConfigFile::create_in_working_dir(&working_dir)?;
+        new_workspace_config_file.set_plow_home(&custom_path);
+        new_workspace_config_file.write()?;
+        workspace_config_file = Some(new_workspace_config_file);
+        custom_path.join(".plow")
+    } else {
+        let homedir = dirs::home_dir().ok_or_else(|| {
+            FailedToReadOrCreateConfigDirectory(
+                Utf8PathBuf::from_str("~/.plow").unwrap().into(),
+                "User home directory could not be found or read.".to_owned(),
+            )
+        })?;
+        let homedir = Utf8PathBuf::from_path_buf(homedir).map_err(|non_utf8_path_buf| {
+            FailedToReadOrCreateConfigDirectory(
+                non_utf8_path_buf.to_string_lossy().into(),
+                "The path to the home directory is not UTF8 encoded.".to_owned(),
+            )
+        })?;
+        user_home = Some(homedir.clone());
+        homedir.join(".plow")
+    };
+
+    // Create if not there already
+    if !plow_home.exists() {
+        std::fs::create_dir_all(&plow_home).map_err(|err| {
+            FailedToReadOrCreateConfigDirectory(plow_home.clone().into(), err.to_string())
+        })?;
+    }
+
+    let credentials_file = plow_home.join("credentials.toml");
+    if !credentials_file.exists() {
+        std::fs::write(
+            plow_home.join("credentials.toml"),
+            "# `plow login <your-api-token>` will store your api token in this file.\n",
+        )
         .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
-    std::fs::write(
-        config_dir
-            .join("registry")
-            .join(CACHE_DIRECTORY_TAG_FILE_NAME),
-        CACHE_DIRECTORY_TAG_FILE_CONTENTS,
-    )
-    .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
-    std::fs::create_dir_all(registry_dir.join("artifact_cache"))
-        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    }
+
+    let registry_dir = plow_home.join("registry");
+    if !registry_dir.exists() {
+        std::fs::create_dir_all(&registry_dir)
+            .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    }
+
+    let cache_dir_tag = registry_dir.join(CACHE_DIRECTORY_TAG_FILE_NAME);
+    if !cache_dir_tag.exists() {
+        std::fs::write(cache_dir_tag, CACHE_DIRECTORY_TAG_FILE_CONTENTS)
+            .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    }
+
+    let field_cache_dir = registry_dir.join("cache");
+    if !field_cache_dir.exists() {
+        std::fs::create_dir_all(registry_dir.join("cache"))
+            .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    }
 
     let index_dir = registry_dir.join("index");
-    std::fs::create_dir_all(&index_dir)
-        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
-    std::fs::create_dir_all(index_dir.join(".cache"))
-        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
-    std::fs::write(index_dir.join(".last_updated"), "")
-        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
-    std::fs::create_dir_all(index_dir.join(".cache").join("public"))
-        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
-    std::fs::create_dir_all(index_dir.join(".cache").join("private"))
-        .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    if !index_dir.exists() {
+        std::fs::create_dir_all(&index_dir)
+            .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    }
 
-    Ok(config_dir.to_string_lossy().as_ref().into())
+    let index_cache_dir = index_dir.join(".cache");
+    if !index_cache_dir.exists() {
+        std::fs::create_dir_all(&index_cache_dir)
+            .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
+    }
+
+    Ok(PlowConfig {
+        user_home,
+        plow_home,
+        credentials_path: credentials_file,
+        registry_dir,
+        field_cache_dir,
+        index_dir,
+        index_cache_dir,
+        working_dir,
+        workspace_config_file,
+        registry_url,
+        fetch_with_cli,
+    })
 }
 
-pub fn remove_configuration_directory_if_exists() -> Result<(), CliError> {
-    let config_dir = get_config_dir()?;
-    if !config_dir.exists() {
+pub fn remove_configuration_directory_if_exists(config: &PlowConfig) -> Result<(), CliError> {
+    if !config.plow_home.exists() {
         return Ok(());
     }
-    std::fs::remove_dir_all(&config_dir)
+    std::fs::remove_dir_all(&config.plow_home)
         .map_err(|err| FailedToRemoveConfigDirectory(err.to_string()))?;
     Ok(())
-}
-
-pub fn clean_configuration_directory() -> Result<camino::Utf8PathBuf, CliError> {
-    let config_dir = get_config_dir()?;
-    if !config_dir.exists() {
-        return create_configuration_directory_if_not_exists();
-    }
-    remove_configuration_directory_if_exists()?;
-    create_configuration_directory_if_not_exists()
 }

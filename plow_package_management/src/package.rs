@@ -1,8 +1,9 @@
 use crate::resolve::Dependency;
 use crate::version::SemanticVersion;
 use crate::{metadata::OntologyMetadata, ORGANIZATION_NAME};
+use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
-use std::{fmt::Formatter, path::PathBuf};
+use std::fmt::Formatter;
 
 /// A single version of a package with enough information to serve as input for the dependency resolution process.
 ///
@@ -21,7 +22,11 @@ impl PackageVersion {
         }
     }
 }
-
+impl ToString for PackageVersion {
+    fn to_string(&self) -> String {
+        format!("{} {}", self.package_name, self.version)
+    }
+}
 // This unusual From implementation is a convenience implementation
 // when using it in resolver when working with iterators of maps.
 //
@@ -35,6 +40,24 @@ impl From<(&String, &SemanticVersion)> for PackageVersion {
     }
 }
 
+impl From<PackageVersionWithRegistryMetadata> for PackageVersion {
+    fn from(metadata: PackageVersionWithRegistryMetadata) -> Self {
+        Self {
+            package_name: metadata.package_name,
+            version: metadata.version.to_string(),
+        }
+    }
+}
+
+impl From<&PackageVersionWithRegistryMetadata> for PackageVersion {
+    fn from(metadata: &PackageVersionWithRegistryMetadata) -> Self {
+        Self {
+            package_name: metadata.package_name.clone(),
+            version: metadata.version.to_string(),
+        }
+    }
+}
+
 /// A single version of a package with enough information to be used in dependency resolution.
 #[derive(Debug, Clone, Serialize)]
 pub struct PackageVersionWithRegistryMetadata {
@@ -43,6 +66,7 @@ pub struct PackageVersionWithRegistryMetadata {
     pub ontology_iri: Option<String>,
     pub dependencies: Vec<Dependency<SemanticVersion>>,
     pub cksum: Option<String>,
+    pub private: bool,
 }
 
 impl PartialEq for PackageVersionWithRegistryMetadata {
@@ -60,7 +84,7 @@ impl std::fmt::Display for PackageVersionWithRegistryMetadata {
 }
 
 /// A flat list of package versions (e.g. dependencies).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PackageSet {
     pub packages: Vec<PackageVersion>,
 }
@@ -70,7 +94,7 @@ pub struct PackageSet {
 pub struct RetrievedPackageVersion {
     pub ontology_iri: String,
     pub package: PackageVersion,
-    pub file_path: PathBuf,
+    pub file_path: Utf8PathBuf,
 }
 
 #[derive(Debug, Clone)]
@@ -104,6 +128,7 @@ pub struct RetrievedPackageSet {
 }
 
 /// The type which resolver directly expects
+#[derive(Debug)]
 pub struct OrganizationToResolveFor {
     pub package_name: String,
     pub package_version: SemanticVersion,
