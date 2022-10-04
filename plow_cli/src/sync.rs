@@ -191,12 +191,17 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
     let clone_from = "git@github.com:field33/plow-registry-index.git";
     let public_index_git_repo_path = &config.index_dir.join("plow-registry-index");
 
+    let pull_command = if !config.index_dir.join("plow-registry-index").exists() {
+        "cd ~/.plow/registry/index && git clone https://github.com/field33/plow-registry-index.git && git pull"
+    } else {
+        "cd ~/.plow/registry/index/plow-registry-index && git fetch --all && git reset --hard origin/main && git pull"
+    };
     if let Some(ref user_home) = config.user_home {
         if which::which("git").is_ok() {
             // TODO: Proper error handling
-            std::process::Command::new("sh")
+            std::process::Command::new("/bin/bash")
                 .arg("-c")
-                .arg("cd ~/.plow/registry/index/plow-registry-index && git pull")
+                .arg(pull_command)
                 .output()
                 .expect("failed to execute process");
         } else {
@@ -217,9 +222,9 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
     } else {
         if which::which("git").is_ok() {
             // TODO: Proper error handling
-            std::process::Command::new("sh")
+            std::process::Command::new("/bin/bash")
                 .arg("-c")
-                .arg("cd ~/.plow/registry/index/plow-registry-index && git pull")
+                .arg(pull_command)
                 .output()
                 .expect("failed to execute process");
         } else {

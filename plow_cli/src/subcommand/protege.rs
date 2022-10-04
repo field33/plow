@@ -291,13 +291,15 @@ pub fn mirror_field_to_protege_workspace(
             .ok_or_else(|| anyhow::anyhow!("Provided path is not a file"))?,
     );
 
-    if !protege_workspace_dir.exists() {
-        std::fs::create_dir_all(&protege_workspace_dir)?;
+    if protege_workspace_dir.exists() {
+        std::fs::remove_dir_all(&protege_workspace_dir)?;
     }
+    std::fs::create_dir_all(&protege_workspace_dir)?;
 
-    if !symlinked_field_path.exists() {
-        std::fs::hard_link(&field_path, &symlinked_field_path)?;
+    if symlinked_field_path.exists() {
+        std::fs::remove_file(&symlinked_field_path)?;
     }
+    std::fs::hard_link(&field_path, &symlinked_field_path)?;
 
     Ok((protege_workspace_dir, symlinked_field_path))
 }
