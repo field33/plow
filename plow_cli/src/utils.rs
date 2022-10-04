@@ -1,3 +1,5 @@
+pub mod url;
+
 use camino::{Utf8Path, Utf8PathBuf};
 use std::{
     fs::File,

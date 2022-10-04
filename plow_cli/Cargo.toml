@@ -13,6 +13,10 @@ categories = ["command-line-utilities"]
 name = "plow"
 path = "src/main.rs"
 
+[lib]
+name = "libplow"
+path = "src/lib.rs"
+
 [dependencies]
 dialoguer = "0.10"
 clap = "3"
@@ -43,3 +47,10 @@ itertools = "0.10"
 fs_extra = "1"
 which = "4"
 open = "3"
+plow_graphify = "0.2"
+field33_rdftk_core_temporary_fork = "0.3"
+field33_rdftk_iri_temporary_fork = "0.1"
+glob = "0.3"
+pubgrub = "0.2"
+semver = "1"
+url = "2"
