@@ -79,5 +79,5 @@ fn lint_registry_license_spdx_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_LICENSE_SPDX_BASE} registry:licenseSPDX \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

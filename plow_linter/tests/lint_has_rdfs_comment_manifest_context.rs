@@ -95,5 +95,5 @@ fn lint_registry_rdfs_comment_manifest_context_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{RDFS_COMMENT_MANIFEST_CONTEXT_BASE} rdfs:comment \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

@@ -68,5 +68,5 @@ fn lint_registry_documentation_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_DOCUMENTATION_BASE} registry:documentation \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

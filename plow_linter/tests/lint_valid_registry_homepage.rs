@@ -63,5 +63,5 @@ fn lint_registry_homepage_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_HOMEPAGE_BASE} registry:homepage \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

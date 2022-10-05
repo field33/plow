@@ -79,5 +79,5 @@ fn lint_registry_short_description_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_SHORT_DESCRIPTION_BASE} registry:shortDescription \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

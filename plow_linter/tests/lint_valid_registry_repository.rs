@@ -65,5 +65,5 @@ fn lint_registry_repository_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_REPOSITORY_BASE} registry:repository \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

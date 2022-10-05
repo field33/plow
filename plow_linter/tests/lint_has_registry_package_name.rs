@@ -99,5 +99,5 @@ fn lint_registry_package_name_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_PACKAGE_NAME_BASE} registry:packageName \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

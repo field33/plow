@@ -69,8 +69,10 @@ impl Lint for ValidRdfsLabels {
                 return lint_success!(format!("No statements found with a Class, ObjectProperty, DataProperty, AnnotationProperty which needs a {RELATED_FIELD} associated with it."));
             }
 
+            let mut warnings = vec![];
             let mut failures = vec![];
 
+            
 
             // We explicitly pass valid data, unwrap is safe here.
             #[allow(clippy::unwrap_used)]
@@ -128,19 +130,24 @@ impl Lint for ValidRdfsLabels {
                     .map(|statement| statement.subject().as_iri().unwrap().clone())
                     .collect::<HashSet<_>>();
 
+            if !failures.is_empty() {
+                return LintResult::Failure(warnings);
+            }
+
             for subject_iri in all_subject_iris_with_selected_owl_props
                 .difference(&statements_which_have_a_rdfs_label)
             {
                 // Statements which need an `rdfs:label` predicate
                 let iri = subject_iri.to_string();
-                failures.push(format!(
+                warnings.push(format!(
                         "The subject with the IRI {iri} does not have an {RELATED_FIELD} associated with it."
                     ));
             }
 
-            if !failures.is_empty() {
-                return LintResult::Failure(failures);
+            if !warnings.is_empty() {
+                return LintResult::Warning(warnings);
             }
+            
             lint_success!(format!("Every Class, ObjectProperty, DataProperty, AnnotationProperty has an {RELATED_FIELD} annotation with a string literal and @en as a language tag."))
         } else {
             lint_failure!(NO_ROOT_PREFIX)

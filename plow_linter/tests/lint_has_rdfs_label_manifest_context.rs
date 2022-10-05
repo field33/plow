@@ -92,5 +92,5 @@ fn lint_registry_rdfs_label_manifest_context_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{RDFS_LABEL_MANIFEST_CONTEXT_BASE} rdfs:label \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

@@ -128,5 +128,5 @@ fn lint_registry_package_version_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_PACKAGE_VERSION_BASE} registry:packageVersion \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

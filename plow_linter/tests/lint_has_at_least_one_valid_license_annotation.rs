@@ -120,13 +120,13 @@ fn lint_registry_licenses_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_LICENSES_BASE} registry:license \"\" ."
     ))
-    .is_err());
+    .is_ok());
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_LICENSES_BASE} registry:licenseSPDX \"\" ."
     ))
-    .is_err());
+    .is_ok());
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_LICENSES_BASE} registry:licenseSPDX \"\"; registry:license \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

@@ -103,5 +103,5 @@ fn lint_registry_keyword_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_KEYWORD_BASE} registry:keyword \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

@@ -18,7 +18,7 @@ registry:dependency
 
 // Every Class, ObjectProperty, DataProperty, AnnotationProperty should have an rdfs:label annotation
 #[test]
-fn lint_related_subjects_with_missing_rdfs_labels_are_invalid() {
+fn lint_related_subjects_with_missing_rdfs_labels_are_failures() {
     let invalid_document_a = format!(
         "{RDFS_LABEL_BASE}
 <http://field33.com/ontologies/@test/test/some-iri>
@@ -77,10 +77,10 @@ rdf:type owl:NamedIndividual ."
     let result_d = linter_d.run_all_lints();
     let result_e = linter_e.run_all_lints();
 
-    assert!(result_a.first().unwrap().is_failure());
-    assert!(result_b.first().unwrap().is_failure());
-    assert!(result_c.first().unwrap().is_failure());
-    assert!(result_d.first().unwrap().is_failure());
+    assert!(result_a.first().unwrap().is_warning());
+    assert!(result_b.first().unwrap().is_warning());
+    assert!(result_c.first().unwrap().is_warning());
+    assert!(result_d.first().unwrap().is_warning());
     assert!(result_e.first().unwrap().is_success());
 }
 

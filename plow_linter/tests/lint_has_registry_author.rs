@@ -177,6 +177,6 @@ fn lint_registry_author_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(REGISTRY_AUTHOR_BASE).is_err());
     assert!(
         TurtleDocument::parse_full(&format!("{REGISTRY_AUTHOR_BASE} registry:author \"\" ."))
-            .is_err()
+            .is_ok()
     );
 }

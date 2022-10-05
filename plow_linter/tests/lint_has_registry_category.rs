@@ -93,5 +93,5 @@ fn lint_registry_category_does_not_exist_or_empty() {
     assert!(TurtleDocument::parse_full(&format!(
         "{REGISTRY_CATEGORY_BASE} registry:category \"\" ."
     ))
-    .is_err());
+    .is_ok());
 }

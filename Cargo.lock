@@ -3749,7 +3749,7 @@ dependencies = [
  "memchr",
  "nom",
  "open",
- "plow_linter 0.2.5",
+ "plow_linter 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_package_management 0.3.0",
  "rayon",
@@ -3849,7 +3849,7 @@ dependencies = [
 
 [[package]]
 name = "plow_linter"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "addr",
  "anyhow",
@@ -3931,7 +3931,7 @@ dependencies = [
  "field33_rdftk_iri_temporary_fork",
  "harriet 0.2.3",
  "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.5",
+ "plow_linter 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
 ]
@@ -3992,7 +3992,7 @@ dependencies = [
  "harriet 0.2.3",
  "itertools 0.10.5",
  "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.4",
+ "plow_linter 0.2.5",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "pubgrub",
  "semver 1.0.14",
