@@ -2,18 +2,18 @@ use std::io::Cursor;
 
 use colored::Colorize;
 
-use plow_package_management::{
-    lock::LockFile, package::OrganizationToResolveFor, registry::Registry, resolve::Dependency,
-    version::SemanticVersion,
-};
-use reqwest::StatusCode;
-
 use crate::{
     config::PlowConfig,
     error::CliError,
     error::{FieldDownloadError::*, ResolveError::*},
     manifest::FieldManifest,
 };
+use libplow::registry::Dependency;
+use libplow::registry::SemanticVersion;
+use plow_package_management::{
+    lock::LockFile, package::OrganizationToResolveFor, registry::Registry,
+};
+use reqwest::StatusCode;
 
 #[allow(clippy::missing_panics_doc)]
 #[allow(clippy::unwrap_used)]
@@ -30,20 +30,12 @@ pub fn resolve(
     println!(
         "\t{} to resolve dependencies of {} ..",
         "Attempting".green().bold(),
-        root_field_manifest
-            .field_namespace_and_name()
-            .unwrap()
-            .bold()
+        root_field_manifest.full_name().bold()
     );
 
     #[allow(clippy::unwrap_used)]
     // We run this one after linting.
-    if let Some(deps) = root_field_manifest.field_dependency_literals() {
-        let deps = deps
-            .into_iter()
-            .map(|dep| Dependency::<SemanticVersion>::try_from(dep.as_str()).unwrap())
-            .collect::<Vec<_>>();
-
+    if root_field_manifest.dependencies().is_empty() {
         // TODO: Don't forget to write the initial package to the lock file also.
         // Needs to get the workspace root and check for lock file.
         // Either in dep resolver.
@@ -55,7 +47,7 @@ pub fn resolve(
         let entry = OrganizationToResolveFor {
             package_name: "@root/root".to_owned(),
             package_version: SemanticVersion::default(),
-            dependencies: deps,
+            dependencies: root_field_manifest.dependencies().iter().cloned(),
         };
 
         let locked_and_resolved = LockFile::lock_with_registry(
@@ -206,10 +198,7 @@ pub fn resolve(
         println!(
             "\t{} resolved dependencies of {} ..",
             "Successfully".green().bold(),
-            root_field_manifest
-                .field_namespace_and_name()
-                .unwrap()
-                .bold()
+            root_field_manifest.full_name().bold()
         );
 
         return Ok(Some(locked_and_resolved));

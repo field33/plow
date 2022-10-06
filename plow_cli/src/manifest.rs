@@ -1,74 +1,146 @@
 #![allow(dead_code)]
 
+mod macros;
+mod utils;
+
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
-use colored::Colorize;
 use harriet::{
     Literal, Object, ObjectList, ParseError, Statement, Triples, TurtleDocument, Verb, Whitespace,
     IRI,
 };
 use lazy_static::lazy_static;
-use plow_package_management::{
-    package::FieldMetadata,
-    registry::index::{IndexedPackageDependency, IndexedPackageVersion},
-    resolve::Dependency,
-    version::SemanticVersion,
-};
+use libplow::registry::Dependency;
+use libplow::registry::SemanticVersion;
 use regex::Regex;
 use serde_json::map;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::str::FromStr;
 
-lazy_static! {
-    static ref PACKAGE_FULL_NAME_REGEX: Regex = Regex::new(r#""(@.+/.+)""#).unwrap();
+use crate::extract_mandatory_annotation_from;
+use crate::extract_optional_string_annotation_from;
+
+use self::utils::get_string_literal_from_object;
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct FieldAuthor {
+    name: String,
+    email: String,
 }
 
-pub struct FieldManifest<'manifest> {
-    extracted_annotations: HashMap<String, Result<Vec<String>, anyhow::Error>>,
-    field_contents: String,
-    pub ontology_iri: Option<String>,
-    statements: Vec<Statement<'manifest>>,
-}
-
-impl<'manifest> std::fmt::Debug for FieldManifest<'manifest> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("FieldManifest")
-            .field("extracted_annotations", &self.extracted_annotations)
-            .field("ontology_iri", &self.ontology_iri)
-            .finish()
+impl core::fmt::Display for FieldAuthor {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{} <{}>", self.name, self.email)
     }
+}
+
+#[derive(Debug)]
+struct ManifestMetadata {
+    full_name: String,
+    namespace: String,
+    name: String,
+    version: SemanticVersion,
+    authors: Vec<FieldAuthor>,
+    license: Option<String>,
+    license_spdx: Option<String>,
+    description: String,
+    homepage: Option<String>,
+    repository: Option<String>,
+    documentation: Option<String>,
+    keywords: Vec<String>,
+    ontology_iri: Option<String>,
+    dependencies: Vec<Dependency<SemanticVersion>>,
+    categories: Vec<String>,
+    title: String,
+    short_description: String,
+}
+
+// TODO: Implement license retrieval and validation when necessary.
+
+#[derive(Debug)]
+pub struct FieldManifest<'manifest> {
+    field_cksum: String,
+    statements: Vec<Statement<'manifest>>,
+    metadata: ManifestMetadata,
 }
 
 impl<'manifest> FieldManifest<'manifest> {
     pub fn quick_extract_field_full_name<P: AsRef<Utf8Path>>(field_path: &P) -> Result<String> {
-        let lines = crate::utils::read_lines(field_path.as_ref())?;
-        let mut package_name_annotation_matched = false;
-        #[allow(clippy::manual_flatten)]
-        for line in lines {
-            if let Ok(line) = line {
-                if package_name_annotation_matched {
-                    let captures = PACKAGE_FULL_NAME_REGEX.captures(&line);
-                    if let Some(captures) = captures {
-                        if let Some(package_full_name) = captures.get(1) {
-                            return Ok(package_full_name.as_str().to_owned());
-                        }
-                    }
-                } else if line.matches("registry:packageName").next().is_some() {
-                    package_name_annotation_matched = true;
-                    let captures = PACKAGE_FULL_NAME_REGEX.captures(&line);
-                    if let Some(captures) = captures {
-                        if let Some(package_full_name) = captures.get(1) {
-                            return Ok(package_full_name.as_str().to_owned());
-                        }
-                    }
-                } else {
-                    continue;
-                }
-            }
-        }
-        Err(anyhow!("Could not find package full name in field file"))
+        self::utils::quick_extract_field_full_name(field_path)
     }
 
+    pub fn full_name(&self) -> &str {
+        &self.metadata.full_name
+    }
+
+    pub fn namespace_and_name(&self) -> (&str, &str) {
+        (&self.metadata.namespace, &self.metadata.name)
+    }
+
+    pub fn version(&self) -> &SemanticVersion {
+        &self.metadata.version
+    }
+
+    pub fn ontology_iri(&self) -> Option<&str> {
+        self.metadata.ontology_iri.as_ref().map(|s| s.as_str())
+    }
+
+    pub fn authors(&self) -> &[FieldAuthor] {
+        &self.metadata.authors
+    }
+
+    pub fn description(&self) -> &str {
+        &self.metadata.description
+    }
+
+    pub fn short_description(&self) -> &str {
+        &self.metadata.short_description
+    }
+
+    pub fn homepage(&self) -> Option<&str> {
+        self.metadata.homepage.as_ref().map(|s| s.as_str())
+    }
+
+    pub fn repository(&self) -> Option<&str> {
+        self.metadata.repository.as_ref().map(|s| s.as_str())
+    }
+
+    pub fn documentation(&self) -> Option<&str> {
+        self.metadata.documentation.as_ref().map(|s| s.as_str())
+    }
+
+    pub fn keywords(&self) -> &[String] {
+        &self.metadata.keywords
+    }
+
+    pub fn keywords_comma_separated(&self) -> String {
+        self.metadata.keywords.join(", ")
+    }
+
+    pub fn categories(&self) -> &[String] {
+        &self.metadata.categories
+    }
+
+    pub fn title(&self) -> &str {
+        &self.metadata.title
+    }
+
+    pub fn dependencies(&self) -> &[Dependency<SemanticVersion>] {
+        &self.metadata.dependencies
+    }
+
+    pub fn field_hash(&self) -> Result<String> {
+        let field_hash = libplow::utils::hash_field(
+            &self.metadata.namespace,
+            &self.metadata.name,
+            &self.metadata.version.to_string(),
+        );
+        Ok(field_hash)
+    }
+}
+
+impl<'manifest> FieldManifest<'manifest> {
     #[allow(clippy::too_many_lines)]
     pub fn new(field_contents: &'manifest str) -> Result<Self> {
         let mut ontology_iri = None;
@@ -175,319 +247,145 @@ impl<'manifest> FieldManifest<'manifest> {
             }
         }
 
-        Ok(Self {
-            extracted_annotations: prefixed_name_to_values_in_ttl,
-            field_contents: field_contents.to_owned(),
-            ontology_iri,
-            statements,
-        })
-    }
-
-    #[allow(clippy::unwrap_used)]
-    #[allow(clippy::missing_panics_doc)]
-    /// Assumes linted input
-    pub fn make_field_metadata_from_manifest_unchecked(&self) -> FieldMetadata {
-        let namespace = self.field_namespace().unwrap();
-        let name = self.field_name().unwrap();
-        let version = self.field_version().unwrap();
-        #[allow(clippy::if_then_some_else_none)]
-        let dependency_literals = self.field_dependency_literals();
-        let dependencies =
-            dependency_literals.map_or_else(std::vec::Vec::new, |dependency_literals| {
-                dependency_literals
-                    .iter()
-                    .map(|literal| {
-                        Dependency::<SemanticVersion>::try_from(literal.as_str()).unwrap()
-                    })
-                    .collect()
-            });
-
-        FieldMetadata {
-            namespace,
-            name,
-            version,
-            dependencies,
-        }
-    }
-
-    pub fn make_index_from_manifest(&self) -> Result<IndexedPackageVersion> {
-        let name = self.field_namespace_and_name().ok_or_else(|| {
-            anyhow!("registry:packageName could not be found or malformed in manifest.")
-        })?;
-
-        let version = self.field_version().ok_or_else(|| {
-            anyhow!("registry:packageVersion could not be found or malformed in manifest.")
-        })?;
-
-        #[allow(clippy::if_then_some_else_none)]
-        let dependency_literals = self.field_dependency_literals();
-
-        let deps = dependency_literals.map_or_else(std::vec::Vec::new, |dependency_literals| {
-            dependency_literals
+        let authors =
+            extract_mandatory_annotation_from!("registry:author", prefixed_name_to_values_in_ttl)
                 .iter()
-                .map(|literal| {
-                    let literal_name_and_req = literal.split(' ').collect::<Vec<&str>>();
-                    #[allow(clippy::indexing_slicing)]
-                    IndexedPackageDependency {
-                        name: literal_name_and_req[0].to_owned(),
-                        req: literal_name_and_req[1].to_owned(),
-                    }
+                .map(|author_literal| {
+                    let author_literal = author_literal.trim();
+                    let (name, email) = author_literal.split_once('<').ok_or_else(|| {
+                        anyhow!("Invalid author literal. Expected format: 'Name Surname <email>'")
+                    })?;
+                    let email = email.trim_end_matches('>');
+                    Ok(FieldAuthor {
+                        name: name.to_string(),
+                        email: email.to_string(),
+                    })
                 })
-                .collect::<Vec<IndexedPackageDependency>>()
-        });
+                .collect::<Result<Vec<_>>>()?;
+
+        let categories =
+            extract_mandatory_annotation_from!("registry:category", prefixed_name_to_values_in_ttl);
+
+        let dependencies =
+            if let Some(literals) = prefixed_name_to_values_in_ttl.get("registry:dependency") {
+                let literals = literals.map_err(|err| {
+                    anyhow::anyhow!(
+                        "Error parsing registry:dependency in the manifest file. Details: {err}",
+                    )
+                })?;
+                literals
+                    .iter()
+                    .map(|dependency| {
+                        let (name, req) = dependency.split_once(' ').ok_or_else(|| {
+                            anyhow!(
+                    "Invalid dependency. Expected format: '@namespace/name <version-requirement>'"
+                )
+                        })?;
+                        Ok(Dependency::<SemanticVersion>::try_new(name, req)?)
+                    })
+                    .collect::<Result<Vec<_>>>()?
+            } else {
+                vec![]
+            };
+
+        let keywords =
+            extract_mandatory_annotation_from!("registry:keyword", prefixed_name_to_values_in_ttl);
+
+        let full_name = extract_mandatory_annotation_from!(
+            "registry:packageName",
+            prefixed_name_to_values_in_ttl
+        )
+        .first()
+        .ok_or_else(|| anyhow!("Missing registry:packageName"))?
+        .to_string();
+
+        let (namespace, name) =
+            Dependency::<SemanticVersion>::split_and_validate_full_field_name(&full_name)?;
+
+        let version = SemanticVersion::from_str(
+            extract_mandatory_annotation_from!(
+                "registry:packageVersion",
+                prefixed_name_to_values_in_ttl
+            )
+            .first()
+            .ok_or_else(|| anyhow!("Missing registry:packageVersion"))?,
+        )?;
+
+        let repository = extract_optional_string_annotation_from!(
+            "registry:repository",
+            prefixed_name_to_values_in_ttl
+        );
+        let homepage = extract_optional_string_annotation_from!(
+            "registry:homepage",
+            prefixed_name_to_values_in_ttl
+        );
+
+        let documentation = extract_optional_string_annotation_from!(
+            "registry:documentation",
+            prefixed_name_to_values_in_ttl
+        );
+
+        // TODO: Validate so these are not both missing
+        let license = extract_optional_string_annotation_from!(
+            "registry:license",
+            prefixed_name_to_values_in_ttl
+        );
+
+        let license_spdx = extract_optional_string_annotation_from!(
+            "registry:licenseSPDX",
+            prefixed_name_to_values_in_ttl
+        );
+        //
+
+        let short_description = extract_mandatory_annotation_from!(
+            "registry:shortDescription",
+            prefixed_name_to_values_in_ttl
+        )
+        .first()
+        .cloned()
+        .ok_or_else(|| anyhow!("Missing registry:shortDescription"))?;
+
+        let description =
+            extract_mandatory_annotation_from!("registry:comment", prefixed_name_to_values_in_ttl)
+                .first()
+                .cloned()
+                .ok_or_else(|| anyhow!("Missing registry:comment"))?;
+
+        let title =
+            extract_mandatory_annotation_from!("registry:label", prefixed_name_to_values_in_ttl)
+                .first()
+                .cloned()
+                .ok_or_else(|| anyhow!("Missing registry:label"))?;
 
         let mut hasher = Sha256::new();
-        hasher.update(self.field_contents.as_bytes());
-        let cksum = format!("{:X}", hasher.finalize()).to_lowercase();
+        hasher.update(field_contents.as_bytes());
+        let field_cksum = format!("{:X}", hasher.finalize()).to_lowercase();
 
-        Ok(IndexedPackageVersion {
-            name,
+        let metadata = ManifestMetadata {
+            full_name,
+            namespace: namespace.to_owned(),
+            name: name.to_owned(),
             version,
-            cksum,
-            ontology_iri: self.ontology_iri.clone(),
-            deps,
+            ontology_iri,
+            authors,
+            categories,
+            dependencies,
+            keywords,
+            license,
+            license_spdx,
+            repository,
+            homepage,
+            documentation,
+            short_description,
+            description,
+            title,
+        };
+
+        Ok(Self {
+            field_cksum,
+            metadata,
+            statements,
         })
-    }
-
-    pub fn get_field_hash(&self) -> Result<String> {
-        let namespace = self.field_namespace().ok_or_else(|| {
-            anyhow!("registry:packageName could not be found or malformed in manifest.")
-        })?;
-        let name = self.field_name().ok_or_else(|| {
-            anyhow!("registry:packageName could not be found or malformed in manifest.")
-        })?;
-        let version = self.field_version().ok_or_else(|| {
-            anyhow!("registry:packageVersion could not be found or malformed in manifest.")
-        })?;
-        let field_hash = hash_field(namespace.as_ref(), name.as_ref(), version.as_ref());
-        Ok(field_hash)
-    }
-
-    pub fn field_authors(&self) -> Option<Vec<String>> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:author") {
-            return Some(literals.clone());
-        }
-        None
-    }
-
-    // TODO: This can be probably done better.
-    pub fn field_author_names(&self) -> Option<Vec<String>> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:author") {
-            let names = literals
-                .iter()
-                .map(|author| author.split('<').next())
-                .filter_map(|name| {
-                    if let Some(name) = name {
-                        return Some(name.to_owned().trim().to_owned());
-                    }
-                    None
-                })
-                .collect::<Vec<String>>();
-            return Some(names);
-        }
-        None
-    }
-
-    pub fn field_author_names_comma_separated(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:author") {
-            let names = literals
-                .iter()
-                .map(|author| author.split('<').next())
-                .filter_map(|name| {
-                    if let Some(name) = name {
-                        return Some(name.to_owned().trim().to_owned());
-                    }
-                    None
-                })
-                .collect::<Vec<String>>();
-            let mut comma_separated_names = names.iter().fold("".to_owned(), |mut acc, name| {
-                acc.push_str(name);
-                acc.push(',');
-                acc
-            });
-            comma_separated_names.pop();
-            return Some(comma_separated_names);
-        }
-        None
-    }
-
-    // TODO: This can be probably done better.
-    pub fn field_author_emails(&self) -> Option<Vec<String>> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:author") {
-            let emails = literals
-                .iter()
-                .map(|author| author.split('<').rev().next())
-                .filter_map(|email| {
-                    if let Some(email) = email {
-                        if email.is_empty() {
-                            return None;
-                        }
-                        #[allow(clippy::string_slice)]
-                        #[allow(clippy::indexing_slicing)]
-                        return Some(email.to_owned()[..email.len() - 1].to_owned());
-                    }
-                    None
-                })
-                .collect::<Vec<String>>();
-
-            return Some(emails);
-        }
-        None
-    }
-
-    pub fn field_namespace_and_name(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:packageName") {
-            if let Some(value) = literals.first() {
-                return Some(value.clone());
-            }
-            return None;
-        }
-        None
-    }
-
-    pub fn field_namespace(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:packageName") {
-            if let Some(value) = literals.first() {
-                return value.split('/').map(std::borrow::ToOwned::to_owned).next();
-            }
-            return None;
-        }
-        None
-    }
-    pub fn field_name(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:packageName") {
-            if let Some(value) = literals.first() {
-                return value
-                    .split('/')
-                    .map(std::borrow::ToOwned::to_owned)
-                    .rev()
-                    .next();
-            }
-            return None;
-        }
-        None
-    }
-
-    pub fn field_categories(&self) -> Option<Vec<String>> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:category") {
-            return Some(literals.clone());
-        }
-        None
-    }
-
-    pub fn field_keywords(&self) -> Option<Vec<String>> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:keyword") {
-            return Some(literals.clone());
-        }
-        None
-    }
-
-    pub fn field_keywords_comma_separated(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:keyword") {
-            let mut comma_separated_keywords =
-                literals.iter().fold("".to_owned(), |mut acc, kw| {
-                    acc.push_str(kw);
-                    acc.push(',');
-                    acc
-                });
-            comma_separated_keywords.pop();
-            return Some(comma_separated_keywords);
-        }
-        None
-    }
-
-    pub fn field_version(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:packageVersion") {
-            if let Some(value) = literals.first() {
-                return Some(value.clone());
-            }
-            return None;
-        }
-        None
-    }
-
-    pub fn field_repository_url(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:repository") {
-            if let Some(value) = literals.first() {
-                return Some(value.clone());
-            }
-            return None;
-        }
-        None
-    }
-
-    pub fn field_homepage_url(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:homepage") {
-            if let Some(value) = literals.first() {
-                return Some(value.clone());
-            }
-            return None;
-        }
-        None
-    }
-
-    pub fn field_documentation_url(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:documentation") {
-            if let Some(value) = literals.first() {
-                return Some(value.clone());
-            }
-            return None;
-        }
-        None
-    }
-
-    pub fn field_license(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:license") {
-            if let Some(value) = literals.first() {
-                return Some(value.clone());
-            }
-            return None;
-        }
-        None
-    }
-
-    pub fn field_license_spdx_literal(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:licenseSPDX") {
-            if let Some(value) = literals.first() {
-                return Some(value.clone());
-            }
-            return None;
-        }
-        None
-    }
-
-    pub fn field_short_description(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:shortDescription") {
-            if let Some(value) = literals.first() {
-                return Some(value.clone());
-            }
-            return None;
-        }
-        None
-    }
-    pub fn field_long_description(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("rdfs:comment") {
-            if let Some(value) = literals.first() {
-                return Some(value.clone());
-            }
-            return None;
-        }
-        None
-    }
-    pub fn field_title(&self) -> Option<String> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("rdfs:label") {
-            if let Some(value) = literals.first() {
-                return Some(value.clone());
-            }
-            return None;
-        }
-        None
-    }
-    pub fn field_dependency_literals(&self) -> Option<Vec<String>> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:dependency") {
-            return Some(literals.clone());
-        }
-        None
     }
 
     pub fn update_owl_imports_and_serialize(
@@ -651,46 +549,6 @@ impl<'manifest> FieldManifest<'manifest> {
             .get(0)
             .map_or_else(|| Err(self.statements.clone()), |x| Ok(x.clone()))
     }
-
-    #[allow(clippy::restriction)]
-    #[allow(clippy::missing_panics_doc)]
-    pub fn field_dependency_names(&self) -> Option<Vec<String>> {
-        if let Some(Ok(literals)) = self.extracted_annotations.get("registry:dependency") {
-            let names = literals
-                .iter()
-                .map(|l| l.split(' ').next())
-                .collect::<Vec<Option<&str>>>();
-            if names.iter().any(std::option::Option::is_none) {
-                return None;
-            }
-            let names: Vec<String> = names.iter().map(|n| n.unwrap().to_owned()).collect();
-            return Some(names);
-        }
-        None
-    }
-}
-
-/// Generates a sha256 hash from field name, namespace and version.
-fn hash_field(namespace: &str, name: &str, version: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(format!("{}/{} {}", namespace, name, version));
-    format!("{:x}", hasher.finalize())
-}
-
-fn get_string_literal_from_object(object: &Object) -> anyhow::Result<String> {
-    match object {
-        Object::Literal(literal) => match literal {
-            Literal::RDFLiteral(rdf_literal) => {
-                let turtle_string = &rdf_literal.string;
-                Ok(turtle_string.to_string())
-            }
-            // TODO: Implement when needed..
-            Literal::BooleanLiteral(_) => anyhow::bail!("Boolean literal found in RDF literal"),
-            Literal::NumericLiteral(_) => anyhow::bail!("Numeric literal found in RDF literal"),
-        },
-
-        _ => anyhow::bail!("Boolean literal found in RDF literal"),
-    }
 }
 
 #[cfg(test)]
@@ -740,93 +598,83 @@ registry:dependency rdf:type owl:AnnotationProperty .
     #[test]
     fn manifest_getters_and_extraction() {
         let field_manifest = FieldManifest::new(VALID_FIELD).unwrap();
-        assert_eq!(field_manifest.field_name(), Some("test".to_owned()));
-        assert_eq!(field_manifest.field_namespace(), Some("@fld33".to_owned()));
+        let (namespace, name) = field_manifest.namespace_and_name();
+        assert_eq!(namespace, "@fld33");
+        assert_eq!(name, "test");
+        assert_eq!(field_manifest.full_name(), "@fld33/test");
+        assert_eq!(field_manifest.version(), &libplow::semver!("0.1.2"));
         assert_eq!(
-            field_manifest.field_namespace_and_name(),
-            Some("@fld33/test".to_owned())
+            field_manifest.authors(),
+            vec![
+                FieldAuthor {
+                    name: "Miles Davis".to_string(),
+                    email: "miles@field33.com".to_string()
+                },
+                FieldAuthor {
+                    name: "Joe Pass".to_string(),
+                    email: "joe@field33.com".to_string(),
+                }
+            ]
         );
-        assert_eq!(field_manifest.field_version(), Some("0.1.2".to_owned()));
+        let mut it = field_manifest.authors().iter();
         assert_eq!(
-            field_manifest.field_authors(),
-            Some(vec![
-                "Miles Davis <miles@field33.com>".to_owned(),
-                "Joe Pass <joe@field33.com>".to_owned()
-            ])
+            it.next().unwrap().to_string(),
+            "Miles Davis <miles@field33.com>"
         );
+        assert_eq!(it.next().unwrap().to_string(), "Joe Pass <joe@field33.com>");
+
+        assert_eq!(field_manifest.homepage(), None);
         assert_eq!(
-            field_manifest.field_author_names(),
-            Some(vec!["Miles Davis".to_owned(), "Joe Pass".to_owned()])
+            field_manifest.repository(),
+            Some("https://github.com/field33/ontology-workspace/tree/main/%40fld33/test")
         );
+        assert_eq!(field_manifest.documentation(), Some("https://field33.com"));
+
+        // TODO:
+        // assert_eq!(field_manifest.license(), Some("MIT License".to_owned()));
+        // assert_eq!(field_manifest.license_spdx(), Some("MIT".to_owned()));
         assert_eq!(
-            field_manifest.field_author_names_comma_separated(),
-            Some("Miles Davis,Joe Pass".to_owned())
-        );
-        assert_eq!(
-            field_manifest.field_author_emails(),
-            Some(vec![
-                "miles@field33.com".to_owned(),
-                "joe@field33.com".to_owned()
-            ])
-        );
-        assert_eq!(field_manifest.field_homepage_url(), None);
-        assert_eq!(
-            field_manifest.field_repository_url(),
-            Some(
-                "https://github.com/field33/ontology-workspace/tree/main/%40fld33/test".to_owned()
-            )
-        );
-        assert_eq!(
-            field_manifest.field_documentation_url(),
-            Some("https://field33.com".to_owned())
-        );
-        assert_eq!(
-            field_manifest.field_license(),
-            Some("MIT License".to_owned())
-        );
-        assert_eq!(
-            field_manifest.field_license_spdx_literal(),
-            Some("MIT".to_owned())
-        );
-        assert_eq!(
-            field_manifest.field_categories(),
-            Some(vec![
+            field_manifest.categories(),
+            vec![
                 "Communication".to_owned(),
                 "Organization".to_owned(),
                 "Upper Ontology".to_owned()
-            ])
+            ]
         );
         assert_eq!(
-            field_manifest.field_keywords(),
-            Some(vec![
+            field_manifest.keywords(),
+            vec![
                 "Communication".to_owned(),
                 "Field 33 Package".to_owned(),
                 "Organization".to_owned(),
                 "Upper Ontology".to_owned()
-            ])
+            ]
         );
         assert_eq!(
-            field_manifest.field_keywords_comma_separated(),
-            Some("Communication,Field 33 Package,Organization,Upper Ontology".to_owned())
+            field_manifest.keywords_comma_separated(),
+            "Communication,Field 33 Package,Organization,Upper Ontology"
         );
         assert_eq!(
-            field_manifest.field_short_description(),
-            Some("A short description of the field".to_owned())
+            field_manifest.short_description(),
+            "A short description of the field"
         );
         assert_eq!(
-            field_manifest.field_long_description(),
-            Some("A long description of the field.".to_owned())
+            field_manifest.description(),
+            "A long description of the field."
         );
+        assert_eq!(field_manifest.title(), "My interesting field");
+
+        let literals = field_manifest
+            .dependencies()
+            .iter()
+            .map(|d| d.to_string())
+            .collect::<Vec<String>>();
         assert_eq!(
-            field_manifest.field_title(),
-            Some("My interesting field".to_owned())
-        );
-        assert_eq!(
-            field_manifest.field_dependency_literals(),
-            Some(vec![
+            literals,
+            vec![
                 "@fld33/communication ^0.1.0".to_owned(),
                 "@fld33/organization ^0.1.1".to_owned(),
-            ])
+            ]
         );
     }
 }

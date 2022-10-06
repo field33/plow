@@ -1,6 +1,7 @@
 pub mod url;
 
 use camino::{Utf8Path, Utf8PathBuf};
+use sha2::{Digest, Sha256};
 use std::{
     fs::File,
     io::{self, BufRead, BufReader, Read},
@@ -77,4 +78,11 @@ where
 {
     let file = File::open::<P>(path)?;
     Ok(io::BufReader::new(file).lines())
+}
+
+/// Generates a sha256 hash from field name, namespace and version.
+pub fn hash_field(namespace: &str, name: &str, version: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(format!("{}/{} {}", namespace, name, version));
+    format!("{:x}", hasher.finalize())
 }

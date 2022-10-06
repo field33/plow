@@ -72,10 +72,8 @@ pub fn run_command_flow(_: &ArgMatches, config: &PlowConfig) -> Result<impl Feed
         })?;
 
         #[allow(clippy::unwrap_used)]
-        let root_field_name = root_field_manifest.field_namespace_and_name().unwrap();
-        let root_dep_names = root_field_manifest
-            .field_dependency_names()
-            .unwrap_or_default();
+        let root_field_name = root_field_manifest.full_name();
+        let root_dep_names = root_field_manifest.dependencies();
 
         if let Ok(Some(fresh_lock_file)) = resolve(
             config,

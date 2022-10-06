@@ -29,6 +29,12 @@ where
     version_range: Range<V>,
 }
 
+impl core::fmt::Display for Dependency<SemanticVersion> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{} {}", self.full_name, self.version_requirement)
+    }
+}
+
 impl<V> Dependency<V>
 where
     V: Version + From<SemanticVersion>,
@@ -563,14 +569,6 @@ where
     }
 }
 
-impl<V> ToString for Dependency<V>
-where
-    V: Version + From<SemanticVersion>,
-{
-    fn to_string(&self) -> String {
-        format!("{} {}", self.full_name, self.version_requirement)
-    }
-}
 
 impl<V> FromStr for Dependency<V>
 where

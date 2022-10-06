@@ -71,20 +71,16 @@ pub fn field_info(local_path: &Utf8Path) -> Result<(), CliError> {
         })
     })?;
 
-    let full_name = manifest
-        .field_namespace_and_name()
-        .unwrap_or_else(|| "Not specified".to_owned().italic().to_string());
-    let version = manifest
-        .field_version()
-        .unwrap_or_else(|| "Not specified".to_owned().italic().to_string());
-    let dependencies = manifest.field_dependency_literals();
+    let full_name = manifest.full_name();
+    let version = manifest.version().to_string();
+    let dependencies = manifest.dependencies();
 
     println!("\t{} {full_name}", "Name".bold());
     println!("\t{} {version}", "Version".bold());
     println!("\t{} {local_path}", "Location".bold());
-    if let Some(dependencies) = dependencies {
+    if !dependencies.is_empty() {
         println!("\t{}", "Requested Dependencies".bold());
-        for dependency in &dependencies {
+        for dependency in dependencies {
             println!("\t\t{dependency}");
         }
     }

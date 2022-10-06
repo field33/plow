@@ -3,12 +3,12 @@ mod index;
 mod version;
 
 use anyhow::anyhow;
-use dependency::Dependency;
+pub use dependency::Dependency;
 use pubgrub::version::Version;
 use serde::Deserialize;
 use std::str::FromStr;
 
-use self::version::SemanticVersion;
+pub use self::version::SemanticVersion;
 
 /// A single line in the index representing a single version of a field.
 #[derive(Deserialize)]
@@ -51,7 +51,7 @@ impl IndexedFieldVersion {
 
 /// A dependency as encoded in the index JSON.
 #[derive(Deserialize)]
-struct IndexedDependencySpec {
+pub struct IndexedDependencySpec {
     name: String,
     req: String,
 }
@@ -108,39 +108,37 @@ where
     }
 }
 
-
 // TODO: On the other hand it is not that simple
-pub trait Registry {
-    // @attention Like our get all available versions of a package
-    /// Attempt to find the packages that match a dependency request.
-    fn query(
-        &mut self,
-        dep: &Dependency,
-        kind: QueryKind,
-        f: &mut dyn FnMut(Summary),
-    ) -> Poll<CargoResult<()>>;
+// pub trait Registry {
+//     // @attention Like our get all available versions of a package
+//     /// Attempt to find the packages that match a dependency request.
+//     fn query(
+//         &mut self,
+//         dep: &Dependency,
+//         kind: QueryKind,
+//         f: &mut dyn FnMut(Summary),
+//     ) -> Poll<CargoResult<()>>;
 
-    // @attention Probably this will always return a vec I mean queries
-    fn query_vec(&mut self, dep: &Dependency, kind: QueryKind) -> Poll<CargoResult<Vec<Summary>>> {
-        let mut ret = Vec::new();
-        self.query(dep, kind, &mut |s| ret.push(s)).map_ok(|()| ret)
-    }
+//     // @attention Probably this will always return a vec I mean queries
+//     fn query_vec(&mut self, dep: &Dependency, kind: QueryKind) -> Poll<CargoResult<Vec<Summary>>> {
+//         let mut ret = Vec::new();
+//         self.query(dep, kind, &mut |s| ret.push(s)).map_ok(|()| ret)
+//     }
 
-    fn describe_source(&self, source: SourceId) -> String;
-    fn is_replaced(&self, source: SourceId) -> bool;
+//     fn describe_source(&self, source: SourceId) -> String;
+//     fn is_replaced(&self, source: SourceId) -> bool;
 
-    // @attention this stands for our retrieve package
-    /// Block until all outstanding Poll::Pending requests are Poll::Ready.
-    fn block_until_ready(&mut self) -> CargoResult<()>;
+//     // @attention this stands for our retrieve package
+//     /// Block until all outstanding Poll::Pending requests are Poll::Ready.
+//     fn block_until_ready(&mut self) -> CargoResult<()>;
 
-    //@attention our submit package is not needed imo
+//     //@attention our submit package is not needed imo
 
-    //@attention TODO: Get package version metadata
-}
+//     //@attention TODO: Get package version metadata
+// }
 
-
-/// A registry fulfills all the duties of an Index (= providing lightweight metadata about packages,
-/// like e.g. version, dependencies) and an Artifact store (= retrieval of packages).
+// A registry fulfills all the duties of an Index (= providing lightweight metadata about packages,
+// like e.g. version, dependencies) and an Artifact store (= retrieval of packages).
 // pub trait Registry {
 //     // TODO: Write docs to trait methods
 //     fn all_available_versions_of_a_package(

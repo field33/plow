@@ -232,7 +232,7 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
         }
     }
 
-    let paths = crate::utils::list_files(&public_index_git_repo_path, "json")
+    let paths = libplow::utils::list_files(&public_index_git_repo_path, "json")
         .map_err(|err| FailedToReadIndexDirectory(err.to_string()))?;
 
     for path in paths {

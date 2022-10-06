@@ -84,8 +84,8 @@ impl From<&Utf8Path> for FieldPath {
 
 impl PartialEq for FieldPath {
     fn eq(&self, other: &Self) -> bool {
-        if let Ok(names_are_same) = crate::utils::file_names_are_same(&self.inner, &other.inner) {
-            if let Ok(files_are_same) = crate::utils::files_are_same(&self.inner, &other.inner) {
+        if let Ok(names_are_same) = libplow::utils::file_names_are_same(&self.inner, &other.inner) {
+            if let Ok(files_are_same) = libplow::utils::files_are_same(&self.inner, &other.inner) {
                 return names_are_same && files_are_same;
             }
             return false;
@@ -131,7 +131,7 @@ impl FieldsDirectory {
     #[allow(clippy::unwrap_used)]
     pub fn fill_from_backup(root: &Utf8Path) -> Result<Self, CliError> {
         let mut fields_dir = Self::create_empty_at(root.parent().unwrap());
-        fields_dir.children = crate::utils::list_files(root, "ttl")
+        fields_dir.children = libplow::utils::list_files(root, "ttl")
             .map_err(|err| FailedRecursiveListingFields {
                 reason: err.to_string(),
             })?
@@ -143,7 +143,7 @@ impl FieldsDirectory {
 
     pub fn fill_from_root(root: &Utf8Path) -> Result<Self, CliError> {
         let mut fields_dir = Self::create_empty_at(root);
-        fields_dir.children = crate::utils::list_files(root, "ttl")
+        fields_dir.children = libplow::utils::list_files(root, "ttl")
             .map_err(|err| FailedRecursiveListingFields {
                 reason: err.to_string(),
             })?
@@ -164,7 +164,7 @@ impl FieldsDirectory {
         &mut self,
         root: &Utf8Path,
     ) -> Result<(), CliError> {
-        self.children = crate::utils::list_files(root, "ttl")
+        self.children = libplow::utils::list_files(root, "ttl")
             .map_err(|err| FailedRecursiveListingFields {
                 reason: err.to_string(),
             })?
@@ -323,7 +323,7 @@ impl FieldsDirectory {
     // Explodes the fields directory back to the workspace root.
     pub fn explode(path_to_fields_dir: &Utf8Path, config: &PlowConfig) -> Result<(), CliError> {
         if path_to_fields_dir.exists() {
-            let fields = crate::utils::list_files(path_to_fields_dir, "ttl")
+            let fields = libplow::utils::list_files(path_to_fields_dir, "ttl")
                 .map_err(|err| FailedToReadFieldsDirectory(err.to_string()))?;
             for field in fields {
                 std::fs::copy(
@@ -350,7 +350,7 @@ impl FieldsDirectory {
         config: &PlowConfig,
     ) -> Result<Option<Utf8PathBuf>, CliError> {
         if path_to_fields_dir.exists() {
-            let fields = crate::utils::list_files(path_to_fields_dir, "ttl")
+            let fields = libplow::utils::list_files(path_to_fields_dir, "ttl")
                 .map_err(|err| FailedToReadFieldsDirectory(err.to_string()))?;
 
             let tmp_uuid = uuid::Uuid::new_v4();
