@@ -14,9 +14,9 @@ use crate::{
 use camino::{Utf8Path, Utf8PathBuf};
 use clap::{arg, App, AppSettings, ArgMatches, Command};
 use colored::*;
-use harriet::IRIReference;
-use harriet::Object;
 use harriet::Whitespace;
+use harriet::{IRIReference, ObjectList};
+use harriet::{Literal, Object};
 use plow_linter::lints::all_lints;
 use plow_package_management::{
     package::{RetrievedPackageSet, RetrievedPackageVersion},
@@ -69,7 +69,7 @@ pub fn run_command_flow(
     if field_file_path.exists() {
         lint_file(field_file_path.as_ref(), all_lints())?;
 
-        let registry = crate::sync::sync(config).map_err(|err| CliError::Wip(err.to_string()))?;
+        let registry = crate::sync::sync(config)?;
 
         let root_field_contents = std::fs::read_to_string(&field_file_path).map_err(|_| {
             CliError::from(FailedToFindFieldAtPath {
@@ -83,169 +83,311 @@ pub fn run_command_flow(
             })
         })?;
 
-        let (mut object_list, stated_dep_names_in_owl_imports, base_iri_beginning, statements) =
-            root_field_manifest.dependencies_stated_in_owl_imports();
+        match root_field_manifest.dependencies_stated_in_owl_imports() {
+            Ok((
+                mut object_list,
+                stated_dep_names_in_owl_imports,
+                base_iri_beginning,
+                statements,
+            )) => {
+                if let Some(lock_file) = resolve(
+                    config,
+                    &root_field_contents,
+                    &root_field_manifest,
+                    true,
+                    &registry as &dyn Registry,
+                )? {
+                    // Leave an empty line in between.
+                    println!();
+                    println!("\t{}", "Dependencies".bold().green());
 
-        if let Some(lock_file) = resolve(
-            config,
-            &root_field_contents,
-            &root_field_manifest,
-            true,
-            &registry as &dyn Registry,
-        )? {
-            // Leave an empty line in between.
-            println!();
-            println!("\t{}", "Dependencies".bold().green());
+                    lock_file
+                        .locked_dependencies
+                        .packages
+                        .iter()
+                        .for_each(|package_version| {
+                            println!(
+                                "\t\t{} {}",
+                                package_version.package_name.bold(),
+                                package_version.version
+                            );
+                        });
 
-            lock_file
-                .locked_dependencies
-                .packages
-                .iter()
-                .for_each(|package_version| {
-                    println!(
-                        "\t\t{} {}",
-                        package_version.package_name.bold(),
-                        package_version.version
-                    );
-                });
+                    // Only names of resolved dependencies.
+                    let resolved_dep_names = lock_file
+                        .locked_dependencies
+                        .packages
+                        .iter()
+                        .map(|p| p.package_name.clone())
+                        .collect::<Vec<_>>();
 
-            // Only names of resolved dependencies.
-            let resolved_dep_names = lock_file
-                .locked_dependencies
-                .packages
-                .iter()
-                .map(|p| p.package_name.clone())
-                .collect::<Vec<_>>();
+                    // Collect deps which does not exist as owl imports.
+                    // Collect deps to be deleted from owl imports.
+                    let (deps_to_add_to_owl_imports, deps_to_remove_from_owl_imports) =
+                        resolved_dep_names.iter().fold(
+                            (vec![], vec![]),
+                            |mut acc, package_name| {
+                                if !stated_dep_names_in_owl_imports.contains(package_name) {
+                                    acc.0.push(package_name.clone());
+                                }
+                                for dep_name in &stated_dep_names_in_owl_imports {
+                                    if !resolved_dep_names.contains(dep_name) {
+                                        acc.1.push(dep_name.clone());
+                                    }
+                                }
+                                acc
+                            },
+                        );
 
-            // Collect deps which does not exist as owl imports.
-            // Collect deps to be deleted from owl imports.
-            let (deps_to_add_to_owl_imports, deps_to_remove_from_owl_imports) = resolved_dep_names
-                .iter()
-                .fold((vec![], vec![]), |mut acc, package_name| {
-                    if !stated_dep_names_in_owl_imports.contains(package_name) {
-                        acc.0.push(package_name.clone());
-                    }
-                    for dep_name in &stated_dep_names_in_owl_imports {
-                        if !resolved_dep_names.contains(dep_name) {
-                            acc.1.push(dep_name.clone());
+                    // Inject necessary owl:imports
+                    for to_add in deps_to_add_to_owl_imports {
+                        if object_list.list.is_empty() {
+                            object_list.list.push(make_owl_imports_object(
+                                &to_add,
+                                &base_iri_beginning,
+                                true,
+                            ));
+                        } else {
+                            object_list.list.push(make_owl_imports_object(
+                                &to_add,
+                                &base_iri_beginning,
+                                false,
+                            ));
                         }
                     }
-                    acc
-                });
 
-            // Inject necessary owl:imports
-            for to_add in deps_to_add_to_owl_imports {
-                if object_list.list.is_empty() {
-                    object_list.list.push(make_owl_imports_object(
-                        &to_add,
-                        &base_iri_beginning,
-                        true,
-                    ));
-                } else {
-                    object_list.list.push(make_owl_imports_object(
-                        &to_add,
-                        &base_iri_beginning,
-                        false,
-                    ));
+                    // Delete unnecessary owl:imports
+
+                    object_list.list = object_list
+                        .list
+                        .iter()
+                        .cloned()
+                        .filter(|(_, _, object)| match object {
+                            Object::IRI(harriet::IRI::IRIReference(iri_ref)) => {
+                                let iri_literal = iri_ref.iri.to_string();
+                                let iris = iri_literal.split('/').collect::<Vec<&str>>();
+                                let mut it = iris.iter().rev();
+                                it.next();
+                                // TODO: These unwraps may indeed fail but it is unlikely to happen.
+                                // They will be addressed in the refactoring.
+                                #[allow(clippy::unwrap_used)]
+                                let name = it.next().unwrap().to_owned();
+                                // TODO: These unwraps may indeed fail but it is unlikely to happen.
+                                // They will be addressed in the refactoring.
+                                #[allow(clippy::unwrap_used)]
+                                let namespace = it.next().unwrap().to_owned();
+                                let dep_name = format!("{namespace}/{name}");
+                                !deps_to_remove_from_owl_imports.contains(&dep_name)
+                            }
+                            _ => true,
+                        })
+                        .collect::<Vec<_>>();
+
+                    // Here the owl imports are updated.
+                    // We just need to add them to the existing statements and re-serialize.
+
+                    root_field_manifest.update_owl_imports_and_serialize(
+                        object_list,
+                        statements,
+                        &field_file_path,
+                    );
+
+                    // TODO: These unwraps may indeed fail but it is unlikely to happen.
+                    // They will be addressed in the refactoring.
+                    #[allow(clippy::unwrap_used)]
+                    let dependency_information = lock_file
+                        .locked_dependencies
+                        .packages
+                        .iter()
+                        .map(|package_version| {
+                            let metadata = registry
+                                .get_package_version_metadata(package_version)
+                                .unwrap();
+                            let name = format!("{}.ttl", metadata.cksum.unwrap());
+                            let ontology_iri = metadata.ontology_iri.unwrap();
+
+                            // TODO: When types are updated with the upcoming refactoring this will be updated also
+                            RetrievedPackageVersion {
+                                ontology_iri,
+                                package: package_version.clone(),
+                                file_path: config.field_cache_dir.join(name),
+                            }
+                        })
+                        .collect::<Vec<_>>();
+
+                    let mut set = RetrievedPackageSet {
+                        packages: dependency_information,
+                    };
+
+                    let root_path = &field_file_path;
+
+                    let (_protege_workspace_dir, symlinked_field_path) =
+                        mirror_field_to_protege_workspace(root_path).map_err(|err| {
+                            CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                        })?;
+
+                    #[allow(clippy::unwrap_used)]
+                    let current_protege_workspace = symlinked_field_path.parent().unwrap();
+
+                    let deps_path = current_protege_workspace.join("deps");
+                    if !deps_path.exists() {
+                        std::fs::create_dir_all(&deps_path).map_err(|err| {
+                            CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                        })?;
+                    }
+                    for package in &mut set.packages {
+                        #[allow(clippy::unwrap_used)]
+                        let dep_path_in_protege_workspace =
+                            deps_path.join(&package.file_path.file_name().unwrap());
+
+                        std::fs::copy(&package.file_path, &dep_path_in_protege_workspace).map_err(
+                            |err| CliError::from(FailedToPrepareProtegeWorkspace(err.to_string())),
+                        )?;
+                        package.file_path = dep_path_in_protege_workspace;
+                    }
+                    // Generate catalog file
+                    CatalogFile::generate(current_protege_workspace, &set).map_err(|err| {
+                        CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                    })?;
+
+                    // Open in protege
+                    open::that(symlinked_field_path).map_err(|err| {
+                        CliError::from(FailedToOpenProtegeApplication(err.to_string()))
+                    })?;
                 }
             }
+            Err(statements) => {
+                if let Some(lock_file) = resolve(
+                    config,
+                    &root_field_contents,
+                    &root_field_manifest,
+                    true,
+                    &registry as &dyn Registry,
+                )? {
+                    // Leave an empty line in between.
+                    println!();
+                    println!("\t{}", "Dependencies".bold().green());
 
-            // Delete unnecessary owl:imports
+                    lock_file
+                        .locked_dependencies
+                        .packages
+                        .iter()
+                        .for_each(|package_version| {
+                            println!(
+                                "\t\t{} {}",
+                                package_version.package_name.bold(),
+                                package_version.version
+                            );
+                        });
 
-            object_list.list = object_list
-                .list
-                .iter()
-                .cloned()
-                .filter(|(_, _, object)| match object {
-                    Object::IRI(harriet::IRI::IRIReference(iri_ref)) => {
-                        let iri_literal = iri_ref.iri.to_string();
-                        let iris = iri_literal.split('/').collect::<Vec<&str>>();
-                        let mut it = iris.iter().rev();
-                        it.next();
-                        // TODO: These unwraps may indeed fail but it is unlikely to happen.
-                        // They will be addressed in the refactoring.
-                        #[allow(clippy::unwrap_used)]
-                        let name = it.next().unwrap().to_owned();
-                        // TODO: These unwraps may indeed fail but it is unlikely to happen.
-                        // They will be addressed in the refactoring.
-                        #[allow(clippy::unwrap_used)]
-                        let namespace = it.next().unwrap().to_owned();
-                        let dep_name = format!("{namespace}/{name}");
-                        !deps_to_remove_from_owl_imports.contains(&dep_name)
+                    // Only names of resolved dependencies.
+                    let resolved_dep_names = lock_file
+                        .locked_dependencies
+                        .packages
+                        .iter()
+                        .map(|p| p.package_name.clone())
+                        .collect::<Vec<_>>();
+
+                    let base_iri = root_field_manifest.ontology_iri.clone().unwrap();
+                    let base_iri_parts = base_iri.split("/").collect::<Vec<&str>>();
+                    let base_iri_beginning = base_iri_parts[..base_iri_parts.len() - 3].join("/");
+
+                    let mut object_list = ObjectList { list: vec![] };
+
+                    for to_add in &resolved_dep_names {
+                        if object_list.list.is_empty() {
+                            object_list.list.push(make_owl_imports_object(
+                                to_add,
+                                &base_iri_beginning,
+                                true,
+                            ));
+                        } else {
+                            object_list.list.push(make_owl_imports_object(
+                                to_add,
+                                &base_iri_beginning,
+                                false,
+                            ));
+                        }
                     }
-                    _ => true,
-                })
-                .collect::<Vec<_>>();
 
-            // Here the owl imports are updated.
-            // We just need to add them to the existing statements and re-serialize.
+                    let predicate = crate::subcommand::init::field::make_predicate_object(
+                        "owl",
+                        "imports",
+                        object_list,
+                    );
 
-            root_field_manifest.update_owl_imports_and_serialize(
-                object_list,
-                statements,
-                &field_file_path,
-            );
+                    root_field_manifest.create_owl_imports_and_serialize(
+                        predicate,
+                        statements,
+                        &field_file_path,
+                    );
 
-            // TODO: These unwraps may indeed fail but it is unlikely to happen.
-            // They will be addressed in the refactoring.
-            #[allow(clippy::unwrap_used)]
-            let dependency_information = lock_file
-                .locked_dependencies
-                .packages
-                .iter()
-                .map(|package_version| {
-                    let metadata = registry
-                        .get_package_version_metadata(package_version)
-                        .unwrap();
-                    let name = format!("{}.ttl", metadata.cksum.unwrap());
-                    let ontology_iri = metadata.ontology_iri.unwrap();
+                    // TODO: These unwraps may indeed fail but it is unlikely to happen.
+                    // They will be addressed in the refactoring.
+                    #[allow(clippy::unwrap_used)]
+                    let dependency_information = lock_file
+                        .locked_dependencies
+                        .packages
+                        .iter()
+                        .map(|package_version| {
+                            let metadata = registry
+                                .get_package_version_metadata(package_version)
+                                .unwrap();
+                            let name = format!("{}.ttl", metadata.cksum.unwrap());
+                            let ontology_iri = metadata.ontology_iri.unwrap();
 
-                    // TODO: When types are updated with the upcoming refactoring this will be updated also
-                    RetrievedPackageVersion {
-                        ontology_iri,
-                        package: package_version.clone(),
-                        file_path: config.field_cache_dir.join(name),
+                            // TODO: When types are updated with the upcoming refactoring this will be updated also
+                            RetrievedPackageVersion {
+                                ontology_iri,
+                                package: package_version.clone(),
+                                file_path: config.field_cache_dir.join(name),
+                            }
+                        })
+                        .collect::<Vec<_>>();
+
+                    let mut set = RetrievedPackageSet {
+                        packages: dependency_information,
+                    };
+
+                    let root_path = &field_file_path;
+
+                    let (_protege_workspace_dir, symlinked_field_path) =
+                        mirror_field_to_protege_workspace(root_path).map_err(|err| {
+                            CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                        })?;
+
+                    #[allow(clippy::unwrap_used)]
+                    let current_protege_workspace = symlinked_field_path.parent().unwrap();
+
+                    let deps_path = current_protege_workspace.join("deps");
+                    if !deps_path.exists() {
+                        std::fs::create_dir_all(&deps_path).map_err(|err| {
+                            CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                        })?;
                     }
-                })
-                .collect::<Vec<_>>();
+                    for package in &mut set.packages {
+                        #[allow(clippy::unwrap_used)]
+                        let dep_path_in_protege_workspace =
+                            deps_path.join(&package.file_path.file_name().unwrap());
 
-            let mut set = RetrievedPackageSet {
-                packages: dependency_information,
-            };
+                        std::fs::copy(&package.file_path, &dep_path_in_protege_workspace).map_err(
+                            |err| CliError::from(FailedToPrepareProtegeWorkspace(err.to_string())),
+                        )?;
+                        package.file_path = dep_path_in_protege_workspace;
+                    }
+                    // Generate catalog file
+                    CatalogFile::generate(current_protege_workspace, &set).map_err(|err| {
+                        CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                    })?;
 
-            let root_path = &field_file_path;
+                    dbg!("COMES");
 
-            let (_protege_workspace_dir, symlinked_field_path) =
-                mirror_field_to_protege_workspace(root_path).map_err(|err| {
-                    CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
-                })?;
-
-            #[allow(clippy::unwrap_used)]
-            let current_protege_workspace = symlinked_field_path.parent().unwrap();
-
-            let deps_path = current_protege_workspace.join("deps");
-            if !deps_path.exists() {
-                std::fs::create_dir_all(&deps_path).map_err(|err| {
-                    CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
-                })?;
+                    // Open in protege
+                    open::that(symlinked_field_path).map_err(|err| {
+                        CliError::from(FailedToOpenProtegeApplication(err.to_string()))
+                    })?;
+                }
             }
-            for package in &mut set.packages {
-                #[allow(clippy::unwrap_used)]
-                let dep_path_in_protege_workspace =
-                    deps_path.join(&package.file_path.file_name().unwrap());
-
-                std::fs::copy(&package.file_path, &dep_path_in_protege_workspace).map_err(
-                    |err| CliError::from(FailedToPrepareProtegeWorkspace(err.to_string())),
-                )?;
-                package.file_path = dep_path_in_protege_workspace;
-            }
-            // Generate catalog file
-            CatalogFile::generate(current_protege_workspace, &set)
-                .map_err(|err| CliError::from(FailedToPrepareProtegeWorkspace(err.to_string())))?;
-
-            // Open in protege
-            open::that(symlinked_field_path)
-                .map_err(|err| CliError::from(FailedToOpenProtegeApplication(err.to_string())))?;
         }
         return Ok(SuccessfulProtege);
     }

@@ -255,7 +255,7 @@ fn make_prefix<'directive>(
     }
 }
 
-fn make_predicate_stringy_object<'list>(
+pub fn make_predicate_stringy_object<'list>(
     predicate_prefix: &'list str,
     predicate_name: &'list str,
     object_literal: &'list str,
@@ -295,6 +295,31 @@ fn make_predicate_stringy_object<'list>(
                 })),
             )],
         },
+        Some(Whitespace {
+            whitespace: " ".into(),
+        }),
+    )
+}
+
+pub fn make_predicate_object<'list>(
+    predicate_prefix: &'list str,
+    predicate_name: &'list str,
+    object_list: ObjectList<'list>,
+) -> (
+    Whitespace<'list>,
+    harriet::Verb<'list>,
+    ObjectList<'list>,
+    Option<Whitespace<'list>>,
+) {
+    (
+        Whitespace {
+            whitespace: "\n".into(),
+        },
+        harriet::Verb::IRI(IRI::PrefixedName(PrefixedName {
+            prefix: Some(Cow::Borrowed(predicate_prefix)),
+            name: Some(Cow::Borrowed(predicate_name)),
+        })),
+        object_list,
         Some(Whitespace {
             whitespace: " ".into(),
         }),

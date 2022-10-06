@@ -4,7 +4,8 @@ use anyhow::{anyhow, Result};
 use camino::Utf8Path;
 use colored::Colorize;
 use harriet::{
-    Literal, Object, ObjectList, ParseError, Statement, Triples, TurtleDocument, Verb, IRI,
+    Literal, Object, ObjectList, ParseError, Statement, Triples, TurtleDocument, Verb, Whitespace,
+    IRI,
 };
 use lazy_static::lazy_static;
 use plow_package_management::{
@@ -14,6 +15,7 @@ use plow_package_management::{
     version::SemanticVersion,
 };
 use regex::Regex;
+use serde_json::map;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 
@@ -24,7 +26,7 @@ lazy_static! {
 pub struct FieldManifest<'manifest> {
     extracted_annotations: HashMap<String, Result<Vec<String>, anyhow::Error>>,
     field_contents: String,
-    ontology_iri: Option<String>,
+    pub ontology_iri: Option<String>,
     statements: Vec<Statement<'manifest>>,
 }
 
@@ -533,9 +535,40 @@ impl<'manifest> FieldManifest<'manifest> {
         std::fs::write(target_path, new_doc.to_string()).unwrap();
     }
 
+    pub fn create_owl_imports_and_serialize(
+        &self,
+        new_predicate: (
+            Whitespace<'manifest>,
+            harriet::Verb<'manifest>,
+            ObjectList<'manifest>,
+            Option<Whitespace<'manifest>>,
+        ),
+        mut statements: Vec<Statement<'manifest>>,
+        target_path: &Utf8Path,
+    ) {
+        for statement in &mut statements {
+            match statement {
+                harriet::Statement::Triples(Triples::Labeled(
+                    _,
+                    subject,
+                    predicate_object_list,
+                )) => {
+                    predicate_object_list.list.push(new_predicate.clone());
+                }
+                _ => {}
+            }
+        }
+
+        let new_doc = TurtleDocument {
+            statements: statements.clone(),
+            trailing_whitespace: None,
+        };
+        std::fs::write(target_path, new_doc.to_string()).unwrap();
+    }
+
     pub fn dependencies_stated_in_owl_imports(
         &self,
-    ) -> (ObjectList, Vec<String>, String, Vec<Statement>) {
+    ) -> Result<(ObjectList, Vec<String>, String, Vec<Statement>), Vec<Statement>> {
         let mut base_iri: Option<String> = None;
         let stuff = self
             .statements
@@ -614,7 +647,9 @@ impl<'manifest> FieldManifest<'manifest> {
                 }
                 _ => acc,
             });
-        stuff[0].clone()
+        stuff
+            .get(0)
+            .map_or_else(|| Err(self.statements.clone()), |x| Ok(x.clone()))
     }
 
     #[allow(clippy::restriction)]
