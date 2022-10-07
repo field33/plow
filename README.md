@@ -1,18 +1,18 @@
 ![Plow logo](./assets/logo.svg)
+
 # Plow - Ontology package manager
 
-Plow is package management solution for OWL ontologies, with support for specifying dependencies between packages via SemVer ranges.
+Plow is package management solution for OWL ontologies, with support for specifying dependencies between packages via [SemVer](https://semver.org/) ranges.
 
 ## Getting started - Installation
 
 ### CLI
-The CLI supports basic commands related to consuming and producing ontologies. It is suitable for both manual and automated workflows (e.g. [metadata linting in CI](https://github.com/field33/ontologies/blob/12ede2b557fde94f6a768e8b65c84929a58c05ce/.github/workflows/lint.yml#L33))
 
-Coming soon: [open in Protégé](https://github.com/field33/plow/issues/10)
+The CLI supports basic commands related to consuming and producing ontologies. It is suitable for both manual and automated workflows (e.g. [metadata linting in CI](https://github.com/field33/ontologies/blob/12ede2b557fde94f6a768e8b65c84929a58c05ce/.github/workflows/lint.yml#L33))
 
 To install, run:
 
-```shell
+```sh
 cargo install plow_cli
 ```
 
@@ -20,41 +20,45 @@ cargo install plow_cli
 
 ### GUI
 
-Coming soon
+The `plow_gui` crate is obsolete and usage of it is discouraged.
 
-> You can install a preview version with limited functionality via `cargo install plow_cli`
-
-[Prebuilt binaries are coming soon!](https://github.com/field33/plow/issues/2)
+A new ontology editor is in the works, and will be released as a separate project.
 
 ## Basic usage
+
 ### Login with Plow
-The tooling currently expects you to be authenticated with the public plow registry ([open issue](https://github.com/field33/plow/issues/11)). Please sign in, creating an account [here](plow.pm) and [create a new User Token in your account settings](https://staging-registry.field33.com/home#user-tokens).
 
+The tooling currently expects you to be authenticated with the public plow registry ([open issue](https://github.com/field33/plow/issues/11)). Please sign in, creating an account [here](plow.pm) and [create a new api token in your account settings](https://staging-registry.field33.com/home#user-tokens).
 
-```shell
-plow login <YOUR_TOKEN>
+```sh
+plow login <api-token>
 ```
 
 ### Initialize workspace
-Create the directory you want to organize your *fields* (= ontologies) in.
-```shell
+
+Create the directory you want to organize your _fields_ (= ontologies) in.
+
+```sh
 # Create workspace directory
 mkdir example_workspace && cd example_workspace
 
-# Workaround: plow init currently expects a .ttl file to be present
-touch test.ttl
+# Crate your first field (.ttl file), or copy existing fields into the workspace
+plow init --field @example_namespace/example_name
 
-# Initializes the workspace in your directory
+# To initialize a workspace run
 plow init
 ```
 
+### Initialize a new _field_ (= ontology)
 
-### Initialize a new *field* (= ontology)
-To create a new *field* with all the necessary metadata run:
-```shell
-plow init --field @example_namespace/example_fieldname
+To create a new _field_ with all the necessary metadata run:
+
+```sh
+plow init --field @example_namespace/example_name
 ```
-This will create the relevant folder structure:
+
+When run under an initialized workspace, this will create the relevant folder structure in the `fields` directory:
+
 ```
 ├── Plow.toml
 └── fields
@@ -62,19 +66,46 @@ This will create the relevant folder structure:
         └── example_fieldname.ttl
 ```
 
-### Submit an *field* to the registry
-To prepare for submitting a new *field* run the following command:
-```shell
-plow submit --dry-run fields/@example_namespace/example_fieldname.ttl
+If run outside of a workspace, it will create a new `.ttl` file in the current directory.
+
+```
+├── example_fieldname.ttl
 ```
 
-If all checks pass you can omit the `--dry-run` flag and propperly submit your *field* by running:
+Running `plow init` without the `--field` flag initializes a new workspace and if run after this, results would look like the most upper example.
+
+### Open a _field_ in protege
+
+If you'd like to open an edit a field in protege, you may use the following command:
+
+```sh
+# Continuing with the upper example
+plow protege example_fieldname.ttl
+```
+
+If you have protege installed in your system and if your field does not have parsing errors, this command will,
+
+- Resolve the dependencies in your field if there are some.
+- Inject them to your original field as `owl:imports` annotations.
+- Make a `protege_workspaces` directory in `~/Documents/plow`, copy your dependencies and hard link your field there.
+- The changes to your field in `protege` will reflect to your original field permanently.
+
+### Submit a _field_ to the registry
+
+To prepare for submitting a new _field_ run the following command:
+
+```shell
+plow submit <path-to-your-field> --dry-run
+```
+
+If all checks pass you can omit the `--dry-run` flag and submit your _field_ by running:
+
 ```shell
 # Public submission
-plow submit fields/@example_namespace/example_fieldname.ttl
+plow submit <path-to-your-field>
 
 # Private submission
-plow submit --private fields/@example_namespace/example_fieldname.ttl
+plow submit --private <path-to-your-field>
 ```
 
 ## Repository contents
@@ -101,6 +132,7 @@ the registry publicly, but that may change in the future.
 ## Citing
 
 If you use Plow in the context of a published academic piece of work, please consider citing:
+
 ```
 @incollection{Plow,
   title = {Plow: A Novel Approach to Interlinking Modular Ontologies Based on Software Package Management},
@@ -129,5 +161,5 @@ conditions.
 
 Licensed under either of
 
-* Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-* MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
