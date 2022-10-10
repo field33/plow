@@ -91,7 +91,7 @@ plow protege example_fieldname.ttl
 
 If you have protege installed in your system and if your field does not have parsing errors, this command will,
 
-- Resolve the dependencies in your field if there are some.
+- Resolve the dependencies in your field if any dependencies are present.
 - Inject them to your original field as `owl:imports` annotations.
 - Make a `protege_workspaces` directory in `~/Documents/plow`, copy your dependencies and hard link your field there.
 - The changes to your field in `protege` will reflect to your original field permanently.
