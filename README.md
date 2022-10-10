@@ -51,28 +51,34 @@ plow init
 
 ### Initialize a new _field_ (= ontology)
 
+#### Example 1
+
 To create a new _field_ with all the necessary metadata run:
 
 ```sh
 plow init --field @example_namespace/example_name
 ```
 
+#### Example 2
+
 When run under an initialized workspace, this will create the relevant folder structure in the `fields` directory:
 
-```
+```sh
 ├── Plow.toml
 └── fields
     └── @example_namespace
         └── example_fieldname.ttl
 ```
 
+#### Example 3
+
 If run outside of a workspace, it will create a new `.ttl` file in the current directory.
 
-```
+```sh
 ├── example_fieldname.ttl
 ```
 
-Running `plow init` without the `--field` flag initializes a new workspace and if run after this, results would look like the most upper example.
+Running `plow init` without the `--field` flag initializes a new workspace and if run after this, results would look like [Example 1](#example-1).
 
 ### Open a _field_ in protege
 
