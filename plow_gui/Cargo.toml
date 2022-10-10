@@ -1,7 +1,7 @@
 [package]
 name = "plow_gui"
 description = "A simple GUI application for the Plow ontology package manager."
-version = "0.1.0"
+version = "0.1.1"
 license = "MIT OR Apache-2.0"
 keywords = ["plow", "owl", "gui"]
 authors = ["Maximilian Goisser <max@field33.com>", "Ali Somay <ali@field33.com>"]
