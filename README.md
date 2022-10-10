@@ -20,7 +20,7 @@ cargo install plow_cli
 
 ### GUI
 
-The `plow_gui` crate is obsolete and usage of it is discouraged.
+The [`plow_gui`](https://crates.io/crates/plow_gui) crate is obsolete and usage of it is discouraged.
 
 A new ontology editor is in the works, and will be released as a separate project.
 
