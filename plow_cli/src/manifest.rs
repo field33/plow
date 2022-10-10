@@ -6,16 +6,18 @@ mod utils;
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
 use harriet::{
-    Literal, Object, ObjectList, ParseError, Statement, Triples, TurtleDocument, Verb, Whitespace,
-    IRI,
+    Object, ObjectList, ParseError, Statement, Triples, TurtleDocument, Verb, Whitespace, IRI,
 };
-use lazy_static::lazy_static;
-use libplow::registry::Dependency;
-use libplow::registry::SemanticVersion;
-use regex::Regex;
-use serde_json::map;
+use ustr::Ustr;
+
+use crate::field_id::FieldId;
+use crate::registry::Dependency;
+use crate::registry::IndexedFieldVersion;
+use crate::registry::SemanticVersion;
+
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::str::FromStr;
 
 use crate::extract_mandatory_annotation_from;
@@ -23,7 +25,7 @@ use crate::extract_optional_string_annotation_from;
 
 use self::utils::get_string_literal_from_object;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct FieldAuthor {
     name: String,
     email: String,
@@ -35,12 +37,80 @@ impl core::fmt::Display for FieldAuthor {
     }
 }
 
-#[derive(Debug)]
+/// Subset of a `Manifest`. Contains only the most important information about
+/// a package.
+///
+/// Summaries are cloned, and should not be mutated after creation
+#[derive(Debug, Clone)]
+pub struct FieldSummary {
+    inner: Rc<FieldSummaryInner>,
+}
+
+#[derive(Debug, Clone)]
+struct FieldSummaryInner {
+    field_id: FieldId,
+    dependencies: Vec<Dependency<SemanticVersion>>,
+    ontology_iri: String,
+    cksum: String,
+}
+
+impl FieldSummary {
+    pub fn new(
+        field_id: FieldId,
+        dependencies: Vec<Dependency<SemanticVersion>>,
+        cksum: String,
+        ontology_iri: String,
+    ) -> FieldSummary {
+        FieldSummary {
+            inner: Rc::new(FieldSummaryInner {
+                field_id,
+                dependencies,
+                ontology_iri,
+                cksum,
+            }),
+        }
+    }
+
+    pub fn field_id(&self) -> FieldId {
+        self.inner.field_id
+    }
+    pub fn name(&self) -> Ustr {
+        self.field_id().name()
+    }
+    pub fn version(&self) -> &SemanticVersion {
+        self.field_id().version()
+    }
+    pub fn ontology_iri(&self) -> &str {
+        &self.inner.ontology_iri
+    }
+    // pub fn source_id(&self) -> SourceId {
+    //     self.package_id().source_id()
+    // }
+    pub fn dependencies(&self) -> &[Dependency<SemanticVersion>] {
+        &self.inner.dependencies
+    }
+
+    pub fn cksum(&self) -> &str {
+        &self.inner.cksum
+    }
+}
+
+impl PartialEq for FieldSummary {
+    fn eq(&self, other: &FieldSummary) -> bool {
+        self.inner.field_id == other.inner.field_id
+    }
+}
+
+impl Eq for FieldSummary {}
+
+impl std::hash::Hash for FieldSummary {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.inner.field_id.hash(state);
+    }
+}
+
+#[derive(Debug, Clone)]
 struct ManifestMetadata {
-    full_name: String,
-    namespace: String,
-    name: String,
-    version: SemanticVersion,
     authors: Vec<FieldAuthor>,
     license: Option<String>,
     license_spdx: Option<String>,
@@ -49,18 +119,17 @@ struct ManifestMetadata {
     repository: Option<String>,
     documentation: Option<String>,
     keywords: Vec<String>,
-    ontology_iri: Option<String>,
-    dependencies: Vec<Dependency<SemanticVersion>>,
     categories: Vec<String>,
     title: String,
     short_description: String,
 }
 
 // TODO: Implement license retrieval and validation when necessary.
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FieldManifest<'manifest> {
-    field_cksum: String,
+    summary: FieldSummary,
+    field_namespace: String,
+    field_name: String,
     statements: Vec<Statement<'manifest>>,
     metadata: ManifestMetadata,
 }
@@ -70,20 +139,32 @@ impl<'manifest> FieldManifest<'manifest> {
         self::utils::quick_extract_field_full_name(field_path)
     }
 
-    pub fn full_name(&self) -> &str {
-        &self.metadata.full_name
+    pub fn as_index(&self) -> IndexedFieldVersion {
+        self.into()
+    }
+
+    pub fn summary(&self) -> &FieldSummary {
+        &self.summary
+    }
+
+    pub fn cksum(&self) -> &str {
+        self.summary().cksum()
+    }
+
+    pub fn full_name(&self) -> Ustr {
+        self.field_id().name()
     }
 
     pub fn namespace_and_name(&self) -> (&str, &str) {
-        (&self.metadata.namespace, &self.metadata.name)
+        (&self.field_namespace, &self.field_name)
     }
 
     pub fn version(&self) -> &SemanticVersion {
-        &self.metadata.version
+        self.summary.field_id().version()
     }
 
-    pub fn ontology_iri(&self) -> Option<&str> {
-        self.metadata.ontology_iri.as_ref().map(|s| s.as_str())
+    pub fn ontology_iri(&self) -> &str {
+        self.summary.ontology_iri()
     }
 
     pub fn authors(&self) -> &[FieldAuthor] {
@@ -99,15 +180,15 @@ impl<'manifest> FieldManifest<'manifest> {
     }
 
     pub fn homepage(&self) -> Option<&str> {
-        self.metadata.homepage.as_ref().map(|s| s.as_str())
+        self.metadata.homepage.as_deref()
     }
 
     pub fn repository(&self) -> Option<&str> {
-        self.metadata.repository.as_ref().map(|s| s.as_str())
+        self.metadata.repository.as_deref()
     }
 
     pub fn documentation(&self) -> Option<&str> {
-        self.metadata.documentation.as_ref().map(|s| s.as_str())
+        self.metadata.documentation.as_deref()
     }
 
     pub fn keywords(&self) -> &[String] {
@@ -127,16 +208,19 @@ impl<'manifest> FieldManifest<'manifest> {
     }
 
     pub fn dependencies(&self) -> &[Dependency<SemanticVersion>] {
-        &self.metadata.dependencies
+        self.summary.dependencies()
     }
 
     pub fn field_hash(&self) -> Result<String> {
-        let field_hash = libplow::utils::hash_field(
-            &self.metadata.namespace,
-            &self.metadata.name,
-            &self.metadata.version.to_string(),
+        let field_hash = crate::utils::hash_field(
+            &self.field_namespace,
+            &self.field_name,
+            &self.summary.version().to_string(),
         );
         Ok(field_hash)
+    }
+    pub fn field_id(&self) -> FieldId {
+        self.summary.field_id()
     }
 }
 
@@ -264,11 +348,12 @@ impl<'manifest> FieldManifest<'manifest> {
                 .collect::<Result<Vec<_>>>()?;
 
         let categories =
-            extract_mandatory_annotation_from!("registry:category", prefixed_name_to_values_in_ttl);
+            extract_mandatory_annotation_from!("registry:category", prefixed_name_to_values_in_ttl)
+                .clone();
 
         let dependencies =
             if let Some(literals) = prefixed_name_to_values_in_ttl.get("registry:dependency") {
-                let literals = literals.map_err(|err| {
+                let literals = literals.as_ref().map_err(|err| {
                     anyhow::anyhow!(
                         "Error parsing registry:dependency in the manifest file. Details: {err}",
                     )
@@ -281,7 +366,7 @@ impl<'manifest> FieldManifest<'manifest> {
                     "Invalid dependency. Expected format: '@namespace/name <version-requirement>'"
                 )
                         })?;
-                        Ok(Dependency::<SemanticVersion>::try_new(name, req)?)
+                        Dependency::<SemanticVersion>::try_new(name, req)
                     })
                     .collect::<Result<Vec<_>>>()?
             } else {
@@ -289,7 +374,8 @@ impl<'manifest> FieldManifest<'manifest> {
             };
 
         let keywords =
-            extract_mandatory_annotation_from!("registry:keyword", prefixed_name_to_values_in_ttl);
+            extract_mandatory_annotation_from!("registry:keyword", prefixed_name_to_values_in_ttl)
+                .clone();
 
         let full_name = extract_mandatory_annotation_from!(
             "registry:packageName",
@@ -361,15 +447,12 @@ impl<'manifest> FieldManifest<'manifest> {
         hasher.update(field_contents.as_bytes());
         let field_cksum = format!("{:X}", hasher.finalize()).to_lowercase();
 
+        let field_id = FieldId::new(&full_name, version);
+        // TODO: Do not accept fields without ontology IRI
+        let summary = FieldSummary::new(field_id, dependencies, field_cksum, ontology_iri.unwrap());
         let metadata = ManifestMetadata {
-            full_name,
-            namespace: namespace.to_owned(),
-            name: name.to_owned(),
-            version,
-            ontology_iri,
             authors,
             categories,
-            dependencies,
             keywords,
             license,
             license_spdx,
@@ -382,7 +465,9 @@ impl<'manifest> FieldManifest<'manifest> {
         };
 
         Ok(Self {
-            field_cksum,
+            summary,
+            field_name: name.to_owned(),
+            field_namespace: namespace.to_owned(),
             metadata,
             statements,
         })
@@ -398,7 +483,7 @@ impl<'manifest> FieldManifest<'manifest> {
             match statement {
                 harriet::Statement::Triples(Triples::Labeled(
                     _,
-                    subject,
+                    _subject,
                     predicate_object_list,
                 )) => {
                     for (_, verb, object_list, _) in &mut predicate_object_list.list {
@@ -422,7 +507,7 @@ impl<'manifest> FieldManifest<'manifest> {
                         }
                     }
                 }
-                _ => {}
+                _ => continue,
             }
         }
 
@@ -448,12 +533,12 @@ impl<'manifest> FieldManifest<'manifest> {
             match statement {
                 harriet::Statement::Triples(Triples::Labeled(
                     _,
-                    subject,
+                    _subject,
                     predicate_object_list,
                 )) => {
                     predicate_object_list.list.push(new_predicate.clone());
                 }
-                _ => {}
+                _ => continue,
             }
         }
 
@@ -505,7 +590,7 @@ impl<'manifest> FieldManifest<'manifest> {
                                                     let iri_literal =
                                                         object_iri.iri.as_ref().to_owned();
                                                     let iris = iri_literal
-                                                        .split("/")
+                                                        .split('/')
                                                         .collect::<Vec<&str>>();
                                                     let mut it = iris.iter().rev();
                                                     it.next();
@@ -515,7 +600,7 @@ impl<'manifest> FieldManifest<'manifest> {
                                                     dep_names.push(dep_name);
                                                 }
                                                 let base_iri_parts =
-                                                    base_iri.split("/").collect::<Vec<&str>>();
+                                                    base_iri.split('/').collect::<Vec<&str>>();
                                                 let base_iri_beginning = base_iri_parts
                                                     [..base_iri_parts.len() - 3]
                                                     .join("/");
@@ -602,7 +687,7 @@ registry:dependency rdf:type owl:AnnotationProperty .
         assert_eq!(namespace, "@fld33");
         assert_eq!(name, "test");
         assert_eq!(field_manifest.full_name(), "@fld33/test");
-        assert_eq!(field_manifest.version(), &libplow::semver!("0.1.2"));
+        assert_eq!(field_manifest.version(), &crate::semver!("0.1.2"));
         assert_eq!(
             field_manifest.authors(),
             vec![

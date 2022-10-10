@@ -6,12 +6,12 @@ use crate::error::FieldAccessError::*;
 use crate::error::SubmissionError::*;
 
 use crate::feedback::*;
-use crate::manifest::FieldManifest;
 use crate::resolve::resolve;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::{arg, App, AppSettings, Arg, ArgMatches, Command};
 use colored::Colorize;
+use plow::manifest::FieldManifest;
 use plow_linter::lints::field_manifest_lints;
 use plow_package_management::registry::Registry;
 use reqwest::blocking::multipart::Form;

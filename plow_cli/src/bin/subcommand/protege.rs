@@ -6,7 +6,6 @@ use crate::{
     error::FieldAccessError::*,
     error::ProtegeSubcommandError::*,
     feedback::{field_info, Feedback},
-    manifest::FieldManifest,
     resolve::resolve,
     subcommand::protege::catalog::CatalogFile,
 };
@@ -17,6 +16,7 @@ use colored::*;
 use harriet::Whitespace;
 use harriet::{IRIReference, ObjectList};
 use harriet::{Literal, Object};
+use plow::manifest::FieldManifest;
 use plow_linter::lints::all_lints;
 use plow_package_management::{
     package::{RetrievedPackageSet, RetrievedPackageVersion},
@@ -288,8 +288,8 @@ pub fn run_command_flow(
                         .map(|p| p.package_name.clone())
                         .collect::<Vec<_>>();
 
-                    let base_iri = root_field_manifest.ontology_iri.clone().unwrap();
-                    let base_iri_parts = base_iri.split("/").collect::<Vec<&str>>();
+                    let base_iri = root_field_manifest.ontology_iri();
+                    let base_iri_parts = base_iri.split('/').collect::<Vec<_>>();
                     let base_iri_beginning = base_iri_parts[..base_iri_parts.len() - 3].join("/");
 
                     let mut object_list = ObjectList { list: vec![] };

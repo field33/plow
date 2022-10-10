@@ -2,6 +2,7 @@ pub mod fields;
 
 use std::collections::HashMap;
 
+use itertools::Itertools;
 use plow_package_management::lock::{LockFile, PackageInLockFile};
 use plow_package_management::registry::Registry;
 
@@ -23,7 +24,7 @@ pub fn prepare(config: &PlowConfig) -> Result<(), CliError> {
         .unwrap()
     {
         // Clean up before creation if running in a workspace
-        let manifest_file_path = config.working_dir.path.join("Plow.toml");
+        let manifest_file_path = config.working_dir().join("Plow.toml");
 
         if manifest_file_path.exists() {
             std::fs::remove_file(&manifest_file_path)
@@ -31,14 +32,14 @@ pub fn prepare(config: &PlowConfig) -> Result<(), CliError> {
         }
 
         // Clean up before creation
-        let lock_file_path = config.working_dir.path.join("Plow.lock");
+        let lock_file_path = config.working_dir().join("Plow.lock");
 
         if lock_file_path.exists() {
             std::fs::remove_file(&lock_file_path)
                 .map_err(|err| FailedToRemoveWorkspaceManifestFile(err.to_string()))?;
         }
 
-        let fields_dir_path = config.working_dir.path.join("fields");
+        let fields_dir_path = config.working_dir().join("fields");
         let maybe_backed_up_fields_dir_path =
             FieldsDirectory::backup_if_already_exists(&fields_dir_path, config)?;
 
@@ -47,10 +48,10 @@ pub fn prepare(config: &PlowConfig) -> Result<(), CliError> {
                 let mut dir = FieldsDirectory::fill_from_backup(backed_up_fields_dir_path)?;
                 // We also extend from the working dir, not only checking backups dir, maybe new fields are added.
                 // TODO: Do we need to check workspace root also?
-                dir.extend_from_root_excluding_fields_dir_and_plow_backup(&config.working_dir.path)?;
+                dir.extend_from_root_excluding_fields_dir_and_plow_backup(&config.working_dir())?;
                 dir
             } else {
-                FieldsDirectory::fill_from_root(&config.working_dir.path)?
+                FieldsDirectory::fill_from_root(&config.working_dir())?
             };
 
         if fields_dir.children.is_empty() && !fields_dir.exists_in_filesystem() {
@@ -110,10 +111,11 @@ pub fn prepare(config: &PlowConfig) -> Result<(), CliError> {
                 })?;
 
             #[allow(clippy::unwrap_used)]
-            let root_field_name = root_field_manifest.field_namespace_and_name().unwrap();
+            let root_field_name = root_field_manifest.full_name();
             let root_dep_names = root_field_manifest
-                .field_dependency_names()
-                .unwrap_or_default();
+                .dependencies()
+                .iter()
+                .map(|dep| dep.to_string()).collect_vec();
 
             if let Ok(Some(fresh_lock_file)) = resolve(
                 config,
@@ -124,7 +126,7 @@ pub fn prepare(config: &PlowConfig) -> Result<(), CliError> {
             ) {
                 // Unwrap is fine here we've linted the field before.
                 #[allow(clippy::unwrap_used)]
-                let root_as_index = root_field_manifest.make_index_from_manifest().unwrap();
+                let root_as_index = root_field_manifest.as_index();
                 // Check for duplicate names
                 if collection.get(&root_field_name).is_some() {
                     return Err(CliError::from(DuplicateFieldInWorkspace(root_field_name)));
@@ -184,7 +186,7 @@ pub fn prepare(config: &PlowConfig) -> Result<(), CliError> {
             .collect::<Vec<_>>();
 
         if !lock_file_contents.is_empty() {
-            LockFile::write(Some(config.working_dir.path.clone()), &lock_file_contents)
+            LockFile::write(Some(config.working_dir()), &lock_file_contents)
                 .map_err(|err| CliError::Wip(err.to_string()))?;
         }
 

@@ -3,11 +3,11 @@ pub mod files;
 use crate::error::CliError;
 use crate::error::ConfigError::*;
 use crate::error::LoginError::*;
-use crate::subcommand::login::CredentialsFile;
 use camino::Utf8Path;
 use camino::Utf8PathBuf;
 use std::str::FromStr;
 
+use self::files::credentials::CredentialsFile;
 use self::files::workspace_config::WorkspaceConfigFile;
 
 // For more information: <http://www.brynosaurus.com/cachedir/>
@@ -23,60 +23,146 @@ Signature: 8a477f597d28d172789f06886806bc55
 pub const DEFAULT_REGISTRY_URL: &str = "https://api.plow.pm";
 
 #[derive(Debug)]
-pub struct PlowConfig {
-    pub plow_home: Utf8PathBuf,
-    pub user_home: Option<Utf8PathBuf>,
-    pub credentials_path: Utf8PathBuf,
-    pub registry_dir: Utf8PathBuf,
-    pub field_cache_dir: Utf8PathBuf,
-    pub index_dir: Utf8PathBuf,
-    pub index_cache_dir: Utf8PathBuf,
-    pub working_dir: WorkingDirectory,
-    workspace_config_file: Option<WorkspaceConfigFile>,
-    // Fill this if it is provided with a command.
+pub struct PlowDirs {
+    plow_home: Utf8PathBuf,
+    user_home: Option<Utf8PathBuf>,
+    credentials_path: Utf8PathBuf,
+    registry_dir: Utf8PathBuf,
+    field_cache_dir: Utf8PathBuf,
+    index_dir: Utf8PathBuf,
+    index_cache_dir: Utf8PathBuf,
+    working_dir: Utf8PathBuf,
+}
+
+impl PlowDirs {
+    pub fn home(&self) -> &Utf8Path {
+        &self.plow_home
+    }
+    pub fn user_home(&self) -> Option<&Utf8Path> {
+        self.user_home.as_deref()
+    }
+    pub fn credentials_path(&self) -> &Utf8Path {
+        &self.credentials_path
+    }
+    pub fn registry(&self) -> &Utf8Path {
+        &self.registry_dir
+    }
+    pub fn field_cache(&self) -> &Utf8Path {
+        &self.field_cache_dir
+    }
+    pub fn index(&self) -> &Utf8Path {
+        &self.index_dir
+    }
+    pub fn index_cache(&self) -> &Utf8Path {
+        &self.index_cache_dir
+    }
+    pub fn working_dir(&self) -> &Utf8Path {
+        &self.working_dir
+    }
+}
+
+#[derive(Debug)]
+pub struct PlowFiles {
+    workspace_config: Option<WorkspaceConfigFile>,
+}
+
+impl PlowFiles {
+    pub fn workspace_config(&self) -> Option<&WorkspaceConfigFile> {
+        self.workspace_config.as_ref()
+    }
+}
+
+#[derive(Debug)]
+pub struct PlowOptions {
     registry_url: Option<String>,
-    pub fetch_with_cli: bool,
+}
+
+impl PlowOptions {
+    pub fn registry_url(&self) -> Option<&str> {
+        self.registry_url.as_deref()
+    }
+}
+
+#[derive(Debug)]
+pub struct PlowConfig {
+    dirs: PlowDirs,
+    files: PlowFiles,
+    options: PlowOptions,
+    workspace: Option<PlowWorkspaceConfig>,
 }
 
 impl PlowConfig {
-    fn find_workspace_root(&self, path: &Utf8Path) -> Result<Utf8PathBuf, CliError> {
-        if path.join("Plow.toml").exists() {
-            return Ok(path.to_path_buf());
-        }
-        if let Some(parent) = path.parent() {
-            return self.find_workspace_root(parent);
-        }
-        Err(CliError::from(FailedToFindWorkspaceRoot))
+    pub fn user_home(&self) -> Option<&Utf8Path> {
+        self.dirs.user_home()
     }
 
-    pub fn get_workspace_root(&self) -> Result<Utf8PathBuf, CliError> {
-        self.find_workspace_root(&self.working_dir.path)
+    pub fn field_cache_dir(&self) -> &Utf8Path {
+        self.dirs.field_cache()
     }
 
-    pub fn get_registry_url(&self) -> Result<String, CliError> {
+    pub fn index_dir(&self) -> &Utf8Path {
+        self.dirs.index()
+    }
+
+    pub fn working_dir(&self) -> &Utf8Path {
+        self.dirs.working_dir()
+    }
+
+    pub fn registry_url(&self) -> Option<&str> {
+        self.options.registry_url()
+    }
+
+    pub fn new(
+        dirs: PlowDirs,
+        files: PlowFiles,
+        options: PlowOptions,
+        workspace: Option<PlowWorkspaceConfig>,
+    ) -> Self {
+        Self {
+            dirs,
+            files,
+            options,
+            workspace,
+        }
+    }
+
+    pub fn workspace_config(&self) -> Option<&PlowWorkspaceConfig> {
+        self.workspace.as_ref()
+    }
+
+    pub fn workspace_root(&self) -> Option<&Utf8Path> {
+        if let Some(ws) = self.workspace {
+            Some(ws.workspace_root())
+        } else {
+            None
+        }
+    }
+
+    pub fn get_registry_url(&self) -> Result<&str, CliError> {
         // Check if user provided any with --registry
-        if let Some(ref registry_url) = self.registry_url {
-            return Ok(registry_url.clone());
+        if let Some(registry_url) = self.registry_url() {
+            return Ok(registry_url);
         }
 
         // Check for .plow folder in the workspace for config.toml which might have a registry url.
-        if let Some(ref workspace_config_file) = self.workspace_config_file {
-            let workspace_config_file = workspace_config_file.fetch()?;
+        if let Some(workspace_config) = self.workspace_config() {
+            let workspace_config_file = workspace_config.fetch()?;
             if let Some(registry) = workspace_config_file.registry {
                 if let Some(url) = registry.index {
-                    return Ok(url);
+                    return Ok(&url);
                 }
             }
         }
 
         // Fall back to default registry url.
-        Ok(DEFAULT_REGISTRY_URL.to_owned())
+        Ok(DEFAULT_REGISTRY_URL)
     }
 
-    pub fn get_saved_api_token(&self) -> Result<String, CliError> {
+    pub fn api_token(&self) -> Result<String, CliError> {
         // Check for .plow folder in the workspace for config.toml which might have a token to override.
-        if let Some(ref workspace_config_file) = self.workspace_config_file {
-            let workspace_config_file = workspace_config_file.fetch()?;
+        if let Some(workspace_config) = self.workspace_config() {
+            let workspace_config_file = workspace_config.fetch()?;
+
             // TODO: This place should modify if we wish to support multiple registries.
             if let Some(registry) = workspace_config_file.registry {
                 if let Some(token) = registry.token {
@@ -85,53 +171,85 @@ impl PlowConfig {
             }
         }
 
-        let credentials_file_contents = std::fs::read_to_string(&self.credentials_path)
+        let credentials_file_contents = std::fs::read_to_string(&self.dirs.credentials_path)
             .map_err(|_| FailedToReadCredentialsFile)?;
         let credentials = toml::from_str::<CredentialsFile>(&credentials_file_contents)
             .map_err(|_| FailedToReadCredentialsFile)?;
 
         Ok(credentials.registry.token.to_owned())
     }
-}
 
-#[derive(Debug)]
-pub struct WorkingDirectory {
-    pub path: Utf8PathBuf,
-}
-
-impl WorkingDirectory {
     pub fn is_workspace(&self) -> bool {
-        self.path.join("Plow.toml").exists()
+        self.workspace.is_some()
     }
-    pub fn fail_if_not_workspace(&self) -> Result<(), CliError> {
-        if !self.path.join("Plow.toml").exists() {
+    pub fn fail_if_not_under_a_workspace(&self) -> Result<(), CliError> {
+        if self.workspace.is_none() {
             return Err(CliError::from(DirectoryNotWorkspace));
         }
         Ok(())
     }
-    pub fn fail_if_not_under_a_workspace(&self) -> Result<Utf8PathBuf, CliError> {
-        self.get_workspace_root()
-            .map_or_else(|_| Err(CliError::from(DirectoryNotWorkspace)), Ok)
+}
+
+#[derive(Debug)]
+pub struct PlowWorkspaceConfig {
+    pub root: Utf8PathBuf,
+    pub file: WorkspaceConfigFile,
+}
+
+impl PlowWorkspaceConfig {
+    pub fn workspace_root(&self) -> &Utf8Path {
+        &self.root
     }
 
-    fn find_workspace_root(&self, path: &Utf8Path) -> Result<Utf8PathBuf, CliError> {
-        if path.join("Plow.toml").exists() {
-            return Ok(path.to_path_buf());
-        }
-        if let Some(parent) = path.parent() {
-            return self.find_workspace_root(parent);
-        }
-        Err(CliError::from(FailedToFindWorkspaceRoot))
+    pub fn fetch(&self) -> Result<WorkspaceConfigFile, CliError> {
+        self.file.fetch()
     }
 
-    pub fn get_workspace_root(&self) -> Result<Utf8PathBuf, CliError> {
-        self.find_workspace_root(&self.path)
+    pub fn workspace_config_file(&self) -> &WorkspaceConfigFile {
+        &self.file
+    }
+
+    // TODO: Revisit
+    pub fn create_config_file(&mut self) -> Result<(), CliError> {
+        let workspace_config_dir_path = self.root.join(".plow");
+        let workspace_config_file_path = workspace_config_dir_path.join("config.toml");
+
+        if !workspace_config_dir_path.exists() {
+            std::fs::create_dir_all(&workspace_config_dir_path)
+                .map_err(|err| FailedToCreateWorkspaceConfigDirectory(err.to_string()))?;
+        }
+
+        if workspace_config_file_path.exists() {
+            self.file = WorkspaceConfigFile::from_file(&workspace_config_file_path)?;
+            Ok(())
+        } else {
+            let mut workspace_config_file =
+                WorkspaceConfigFile::empty_with_path(&workspace_config_file_path);
+            workspace_config_file.path = workspace_config_file_path;
+            workspace_config_file.write()?;
+            self.file = workspace_config_file;
+            Ok(())
+        }
     }
 }
 
-impl From<Utf8PathBuf> for WorkingDirectory {
-    fn from(path: Utf8PathBuf) -> Self {
-        Self { path }
+impl TryFrom<&Utf8Path> for PlowWorkspaceConfig {
+    type Error = anyhow::Error;
+
+    fn try_from(path_possibly_under_workspace: &Utf8Path) -> Result<Self, Self::Error> {
+        if let Some(workspace_root) = find_workspace_root(path_possibly_under_workspace) {
+            if workspace_root.join("Plow.toml").exists() {
+                let workspace_config_file =
+                    WorkspaceConfigFile::from_file(&workspace_root.join("Plow.toml"))?;
+                let workspace_config = workspace_config_file.fetch()?;
+                return Ok(Self {
+                    root: workspace_root.to_path_buf(),
+                    file: workspace_config_file,
+                });
+            }
+            return Err(anyhow::anyhow!("Workspace is corrupt"));
+        }
+        Err(anyhow::anyhow!("Failed to find workspace root"))
     }
 }
 
@@ -142,30 +260,28 @@ impl From<Utf8PathBuf> for WorkingDirectory {
 #[allow(clippy::missing_panics_doc)]
 pub fn configure(
     custom_path: Option<Utf8PathBuf>,
-    registry_url: Option<String>,
-    fetch_with_cli: bool,
+    registry_url_override: Option<String>,
 ) -> Result<PlowConfig, CliError> {
-    let working_dir = WorkingDirectory::from(
-        Utf8PathBuf::from_path_buf(
-            std::env::current_dir().map_err(|err| FailedToGetWorkingDirectory(err.to_string()))?,
+    let working_dir = Utf8PathBuf::from_path_buf(
+        std::env::current_dir().map_err(|err| FailedToGetWorkingDirectory(err.to_string()))?,
+    )
+    .map_err(|_| {
+        FailedToGetWorkingDirectory(
+            "The path to the home directory is not UTF8 encoded.".to_owned(),
         )
-        .map_err(|_| {
-            FailedToGetWorkingDirectory(
-                "The path to the home directory is not UTF8 encoded.".to_owned(),
-            )
-        })?,
-    );
+    })?;
 
     let mut workspace_config_file = None;
 
     let mut user_home: Option<Utf8PathBuf> = None;
     let plow_home = if let Some(custom_path) = custom_path {
-        let mut new_workspace_config_file =
-            WorkspaceConfigFile::create_in_working_dir(&working_dir)?;
-        new_workspace_config_file.set_plow_home(&custom_path);
-        new_workspace_config_file.write()?;
-        workspace_config_file = Some(new_workspace_config_file);
-        custom_path.join(".plow")
+        // let mut new_workspace_config_file =
+        //     WorkspaceConfigFile::create_in_working_dir(&working_dir)?;
+        // new_workspace_config_file.set_plow_home(&custom_path);
+        // new_workspace_config_file.write()?;
+        // workspace_config_file = Some(new_workspace_config_file);
+        // custom_path.join(".plow")
+        todo!()
     } else {
         let homedir = dirs::home_dir().ok_or_else(|| {
             FailedToReadOrCreateConfigDirectory(
@@ -229,26 +345,48 @@ pub fn configure(
             .map_err(|err| FailedToWriteToConfigDirectory(err.to_string()))?;
     }
 
-    Ok(PlowConfig {
-        user_home,
-        plow_home,
-        credentials_path: credentials_file,
-        registry_dir,
-        field_cache_dir,
-        index_dir,
-        index_cache_dir,
-        working_dir,
-        workspace_config_file,
-        registry_url,
-        fetch_with_cli,
-    })
+    let workspace = if let Some(root) = find_workspace_root(&working_dir) {
+        PlowWorkspaceConfig::try_from(root).ok()
+    } else {
+        None
+    };
+
+    Ok(PlowConfig::new(
+        PlowDirs {
+            user_home,
+            plow_home,
+            credentials_path: credentials_file,
+            registry_dir,
+            field_cache_dir,
+            index_dir,
+            index_cache_dir,
+            working_dir,
+        },
+        PlowFiles {
+            workspace_config: workspace_config_file,
+        },
+        PlowOptions {
+            registry_url: registry_url_override,
+        },
+        workspace,
+    ))
+}
+
+fn find_workspace_root(path: &Utf8Path) -> Option<&Utf8Path> {
+    if path.join("Plow.toml").exists() {
+        return Some(path);
+    }
+    if let Some(parent) = path.parent() {
+        return find_workspace_root(parent);
+    }
+    None
 }
 
 pub fn remove_configuration_directory_if_exists(config: &PlowConfig) -> Result<(), CliError> {
-    if !config.plow_home.exists() {
+    if !config.dirs.home().exists() {
         return Ok(());
     }
-    std::fs::remove_dir_all(&config.plow_home)
+    std::fs::remove_dir_all(config.dirs.home())
         .map_err(|err| FailedToRemoveConfigDirectory(err.to_string()))?;
     Ok(())
 }

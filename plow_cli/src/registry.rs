@@ -7,16 +7,19 @@ pub use dependency::Dependency;
 use pubgrub::version::Version;
 use serde::Deserialize;
 use std::str::FromStr;
+use ustr::Ustr;
+
+use crate::manifest::FieldManifest;
 
 pub use self::version::SemanticVersion;
 
 /// A single line in the index representing a single version of a field.
 #[derive(Deserialize)]
 pub struct IndexedFieldVersion {
-    name: String,
+    name: Ustr,
     version: SemanticVersion,
-    ontology_iri: String,
-    cksum: String,
+    ontology_iri: Ustr,
+    cksum: Ustr,
     dependencies: Vec<IndexedDependencySpec>,
     /// If `true`, Plow will skip this version when resolving.
     yanked: bool,
@@ -49,11 +52,32 @@ impl IndexedFieldVersion {
     }
 }
 
+impl From<&FieldManifest<'_>> for IndexedFieldVersion {
+    fn from(manifest: &FieldManifest) -> Self {
+        Self {
+            name: manifest.full_name(),
+            version: *manifest.version(),
+            ontology_iri: manifest.ontology_iri().into(),
+            cksum: manifest.cksum().into(),
+            dependencies: manifest
+                .dependencies()
+                .iter()
+                .map(|dep| IndexedDependencySpec {
+                    name: dep.full_name().into(),
+                    req: dep.version_requirement().into(),
+                })
+                .collect(),
+            // TODO: Yanking..
+            yanked: false,
+        }
+    }
+}
+
 /// A dependency as encoded in the index JSON.
 #[derive(Deserialize)]
 pub struct IndexedDependencySpec {
-    name: String,
-    req: String,
+    name: Ustr,
+    req: Ustr,
 }
 
 impl IndexedDependencySpec {
@@ -84,7 +108,7 @@ impl FromStr for IndexedDependencySpec {
         )?;
 
         Ok(Self {
-            name: full_name.to_string(),
+            name: full_name.into(),
             req: req.into(),
         })
     }
@@ -102,8 +126,8 @@ where
 {
     fn from(dep: Dependency<V>) -> Self {
         Self {
-            name: dep.full_name().to_owned(),
-            req: dep.version_requirement().to_owned(),
+            name: dep.full_name().into(),
+            req: dep.version_requirement().into(),
         }
     }
 }

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use crate::manifest::FieldManifest;
 use crate::{error::CliError, error::FieldAccessError::*, error::WorkspaceInitializationError::*};
+use plow::manifest::FieldManifest;
 
 use clap::ArgMatches;
 use clap::{App, Command};
@@ -84,7 +84,7 @@ pub fn run_command_flow(_: &ArgMatches, config: &PlowConfig) -> Result<impl Feed
         ) {
             // Unwrap is fine here we've linted the field before.
             #[allow(clippy::unwrap_used)]
-            let root_as_index = root_field_manifest.make_index_from_manifest().unwrap();
+            let root_as_index = root_field_manifest.as_index();
             // Check for duplicate names
             if collection.get(&root_field_name).is_some() {
                 return Err(CliError::from(DuplicateFieldInWorkspace(root_field_name)));
@@ -93,7 +93,7 @@ pub fn run_command_flow(_: &ArgMatches, config: &PlowConfig) -> Result<impl Feed
                 root_field_name.clone(),
                 (
                     PackageInLockFile {
-                        name: root_as_index.name,
+                        name: root_as_index.name(),
                         version: root_as_index.version,
                         ontology_iri: root_as_index.ontology_iri,
                         source: None,

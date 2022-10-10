@@ -2,10 +2,8 @@
 use camino::Utf8Path;
 use colored::*;
 
-use crate::{
-    error::{CliError, FieldAccessError},
-    manifest::FieldManifest,
-};
+use crate::error::{CliError, FieldAccessError};
+use crate::manifest::FieldManifest;
 
 pub trait Feedback {
     fn feedback(&self);

@@ -3,6 +3,7 @@ macro_rules! extract_mandatory_annotation_from {
     ($annotation: literal, $map: expr) => {
         $map.get($annotation)
             .ok_or_else(|| anyhow::anyhow!("Missing {} in the manifest file", $annotation))?
+            .as_ref()
             .map_err(|err| {
                 anyhow::anyhow!(
                     "Error parsing {} in the manifest file. Details: {err}",
@@ -16,7 +17,7 @@ macro_rules! extract_mandatory_annotation_from {
 macro_rules! extract_optional_string_annotation_from {
     ($annotation: literal, $map: expr) => {
         if let Some(literal) = $map.get($annotation) {
-            let literal = literal.map_err(|err| {
+            let literal = literal.as_ref().map_err(|err| {
                 anyhow::anyhow!(
                     "Error parsing {} in the manifest file. Details: {err}",
                     $annotation

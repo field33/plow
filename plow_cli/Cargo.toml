@@ -11,10 +11,11 @@ categories = ["command-line-utilities"]
 
 [[bin]]
 name = "plow"
-path = "src/main.rs"
+path = "src/bin/main.rs"
+doc = false
 
 [lib]
-name = "libplow"
+name = "plow"
 path = "src/lib.rs"
 
 [dependencies]
@@ -54,3 +55,4 @@ glob = "0.3"
 pubgrub = "0.2"
 semver = "1"
 url = "2"
+ustr = { version = "0.9", features = ["serialization", "parking_lot"] }

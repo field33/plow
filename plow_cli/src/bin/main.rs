@@ -61,15 +61,9 @@
     clippy::negative_feature_names
 )]
 
-pub mod error;
-pub mod feedback;
-pub mod git;
-pub mod manifest;
+// pub fn main() {}
 
-pub mod config;
-pub mod resolve;
-pub mod subcommand;
-pub mod sync;
+mod subcommand;
 
 use camino::Utf8PathBuf;
 use clap::{App, AppSettings, Arg};

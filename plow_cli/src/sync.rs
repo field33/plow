@@ -51,7 +51,7 @@ pub struct PrivateIndexResponse {
 
 #[allow(clippy::too_many_lines)]
 pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
-    let token = config.get_saved_api_token()?;
+    let token = config.api_token()?;
     let registry_url = config.get_registry_url()?;
     let private_index_sync_url = format!("{registry_url}/v1/index/private/sync");
     let client = reqwest::blocking::Client::new();
@@ -189,14 +189,14 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
 
     // TODO: Move these somewhere else?
     let clone_from = "git@github.com:field33/plow-registry-index.git";
-    let public_index_git_repo_path = &config.index_dir.join("plow-registry-index");
+    let public_index_git_repo_path = &config.index_dir().join("plow-registry-index");
 
-    let pull_command = if !config.index_dir.join("plow-registry-index").exists() {
+    let pull_command = if !config.index_dir().join("plow-registry-index").exists() {
         "cd ~/.plow/registry/index && git clone https://github.com/field33/plow-registry-index.git && git pull"
     } else {
         "cd ~/.plow/registry/index/plow-registry-index && git fetch --all && git reset --hard origin/main && git pull"
     };
-    if let Some(ref user_home) = config.user_home {
+    if let Some(user_home) = config.user_home() {
         if which::which("git").is_ok() {
             // TODO: Proper error handling
             std::process::Command::new("/bin/bash")
@@ -232,7 +232,7 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
         }
     }
 
-    let paths = libplow::utils::list_files(&public_index_git_repo_path, "json")
+    let paths = crate::utils::list_files(&public_index_git_repo_path, "json")
         .map_err(|err| FailedToReadIndexDirectory(err.to_string()))?;
 
     for path in paths {

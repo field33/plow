@@ -2,14 +2,14 @@ use std::io::Cursor;
 
 use colored::Colorize;
 
+use crate::manifest::FieldManifest;
+use crate::registry::Dependency;
+use crate::registry::SemanticVersion;
 use crate::{
     config::PlowConfig,
     error::CliError,
     error::{FieldDownloadError::*, ResolveError::*},
-    manifest::FieldManifest,
 };
-use libplow::registry::Dependency;
-use libplow::registry::SemanticVersion;
 use plow_package_management::{
     lock::LockFile, package::OrganizationToResolveFor, registry::Registry,
 };
@@ -25,7 +25,7 @@ pub fn resolve(
     respect_existing_lock_file: bool,
     registry: &dyn Registry,
 ) -> Result<Option<LockFile>, CliError> {
-    let workspace_root = config.get_workspace_root().ok();
+    let workspace_root = config.workspace_root();
 
     println!(
         "\t{} to resolve dependencies of {} ..",
@@ -76,7 +76,7 @@ pub fn resolve(
             .filter_map(|metadata| metadata.cksum.clone())
             .collect::<Vec<_>>();
 
-        let paths = crate::utils::list_files(&config.field_cache_dir, "ttl").map_err(|err| {
+        let paths = crate::utils::list_files(config.field_cache_dir(), "ttl").map_err(|err| {
             CliError::from(FailedToReadFieldCache {
                 reason: err.to_string(),
             })
@@ -95,7 +95,7 @@ pub fn resolve(
 
         let client = reqwest::blocking::Client::new();
         let registry_url = config.get_registry_url()?;
-        let token = config.get_saved_api_token()?;
+        let token = config.api_token()?;
 
         for download in cksums_to_download {
             println!("\t{} to download field contents ..", "Attempting".bold());
@@ -168,7 +168,7 @@ pub fn resolve(
             })?;
 
             let mut file =
-                std::fs::File::create(&config.field_cache_dir.join(format!("{download}.ttl")))
+                std::fs::File::create(config.field_cache_dir().join(format!("{download}.ttl")))
                     .map_err(|err| {
                         CliError::from(FailedToDownloadAndCacheField {
                             reason: format!(

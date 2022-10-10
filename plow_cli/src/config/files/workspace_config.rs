@@ -1,4 +1,4 @@
-use crate::{config::WorkingDirectory, error::CliError, error::ConfigError::*};
+use crate::{error::CliError, error::ConfigError::*};
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Serialize};
 
@@ -68,25 +68,27 @@ impl WorkspaceConfigFile {
             .map_err(|err| FailedToWriteWorkspaceConfigFile(err.to_string()))?;
         Ok(())
     }
-    pub fn create_in_working_dir(working_dir: &WorkingDirectory) -> Result<Self, CliError> {
-        working_dir.fail_if_not_workspace()?;
-        let workspace_config_dir_path = working_dir.path.join(".plow");
-        let workspace_config_file_path = workspace_config_dir_path.join("config.toml");
 
-        if !workspace_config_dir_path.exists() {
-            std::fs::create_dir_all(&workspace_config_dir_path)
-                .map_err(|err| FailedToCreateWorkspaceConfigDirectory(err.to_string()))?;
-        }
+    // TODO: Revisit
+    // pub fn create_in_working_dir(working_dir: &WorkingDirectory) -> Result<Self, CliError> {
+    //     working_dir.fail_if_not_workspace()?;
+    //     let workspace_config_dir_path = working_dir.path.join(".plow");
+    //     let workspace_config_file_path = workspace_config_dir_path.join("config.toml");
 
-        if workspace_config_file_path.exists() {
-            Self::from_file(&workspace_config_file_path)
-        } else {
-            let mut workspace_config_file = Self::empty_with_path(&workspace_config_file_path);
-            workspace_config_file.path = workspace_config_file_path;
-            workspace_config_file.write()?;
-            Ok(workspace_config_file)
-        }
-    }
+    //     if !workspace_config_dir_path.exists() {
+    //         std::fs::create_dir_all(&workspace_config_dir_path)
+    //             .map_err(|err| FailedToCreateWorkspaceConfigDirectory(err.to_string()))?;
+    //     }
+
+    //     if workspace_config_file_path.exists() {
+    //         Self::from_file(&workspace_config_file_path)
+    //     } else {
+    //         let mut workspace_config_file = Self::empty_with_path(&workspace_config_file_path);
+    //         workspace_config_file.path = workspace_config_file_path;
+    //         workspace_config_file.write()?;
+    //         Ok(workspace_config_file)
+    //     }
+    // }
 }
 
 #[derive(Serialize, Debug, Deserialize, Clone)]

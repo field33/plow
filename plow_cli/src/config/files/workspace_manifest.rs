@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::CliError, error::WorkspaceInitializationError::*, manifest::FieldManifest,
-    subcommand::init::workspace::fields::FieldsDirectory,
+    workspace::fields::FieldsDirectory,
 };
 /// Serialized example:
 ///

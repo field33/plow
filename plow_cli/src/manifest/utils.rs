@@ -1,11 +1,11 @@
+use crate::registry::Dependency;
+use crate::registry::SemanticVersion;
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
 use harriet::{
     Literal, Object, ObjectList, ParseError, Statement, Triples, TurtleDocument, Verb, IRI,
 };
 use lazy_static::lazy_static;
-use libplow::registry::Dependency;
-use libplow::registry::SemanticVersion;
 use regex::Regex;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -16,7 +16,7 @@ lazy_static! {
 }
 
 pub fn quick_extract_field_full_name<P: AsRef<Utf8Path>>(field_path: &P) -> Result<String> {
-    let lines = libplow::utils::read_lines(field_path.as_ref())?;
+    let lines = crate::utils::read_lines(field_path.as_ref())?;
     let mut package_name_annotation_matched = false;
     #[allow(clippy::manual_flatten)]
     for line in lines {
