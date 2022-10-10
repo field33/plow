@@ -28,7 +28,7 @@ A new ontology editor is in the works, and will be released as a separate projec
 
 ### Login with Plow
 
-The tooling currently expects you to be authenticated with the public plow registry ([open issue](https://github.com/field33/plow/issues/11)). Please sign in, creating an account [here](plow.pm) and [create a new api token in your account settings](https://staging-registry.field33.com/home#user-tokens).
+The tooling currently expects you to be authenticated with the public plow registry ([open issue](https://github.com/field33/plow/issues/11)). Please sign in, creating an account [here](https://plow.pm) and [create a new api token in your account settings](https://registry.field33.com/home#user-tokens).
 
 ```sh
 plow login <api-token>
