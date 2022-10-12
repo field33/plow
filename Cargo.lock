@@ -3767,6 +3767,7 @@ dependencies = [
  "thiserror",
  "toml",
  "url",
+ "ustr",
  "uuid 1.1.2",
  "which",
 ]
@@ -5652,6 +5653,19 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+]
+
+[[package]]
+name = "ustr"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "371436099f2980de56dc385b615696d3eabbdac9649a72b85f9d75f68474fa9c"
+dependencies = [
+ "ahash 0.7.6",
+ "byteorder",
+ "lazy_static",
+ "parking_lot 0.11.2",
+ "serde",
 ]
 
 [[package]]

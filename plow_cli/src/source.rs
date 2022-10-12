@@ -2,7 +2,14 @@ mod source_id;
 
 use std::collections::hash_map::HashMap;
 use std::fmt;
-use std::task::Poll;
+
+use crate::{
+    error::CliError,
+    field::Field,
+    field_id::FieldId,
+    manifest::FieldSummary,
+    registry::{Dependency, SemanticVersion},
+};
 
 pub use self::source_id::SourceId;
 
@@ -16,30 +23,12 @@ pub trait Source {
         self.source_id()
     }
 
-    /// Attempts to find the packages that match a dependency request.
-    fn query(&mut self, dep: &Dependency, f: &mut dyn FnMut(Summary)) -> Poll<Result<()>>;
+    /// Attempts to find a range of packages that match a dependency request.
+    fn query(&mut self, dep: &Dependency<SemanticVersion>) -> Vec<FieldSummary>;
 
-    fn query_vec(&mut self, dep: &Dependency) -> Poll<Result<Vec<Summary>>> {
-        let mut ret = Vec::new();
-        self.query(dep, &mut |s| ret.push(s)).map_ok(|_| ret)
-    }
-
-    /// Ensure that the source is fully up-to-date for the current session on the next query.
-    fn invalidate_cache(&mut self);
-
+    // TODO: The error type will be updated later
     /// Fetches the full package for each name and version specified.
-    fn download(&mut self, package: PackageId) -> Result<MaybePackage>;
-
-    /// Generates a unique string which represents the fingerprint of the
-    /// current state of the source.
-    ///
-    /// This fingerprint is used to determine the "fresheness" of the source
-    /// later on. It must be guaranteed that the fingerprint of a source is
-    /// constant if and only if the output product will remain constant.
-    ///
-    /// The `pkg` argument is the package which this fingerprint should only be
-    /// interested in for when this source may contain multiple packages.
-    fn fingerprint(&self, pkg: &Package) -> Result<String>;
+    fn retrieve(&mut self, id: FieldId) -> Result<MaybeField, CliError>;
 
     /// Describes this source in a human readable fashion, used for display in
     /// resolver error messages currently.
@@ -49,25 +38,11 @@ pub trait Source {
     fn is_replaced(&self) -> bool {
         false
     }
-
-    /// Query if a package is yanked. Only registry sources can mark packages
-    /// as yanked. This ignores the yanked whitelist.
-    fn is_yanked(&mut self, _pkg: PackageId) -> Poll<Result<bool>>;
-
-    // TODO:
-    /// Block until all outstanding Poll::Pending requests are `Poll::Ready`.
-    ///
-    /// After calling this function, the source should return `Poll::Ready` for
-    /// any queries that previously returned `Poll::Pending`.
-    ///
-    /// If no queries previously returned `Poll::Pending`, and `invalidate_cache`
-    /// was not called, this function should be a no-op.
-    fn block_until_ready(&mut self) -> Result<()>;
 }
 
-pub enum MaybePackage {
-    Ready(Package),
-    Download { url: String, descriptor: String },
+pub enum MaybeField {
+    Ready(Field<'static>),
+    Download { url: String },
 }
 
 impl<'a, T: Source + ?Sized + 'a> Source for Box<T> {
@@ -82,22 +57,13 @@ impl<'a, T: Source + ?Sized + 'a> Source for Box<T> {
     }
 
     /// Forwards to `Source::query`.
-    fn query(&mut self, dep: &Dependency, f: &mut dyn FnMut(Summary)) -> Poll<Result<()>> {
-        (**self).query(dep, f)
-    }
-
-    fn invalidate_cache(&mut self) {
-        (**self).invalidate_cache()
+    fn query(&mut self, dep: &Dependency<SemanticVersion>) -> Vec<FieldSummary> {
+        (**self).query(dep)
     }
 
     /// Forwards to `Source::download`.
-    fn download(&mut self, id: PackageId) -> Result<MaybePackage> {
-        (**self).download(id)
-    }
-
-    /// Forwards to `Source::fingerprint`.
-    fn fingerprint(&self, pkg: &Package) -> Result<String> {
-        (**self).fingerprint(pkg)
+    fn retrieve(&mut self, id: FieldId) -> Result<MaybeField, CliError> {
+        (**self).retrieve(id)
     }
 
     fn describe(&self) -> String {
@@ -106,40 +72,28 @@ impl<'a, T: Source + ?Sized + 'a> Source for Box<T> {
 
     fn is_replaced(&self) -> bool {
         (**self).is_replaced()
-    }
-
-    fn is_yanked(&mut self, pkg: PackageId) -> Poll<Result<bool>> {
-        (**self).is_yanked(pkg)
-    }
-
-    fn block_until_ready(&mut self) -> Result<()> {
-        (**self).block_until_ready()
     }
 }
 
 impl<'a, T: Source + ?Sized + 'a> Source for &'a mut T {
+    /// Forwards to `Source::source_id`.
     fn source_id(&self) -> SourceId {
         (**self).source_id()
     }
 
+    /// Forwards to `Source::replaced_source_id`.
     fn replaced_source_id(&self) -> SourceId {
         (**self).replaced_source_id()
     }
 
-    fn query(&mut self, dep: &Dependency, f: &mut dyn FnMut(Summary)) -> Poll<Result<()>> {
-        (**self).query(dep, f)
+    /// Forwards to `Source::query`.
+    fn query(&mut self, dep: &Dependency<SemanticVersion>) -> Vec<FieldSummary> {
+        (**self).query(dep)
     }
 
-    fn invalidate_cache(&mut self) {
-        (**self).invalidate_cache()
-    }
-
-    fn download(&mut self, id: PackageId) -> Result<MaybePackage> {
-        (**self).download(id)
-    }
-
-    fn fingerprint(&self, pkg: &Package) -> Result<String> {
-        (**self).fingerprint(pkg)
+    /// Forwards to `Source::download`.
+    fn retrieve(&mut self, id: FieldId) -> Result<MaybeField, CliError> {
+        (**self).retrieve(id)
     }
 
     fn describe(&self) -> String {
@@ -148,14 +102,6 @@ impl<'a, T: Source + ?Sized + 'a> Source for &'a mut T {
 
     fn is_replaced(&self) -> bool {
         (**self).is_replaced()
-    }
-
-    fn is_yanked(&mut self, pkg: PackageId) -> Poll<Result<bool>> {
-        (**self).is_yanked(pkg)
-    }
-
-    fn block_until_ready(&mut self) -> Result<()> {
-        (**self).block_until_ready()
     }
 }
 

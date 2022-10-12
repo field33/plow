@@ -19,7 +19,6 @@ Signature: 8a477f597d28d172789f06886806bc55
 #	http://www.brynosaurus.com/cachedir/
 "#;
 
-// TODO: Change back
 pub const DEFAULT_REGISTRY_URL: &str = "https://api.plow.pm";
 
 #[derive(Debug)]

@@ -8,7 +8,7 @@ pub mod lint;
 pub mod manifest;
 pub mod registry;
 pub mod resolve;
-// pub mod source;
+pub mod source;
 pub mod utils;
 pub mod workspace;
 

@@ -1,3 +1,4 @@
+use crate::config::PlowConfig;
 use crate::utils::url::IntoUrl;
 use camino::Utf8Path;
 use serde::de;
@@ -6,7 +7,7 @@ use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fmt::{self, Formatter};
 use std::hash::{self, Hash};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::ptr;
 use std::sync::Mutex;
 use url::Url;
@@ -32,7 +33,7 @@ struct SourceIdInner {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-enum SourceKind {
+pub enum SourceKind {
     Registry,
 }
 
@@ -99,41 +100,21 @@ impl SourceId {
         SourceId::new(SourceKind::Registry, url.clone(), None)
     }
 
-    // TODO: Needs re architecting to separate lib and bin parts
-    /// Returns the `SourceId` corresponding to the main repository.
-    ///
-    /// This is the main plow registry by default, but it can be overridden in
-    /// a `.plow/config.toml`.
-    // pub fn plow_public_registry_index(config: &PlowConfig) -> Result<SourceId> {
-    //     todo!()
-    // }
-
-    // TODO: Needs re architecting to separate lib and bin parts
-    /// Returns the `SourceId` corresponding to the main repository.
-    ///
-    /// This is the main plow registry by default, but it can be overridden in
-    /// a `.plow/config.toml`.
-    // pub fn plow_private_registry_index(config: &PlowConfig) -> Result<SourceId> {
-    //     todo!()
-    // }
-
-    // TODO: Check implementation
-    /// Gets the `SourceId` associated with given name of the remote registry.
-    // pub fn alt_registry(config: &Config, key: &str) -> CargoResult<SourceId> {
-    //     let url = config.get_registry_index(key)?;
-    //     Ok(SourceId::wrap(SourceIdInner {
-    //         kind: SourceKind::Registry,
-    //         url,
-    //         name: Some(key.to_string()),
-    //     }))
-    // }
+    pub fn default_public_registry_source(config: &PlowConfig) -> Result<SourceId> {
+        todo!()
+        //TODO: We can use get registry url from config but we need to finish this function when source id is completed.
+    }
+    pub fn default_private_registry_source(config: &PlowConfig) -> Result<SourceId> {
+        todo!()
+        //TODO: We can use get registry url from config but we need to finish this function when source id is completed.
+    }
 
     /// Gets this source URL.
     pub fn url(&self) -> &Url {
         &self.inner.url
     }
 
-    // TODO: Check
+    // TODO: Maybe will be needed in the future
     // pub fn display_index(self) -> String {
     //     if self.is_default_registry() {
     //         format!("{} index", CRATES_IO_DOMAIN)
@@ -142,7 +123,7 @@ impl SourceId {
     //     }
     // }
 
-    // TODO: Check
+    // TODO: Maybe will be needed in the future
     // pub fn display_registry_name(self) -> String {
     //     if self.is_default_registry() {
     //         CRATES_IO_REGISTRY.to_string()
@@ -157,39 +138,34 @@ impl SourceId {
     //     }
     // }
 
+    // TODO: Private or Public separation in the enum will be decided later
     /// Returns `true` if this source is from a registry (either local or not).
     pub fn is_registry(self) -> bool {
         matches!(self.inner.kind, SourceKind::Registry)
     }
 
-    /// Returns `true` if this source is a "remote" registry.
-    ///
-    /// "remote" may also mean a file URL to a git index, so it is not
-    /// necessarily "remote". This just means it is not `local-registry`.
-    pub fn is_remote_registry(self) -> bool {
-        matches!(self.inner.kind, SourceKind::Registry)
-    }
-
     // TODO: Implement and check
     /// Creates an implementation of `Source` corresponding to this ID.
-    pub fn load<'a>(
-        self,
-        // config: &'a Config,
-        // yanked_whitelist: &HashSet<PackageId>,
-    ) -> Result<Box<dyn super::Source + 'a>> {
+    pub fn load<'a>(self, config: &'a PlowConfig) -> Result<Box<dyn super::Source + 'a>> {
         match self.inner.kind {
             SourceKind::Registry => {
+                // TODO: Load the registry source
                 todo!()
             }
         }
     }
 
-    /// Returns `true` if the remote registry is the standard <https://plow.pm>.
-    pub fn is_default_registry(self) -> bool {
+    pub fn display_registry_name(self) -> String {
         todo!()
     }
 
-    pub fn stable_hash<S: hash::Hasher>(self, workspace: &Path, into: &mut S) {
+    /// Returns `true` if the remote registry is the standard <https://plow.pm>.
+    pub fn is_default_registry(self) -> bool {
+        /// TODO: Checks the url here we'll see if we'll use the url system
+        todo!()
+    }
+
+    pub fn stable_hash<S: hash::Hasher>(self, into: &mut S) {
         self.hash(into)
     }
 
@@ -222,12 +198,9 @@ impl Ord for SourceId {
             return Ordering::Equal;
         }
 
-        // Sort first based on `kind`, deferring to the URL comparison below if
-        // the kinds are equal.
-        match self.inner.kind.cmp(&other.inner.kind) {
-            Ordering::Equal => {}
-            other => return other,
-        }
+        // TODO: This gets more complicated when url kinds are introduced.
+        // But for later..
+        self.inner.url.cmp(&other.inner.url)
     }
 }
 

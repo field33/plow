@@ -21,8 +21,8 @@ pub struct IndexedFieldVersion {
     ontology_iri: Ustr,
     cksum: Ustr,
     dependencies: Vec<IndexedDependencySpec>,
-    /// If `true`, Plow will skip this version when resolving.
-    yanked: bool,
+    // TODO:  If `true`, Plow will skip this version when resolving.
+    // yanked: bool,
 }
 
 impl IndexedFieldVersion {
@@ -44,9 +44,9 @@ impl IndexedFieldVersion {
     pub fn dependencies(&self) -> &[IndexedDependencySpec] {
         &self.dependencies
     }
-    pub fn yanked(&self) -> bool {
-        self.yanked
-    }
+    // pub fn yanked(&self) -> bool {
+    //     self.yanked
+    // }
     pub fn namespace_and_name(&self) -> (&str, &str) {
         self.name.split_once('/').unwrap()
     }
@@ -68,7 +68,7 @@ impl From<&FieldManifest<'_>> for IndexedFieldVersion {
                 })
                 .collect(),
             // TODO: Yanking..
-            yanked: false,
+            // yanked: false,
         }
     }
 }

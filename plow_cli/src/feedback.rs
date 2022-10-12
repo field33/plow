@@ -4,6 +4,7 @@ use colored::*;
 
 use crate::error::{CliError, FieldAccessError};
 use crate::manifest::FieldManifest;
+use crate::source::SourceId;
 
 pub trait Feedback {
     fn feedback(&self);
@@ -63,11 +64,13 @@ pub fn field_info(local_path: &Utf8Path) -> Result<(), CliError> {
         })
     })?;
 
-    let manifest = FieldManifest::new(&contents).map_err(|_| {
-        CliError::from(FieldAccessError::FailedToReadFieldManifest {
-            field_path: local_path.to_string(),
-        })
-    })?;
+    // TODO: Update this meaningfully later.
+    let manifest = FieldManifest::new(&contents, SourceId::from_url("registry+dummy").unwrap())
+        .map_err(|_| {
+            CliError::from(FieldAccessError::FailedToReadFieldManifest {
+                field_path: local_path.to_string(),
+            })
+        })?;
 
     let full_name = manifest.full_name();
     let version = manifest.version().to_string();

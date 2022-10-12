@@ -14,6 +14,7 @@ use crate::field_id::FieldId;
 use crate::registry::Dependency;
 use crate::registry::IndexedFieldVersion;
 use crate::registry::SemanticVersion;
+use crate::source::SourceId;
 
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -83,9 +84,9 @@ impl FieldSummary {
     pub fn ontology_iri(&self) -> &str {
         &self.inner.ontology_iri
     }
-    // pub fn source_id(&self) -> SourceId {
-    //     self.package_id().source_id()
-    // }
+    pub fn source_id(&self) -> SourceId {
+        self.field_id().source_id()
+    }
     pub fn dependencies(&self) -> &[Dependency<SemanticVersion>] {
         &self.inner.dependencies
     }
@@ -226,7 +227,7 @@ impl<'manifest> FieldManifest<'manifest> {
 
 impl<'manifest> FieldManifest<'manifest> {
     #[allow(clippy::too_many_lines)]
-    pub fn new(field_contents: &'manifest str) -> Result<Self> {
+    pub fn new(field_contents: &'manifest str, source_id: SourceId) -> Result<Self> {
         let mut ontology_iri = None;
         // File name -> (prefixed_name -> values as vec of string)
         let mut prefixed_name_to_values_in_ttl: HashMap<String, Result<Vec<String>, _>> =
@@ -447,7 +448,7 @@ impl<'manifest> FieldManifest<'manifest> {
         hasher.update(field_contents.as_bytes());
         let field_cksum = format!("{:X}", hasher.finalize()).to_lowercase();
 
-        let field_id = FieldId::new(&full_name, version);
+        let field_id = FieldId::new(&full_name, version, source_id);
         // TODO: Do not accept fields without ontology IRI
         let summary = FieldSummary::new(field_id, dependencies, field_cksum, ontology_iri.unwrap());
         let metadata = ManifestMetadata {
@@ -682,7 +683,8 @@ registry:dependency rdf:type owl:AnnotationProperty .
 
     #[test]
     fn manifest_getters_and_extraction() {
-        let field_manifest = FieldManifest::new(VALID_FIELD).unwrap();
+        let field_manifest =
+            FieldManifest::new(VALID_FIELD, SourceId::from_url("registry+dummy").unwrap()).unwrap();
         let (namespace, name) = field_manifest.namespace_and_name();
         assert_eq!(namespace, "@fld33");
         assert_eq!(name, "test");

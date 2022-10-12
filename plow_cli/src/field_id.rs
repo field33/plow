@@ -1,6 +1,6 @@
 use std::{collections::HashSet, hash, sync::Mutex};
 
-use crate::registry::SemanticVersion;
+use crate::{registry::SemanticVersion, source::SourceId};
 use lazy_static::lazy_static;
 use ustr::Ustr;
 
@@ -18,7 +18,7 @@ pub struct FieldId {
 struct FieldIdInner {
     name: Ustr,
     version: SemanticVersion,
-    // source_id: SourceId,
+    source_id: SourceId,
 }
 
 impl PartialEq for FieldId {
@@ -45,11 +45,11 @@ impl std::hash::Hash for FieldId {
 }
 
 impl FieldId {
-    pub fn new(name: &str, version: SemanticVersion /*sid: SourceId*/) -> FieldId {
+    pub fn new(name: &str, version: SemanticVersion, source_id: SourceId) -> FieldId {
         let inner = FieldIdInner {
             name: Ustr::from(name),
             version,
-            /*  source_id,*/
+            source_id,
         };
         let mut cache = FIELD_ID_CACHE.lock().unwrap();
         let inner = cache.get(&inner).cloned().unwrap_or_else(|| {
@@ -67,18 +67,19 @@ impl FieldId {
         &self.inner.version
     }
 
-    // pub fn source_id(self) -> SourceId {
-    //     self.inner.source_id
-    // }
+    pub fn source_id(self) -> SourceId {
+        self.inner.source_id
+    }
 }
 
 impl core::fmt::Display for FieldId {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{} v{}", self.inner.name, self.inner.version)?;
 
-        // if !self.inner.source_id.is_default_registry() {
-        //     write!(f, " ({})", self.inner.source_id)?;
-        // }
+        // TODO: This might error currently because it is a todo! in source id
+        if !self.inner.source_id.is_default_registry() {
+            write!(f, " ({})", self.inner.source_id)?;
+        }
 
         Ok(())
     }
