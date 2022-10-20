@@ -41,7 +41,7 @@ impl Feedback for LintSubcommandError {
             }
             SingleLintContainsFailure { .. } => { /* Omit feedback */ }
             LintsContainFailures { field_paths } => {
-                println!("\t{} couldn't pass the linting phase thus ignored and not included in the workspace and fields directory.\n\tPlease lint them individually, correct them and run plow init one more time to recreate the workspace.", "Paths listed below".yellow().bold());
+                println!("\t{} couldn't pass the linting phase thus ignored and not included in the workspace and fields directory.\n\tPlease check if they have valid values for `registry:packageName`, `registry:packageVersion` and if they include dependencies have valid values for `registry:dependency` individually, correct them and run plow init one more time to recreate the workspace.", "Paths listed below".yellow().bold());
                 for field_path in field_paths {
                     println!("\t\t{}", field_path);
                 }

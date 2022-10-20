@@ -4,6 +4,11 @@ use std::fs::create_dir_all;
 use camino::{Utf8Path, Utf8PathBuf};
 use itertools::Itertools;
 use plow_linter::lints::field_manifest_lints;
+use plow_linter::lints::HasRegistryPackageName;
+use plow_linter::lints::HasRegistryPackageVersion;
+use plow_linter::lints::LintSet;
+use plow_linter::lints::PlowLint;
+use plow_linter::lints::ValidRegistryDependencies;
 use rayon::prelude::IntoParallelRefIterator;
 use rayon::prelude::ParallelIterator;
 use sha2::{Digest, Sha256};
@@ -194,10 +199,18 @@ impl FieldsDirectory {
             .children
             .par_iter()
             .filter_map(|child| {
+                let lints = LintSet::new(
+                    "plow init lints",
+                    vec![
+                        Box::new(HasRegistryPackageName::default()) as PlowLint,
+                        Box::new(HasRegistryPackageVersion::default()) as PlowLint,
+                        Box::new(ValidRegistryDependencies::default()) as PlowLint,
+                    ],
+                    None,
+                );
+
                 // TODO: Field manifest or all lints?
-                if let Err(err) =
-                    lint_file_fail_on_failure(child.as_path().as_ref(), field_manifest_lints())
-                {
+                if let Err(err) = lint_file_fail_on_failure(child.as_path().as_ref(), lints) {
                     Some(err)
                 } else {
                     None
