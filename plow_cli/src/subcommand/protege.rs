@@ -14,9 +14,9 @@ use crate::{
 use camino::{Utf8Path, Utf8PathBuf};
 use clap::{arg, App, AppSettings, ArgMatches, Command};
 use colored::*;
-use harriet::Whitespace;
-use harriet::{IRIReference, ObjectList};
+use harriet::{IRIReference, ObjectList, Verb, IRI};
 use harriet::{Literal, Object};
+use harriet::{Triples, Whitespace};
 use plow_linter::lints::all_lints;
 use plow_package_management::{
     package::{RetrievedPackageSet, RetrievedPackageVersion},
@@ -186,10 +186,12 @@ pub fn run_command_flow(
                     // Here the owl imports are updated.
                     // We just need to add them to the existing statements and re-serialize.
 
+                    let remove_owl_imports_line = object_list.list.is_empty();
                     root_field_manifest.update_owl_imports_and_serialize(
                         object_list,
                         statements,
                         &field_file_path,
+                        remove_owl_imports_line,
                     );
 
                     // TODO: These unwraps may indeed fail but it is unlikely to happen.
@@ -218,6 +220,58 @@ pub fn run_command_flow(
                     let mut set = RetrievedPackageSet {
                         packages: dependency_information,
                     };
+
+                    let root_path = &field_file_path;
+
+                    let (_protege_workspace_dir, symlinked_field_path) =
+                        mirror_field_to_protege_workspace(root_path).map_err(|err| {
+                            CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                        })?;
+
+                    #[allow(clippy::unwrap_used)]
+                    let current_protege_workspace = symlinked_field_path.parent().unwrap();
+
+                    let deps_path = current_protege_workspace.join("deps");
+                    if !deps_path.exists() {
+                        std::fs::create_dir_all(&deps_path).map_err(|err| {
+                            CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                        })?;
+                    }
+                    for package in &mut set.packages {
+                        #[allow(clippy::unwrap_used)]
+                        let dep_path_in_protege_workspace =
+                            deps_path.join(&package.file_path.file_name().unwrap());
+
+                        std::fs::copy(&package.file_path, &dep_path_in_protege_workspace).map_err(
+                            |err| CliError::from(FailedToPrepareProtegeWorkspace(err.to_string())),
+                        )?;
+                        package.file_path = dep_path_in_protege_workspace;
+                    }
+                    // Generate catalog file
+                    CatalogFile::generate(current_protege_workspace, &set).map_err(|err| {
+                        CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                    })?;
+
+                    // Open in protege
+                    open::that(symlinked_field_path).map_err(|err| {
+                        CliError::from(FailedToOpenProtegeApplication(err.to_string()))
+                    })?;
+                } else {
+                    // No deps, delete owl imports
+
+                    // Here the owl imports are updated.
+                    // We just need to add them to the existing statements and re-serialize.
+
+                    let object_list = ObjectList { list: vec![] };
+                    let remove_owl_imports_line = object_list.list.is_empty();
+                    root_field_manifest.update_owl_imports_and_serialize(
+                        object_list,
+                        statements,
+                        &field_file_path,
+                        remove_owl_imports_line,
+                    );
+
+                    let mut set = RetrievedPackageSet { packages: vec![] };
 
                     let root_path = &field_file_path;
 
@@ -380,7 +434,45 @@ pub fn run_command_flow(
                         CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
                     })?;
 
-                    dbg!("COMES");
+                    // Open in protege
+                    open::that(symlinked_field_path).map_err(|err| {
+                        CliError::from(FailedToOpenProtegeApplication(err.to_string()))
+                    })?;
+                } else {
+                    // No deps and no owl imports
+
+                    let mut set = RetrievedPackageSet { packages: vec![] };
+
+                    let root_path = &field_file_path;
+
+                    let (_protege_workspace_dir, symlinked_field_path) =
+                        mirror_field_to_protege_workspace(root_path).map_err(|err| {
+                            CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                        })?;
+
+                    #[allow(clippy::unwrap_used)]
+                    let current_protege_workspace = symlinked_field_path.parent().unwrap();
+
+                    let deps_path = current_protege_workspace.join("deps");
+                    if !deps_path.exists() {
+                        std::fs::create_dir_all(&deps_path).map_err(|err| {
+                            CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                        })?;
+                    }
+                    for package in &mut set.packages {
+                        #[allow(clippy::unwrap_used)]
+                        let dep_path_in_protege_workspace =
+                            deps_path.join(&package.file_path.file_name().unwrap());
+
+                        std::fs::copy(&package.file_path, &dep_path_in_protege_workspace).map_err(
+                            |err| CliError::from(FailedToPrepareProtegeWorkspace(err.to_string())),
+                        )?;
+                        package.file_path = dep_path_in_protege_workspace;
+                    }
+                    // Generate catalog file
+                    CatalogFile::generate(current_protege_workspace, &set).map_err(|err| {
+                        CliError::from(FailedToPrepareProtegeWorkspace(err.to_string()))
+                    })?;
 
                     // Open in protege
                     open::that(symlinked_field_path).map_err(|err| {

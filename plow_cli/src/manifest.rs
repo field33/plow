@@ -495,6 +495,7 @@ impl<'manifest> FieldManifest<'manifest> {
         new_object_list: ObjectList<'manifest>,
         mut statements: Vec<Statement<'manifest>>,
         target_path: &Utf8Path,
+        remove_owl_imports_line: bool,
     ) {
         for statement in &mut statements {
             match statement {
@@ -532,7 +533,19 @@ impl<'manifest> FieldManifest<'manifest> {
             statements: statements.clone(),
             trailing_whitespace: None,
         };
-        std::fs::write(target_path, new_doc.to_string()).unwrap();
+
+        let mut serialized_turtle = new_doc.to_string();
+
+        // Hacky way to remove owl imports, I'm deferring the refactoring of this to the refactoring effort PRs
+        // This assumes that the left over part in the file is ..;\nowl:imports..
+        if remove_owl_imports_line {
+            let (rest, _) = serialized_turtle.split_once("owl:imports").unwrap();
+            serialized_turtle = rest.to_owned();
+            serialized_turtle = serialized_turtle[..serialized_turtle.len() - 2].to_owned();
+            serialized_turtle += " .";
+        }
+
+        std::fs::write(target_path, serialized_turtle).unwrap();
     }
 
     pub fn create_owl_imports_and_serialize(
