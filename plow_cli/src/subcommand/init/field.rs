@@ -154,9 +154,9 @@ pub fn new(name: &str) -> std::string::String {
                         whitespace: " ".into(),
                     }),
                 ),
-                make_predicate_stringy_object("registry", "ontologyFormatVersion", "v1", None, None),
+           
                 make_predicate_stringy_object("registry", "author", "John Doe <john@example.com>", Some(
-                    "\n\n# Specifies the field author in a format as in the example.\n"
+                    "\n\n# Specifies the field author in a format as in the example.\n#"
                     ),None),
                 make_predicate_stringy_object("registry", "packageName", name, Some(
                     "\n\n# Name of your field in the form of @namespace/name.\n"
@@ -168,14 +168,14 @@ pub fn new(name: &str) -> std::string::String {
                     "registry",
                     "category",
                     "Communication\", \"Core\", \"Design", Some(
-                    "\n\n# You may specify a maximum of 5 categories to categorize your field as in the example. Available categories could be viewed in <https://registry.field33.com>\n"
+                    "\n\n# You may specify a maximum of 5 categories to categorize your field as in the example. Available categories could be viewed in <https://registry.field33.com>\n#"
                     ),None,
                 ),
                 make_predicate_stringy_object(
                     "registry",
                     "keyword",
                     "some\", \"key\", \"words",Some(
-                    "\n\n# You may specify a maximum of 5 keywords to describe your field as in the example.\n"
+                    "\n\n# You may specify a maximum of 5 keywords to describe your field as in the example.\n#"
                     ),
                     None,
                 ),
@@ -183,19 +183,19 @@ pub fn new(name: &str) -> std::string::String {
                     "registry",
                     "shortDescription",
                     "A short description for the field",Some(
-                    "\n\n# Specify a short description for your field to be viewed in registry.field33.com. The value requires a language tag \"My short description.\"@en\n"
+                    "\n\n# Specify a short description for your field to be viewed in registry.field33.com. The value requires a language tag \"My short description.\"@en\n#"
                     ),
                     Some(
                         "en"
                     ),
                 ),
                 make_predicate_stringy_object("rdfs", "comment", "A description for the field",  Some(
-                    "\n\n# Specify a description for your field to be viewed in registry.field33.com. The value requires a language tag \"My Description\"@en\n"
+                    "\n\n# Specify a description for your field to be viewed in registry.field33.com. The value requires a language tag \"My Description\"@en\n#"
                     ),  Some(
                         "en"
                     )),
                 make_predicate_stringy_object("rdfs", "label", "A title for the field", Some(
-                    "\n\n# Specify a title for your field to be viewed in registry.field33.com. The value requires a language tag \"My title\"@en\n"
+                    "\n\n# Specify a title for your field to be viewed in registry.field33.com. The value requires a language tag \"My title\"@en\n#"
                     ),
                       Some(
                         "en"
@@ -220,6 +220,8 @@ pub fn new(name: &str) -> std::string::String {
                 make_predicate_stringy_object("registry", "licenseSPDX", "MIT", Some(
                     "\n\n# Specify a valid SPDX license for your field, valid licenses could be viewed in <https://spdx.org/licenses>.\n"
                     ), None),
+
+                make_predicate_stringy_object("registry", "ontologyFormatVersion", "v1", Some("\n\n"), None),
 
             ],
         },
