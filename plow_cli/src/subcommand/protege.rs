@@ -17,7 +17,10 @@ use colored::*;
 use harriet::{IRIReference, ObjectList, Verb, IRI};
 use harriet::{Literal, Object};
 use harriet::{Triples, Whitespace};
-use plow_linter::lints::all_lints;
+use plow_linter::lints::{
+    all_lints, HasRegistryPackageName, HasRegistryPackageVersion, LintSet, PlowLint,
+    ValidRegistryDependencies,
+};
 use plow_package_management::{
     package::{RetrievedPackageSet, RetrievedPackageVersion},
     registry::Registry,
@@ -67,7 +70,16 @@ pub fn run_command_flow(
     field_info(&field_file_path)?;
 
     if field_file_path.exists() {
-        lint_file(field_file_path.as_ref(), all_lints())?;
+        let lints = LintSet::new(
+            "plow protege lints",
+            vec![
+                Box::new(HasRegistryPackageName::default()) as PlowLint,
+                Box::new(HasRegistryPackageVersion::default()) as PlowLint,
+                Box::new(ValidRegistryDependencies::default()) as PlowLint,
+            ],
+            None,
+        );
+        lint_file(field_file_path.as_ref(), vec![lints])?;
 
         let registry = crate::sync::sync(config)?;
 
