@@ -71,13 +71,6 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
         "Attempting".green().bold()
     );
 
-    // dbg!(client
-    //     .post(&private_index_sync_url)
-    //     .header(reqwest::header::AUTHORIZATION, &format!("Basic {token}"))
-    //     .header(reqwest::header::CONTENT_TYPE, "application/json")
-    //     .json(&query)
-    //     .build());
-
     let private_index_sync_response = client
         .post(private_index_sync_url)
         .header(reqwest::header::AUTHORIZATION, &format!("Basic {token}"))
