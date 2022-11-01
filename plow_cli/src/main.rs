@@ -79,7 +79,7 @@ use feedback::{command_failed, Feedback};
 #[allow(clippy::missing_panics_doc)]
 pub fn main() {
     let app = App::new("plow")
-        .version("0.4.6")
+        .version("0.4.7")
         .about("Plowing the field of knowledge. Package management for ontologies.")
         // .arg(
         //     Arg::with_name("registry")

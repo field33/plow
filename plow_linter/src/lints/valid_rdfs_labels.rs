@@ -1,12 +1,8 @@
 use crate::lints::get_root_prefix;
 use crate::{
-    lint::{
-        common_error_literals::{NO_ROOT_PREFIX, },
-        lint_failure, lint_success, Lint, LintResult,
-    },
+    lint::{common_error_literals::NO_ROOT_PREFIX, lint_failure, lint_success, Lint, LintResult},
     Linter,
 };
-
 
 use plow_ontology::constants::{
     OWL_ANNOTATION_PROPERTY, OWL_CLASS, OWL_DATA_PROPERTY, OWL_OBJECT_PROPERTY, RDFS_LABEL,
@@ -26,7 +22,7 @@ pub struct ValidRdfsLabels;
 impl Lint for ValidRdfsLabels {
     fn as_any(&self) -> &dyn Any {
         self
-    }     
+    }
     fn short_description(&self) -> &str {
         "Check that the related field is annotated with a value for `rdfs:label`"
     }
@@ -36,16 +32,14 @@ impl Lint for ValidRdfsLabels {
     fn run(&self, linter: &Linter) -> LintResult {
         let rdf_factory = field33_rdftk_core_temporary_fork::simple::statement::statement_factory();
         if let Some(root_prefix) = get_root_prefix(&linter.document) {
-       
             let graph = linter.graph.inner.borrow();
-         
+
             // We explicitly pass valid data, unwrap is safe here.
             #[allow(clippy::unwrap_used)]
-      
             let all_subject_iris_with_selected_owl_props = graph
                 .statements()
                 .filter(|statement| {
-                    if let Some(subject_iri) =  statement.subject().as_iri() {
+                    if let Some(subject_iri) = statement.subject().as_iri() {
                         // TODO: Fast filter improve, this will not check validity of registry annotations for labels.
                         if subject_iri.to_string().matches("REGISTRY").count() > 0 {
                             return false;
@@ -71,8 +65,6 @@ impl Lint for ValidRdfsLabels {
 
             let mut warnings = vec![];
             let mut failures = vec![];
-
-            
 
             // We explicitly pass valid data, unwrap is safe here.
             #[allow(clippy::unwrap_used)]
@@ -131,7 +123,7 @@ impl Lint for ValidRdfsLabels {
                     .collect::<HashSet<_>>();
 
             if !failures.is_empty() {
-                return LintResult::Failure(warnings);
+                return LintResult::Failure(failures);
             }
 
             for subject_iri in all_subject_iris_with_selected_owl_props
@@ -147,7 +139,7 @@ impl Lint for ValidRdfsLabels {
             if !warnings.is_empty() {
                 return LintResult::Warning(warnings);
             }
-            
+
             lint_success!(format!("Every Class, ObjectProperty, DataProperty, AnnotationProperty has an {RELATED_FIELD} annotation with a string literal and @en as a language tag."))
         } else {
             lint_failure!(NO_ROOT_PREFIX)

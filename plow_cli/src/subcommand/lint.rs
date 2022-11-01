@@ -113,9 +113,11 @@ pub fn lint_file(field_path: &str, lints: Vec<LintSet>) -> Result<(), CliError> 
     for lint_set in lints {
         let set_id = lint_set.id;
         let set_name = linter.add_lint_set(lint_set);
+
         lint_start(&set_name);
 
         let results = linter.run_lint_set(set_id);
+
         for result in results {
             use LintResult::*;
             match result {
