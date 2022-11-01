@@ -80,7 +80,7 @@ dependencies = [
  "http",
  "httparse",
  "httpdate",
- "itoa 1.0.3",
+ "itoa 1.0.4",
  "language-tags",
  "local-channel",
  "mime",
@@ -190,7 +190,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "http",
- "itoa 1.0.3",
+ "itoa 1.0.4",
  "language-tags",
  "log",
  "mime",
@@ -636,7 +636,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83fc15853171b33280f5614e77f5fa4debd33f51a86c44daa4ba3d759674c561"
 dependencies = [
  "base64",
- "uuid 1.1.2",
+ "uuid 1.2.1",
 ]
 
 [[package]]
@@ -2413,7 +2413,7 @@ checksum = "75f43d41e26995c17e71ee126451dd3941010b0514a81a9d11f3b341debc2399"
 dependencies = [
  "bytes",
  "fnv",
- "itoa 1.0.3",
+ "itoa 1.0.4",
 ]
 
 [[package]]
@@ -2460,7 +2460,7 @@ dependencies = [
  "http-body",
  "httparse",
  "httpdate",
- "itoa 1.0.3",
+ "itoa 1.0.4",
  "pin-project-lite",
  "socket2",
  "tokio",
@@ -2704,9 +2704,9 @@ checksum = "b71991ff56294aa922b450139ee08b3bfc70982c6b2c7562771375cf73542dd4"
 
 [[package]]
 name = "itoa"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c8af84674fe1f223a982c933a0ee1086ac4d4052aa0fb8060c12c6ad838e754"
+checksum = "4217ad341ebadf8d8e724e264f13e593e0648f5b3e94b3896a5df283be015ecc"
 
 [[package]]
 name = "jni-sys"
@@ -2801,9 +2801,9 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
 name = "libc"
-version = "0.2.134"
+version = "0.2.135"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "329c933548736bc49fd575ee68c89e8be4d260064184389a5b77517cddd99ffb"
+checksum = "68783febc7782c6c5cb401fbda4de5a9898be1762314da0bb2c10ced61f18b0c"
 
 [[package]]
 name = "libgit2-sys"
@@ -3731,7 +3731,7 @@ dependencies = [
 
 [[package]]
 name = "plow_cli"
-version = "0.4.2"
+version = "0.4.6"
 dependencies = [
  "anyhow",
  "camino",
@@ -3749,7 +3749,7 @@ dependencies = [
  "memchr",
  "nom",
  "open",
- "plow_linter 0.2.5",
+ "plow_linter 0.2.7",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_package_management 0.3.0",
  "rayon",
@@ -3760,7 +3760,7 @@ dependencies = [
  "sha2 0.10.6",
  "thiserror",
  "toml",
- "uuid 1.1.2",
+ "uuid 1.2.1",
  "which",
 ]
 
@@ -3849,38 +3849,9 @@ dependencies = [
 
 [[package]]
 name = "plow_linter"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a89267cb58d655797a64ff7e8f1602f59f30d9cdff10b1a1518f6cb52ea2ec6c"
-dependencies = [
- "addr",
- "anyhow",
- "aquamarine",
- "chashmap",
- "darc",
- "email_address",
- "field33_rdftk_core_temporary_fork",
- "field33_rdftk_iri_temporary_fork",
- "harriet 0.2.3",
- "nom",
- "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.3.0",
- "rayon",
- "regex",
- "rustrict 0.5.1",
- "semver 1.0.14",
- "serde",
- "serde_json",
- "spdx 0.9.0",
- "tempdir",
- "thiserror",
- "uuid 1.1.2",
-]
-
-[[package]]
-name = "plow_linter"
 version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "455fec95936e1b87fa7d7b7a8affda381640fad0f9fe9016c72d58423feeca00"
 dependencies = [
  "addr",
  "anyhow",
@@ -3904,7 +3875,36 @@ dependencies = [
  "spdx 0.9.0",
  "tempdir",
  "thiserror",
- "uuid 1.1.2",
+ "uuid 1.2.1",
+]
+
+[[package]]
+name = "plow_linter"
+version = "0.2.7"
+dependencies = [
+ "addr",
+ "anyhow",
+ "aquamarine",
+ "chashmap",
+ "darc",
+ "email_address",
+ "field33_rdftk_core_temporary_fork",
+ "field33_rdftk_iri_temporary_fork",
+ "harriet 0.2.3",
+ "nom",
+ "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rayon",
+ "regex",
+ "rustrict 0.5.1",
+ "semver 1.0.14",
+ "serde",
+ "serde_json",
+ "spdx 0.9.0",
+ "tempdir",
+ "thiserror",
+ "uuid 1.2.1",
 ]
 
 [[package]]
@@ -3931,7 +3931,7 @@ dependencies = [
  "field33_rdftk_iri_temporary_fork",
  "harriet 0.2.3",
  "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.5",
+ "plow_linter 0.2.6",
  "serde",
  "serde_json",
 ]
@@ -3992,7 +3992,7 @@ dependencies = [
  "harriet 0.2.3",
  "itertools 0.10.5",
  "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.6",
+ "plow_linter 0.2.7",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "pubgrub",
  "semver 1.0.14",
@@ -4787,12 +4787,12 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.85"
+version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e55a28e3aaef9d5ce0506d0a14dbba8054ddc7e499ef522dd8b26859ec9d4a44"
+checksum = "41feea4228a6f1cd09ec7a3593a682276702cd67b5273544757dae23c096f074"
 dependencies = [
  "indexmap",
- "itoa 1.0.3",
+ "itoa 1.0.4",
  "ryu",
  "serde",
 ]
@@ -4804,7 +4804,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3491c14715ca2294c4d6a88f15e84739788c1d030eed8c110436aafdaa2f3fd"
 dependencies = [
  "form_urlencoded",
- "itoa 1.0.3",
+ "itoa 1.0.4",
  "ryu",
  "serde",
 ]
@@ -5378,7 +5378,7 @@ version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d634a985c4d4238ec39cacaed2e7ae552fbd3c476b552c1deac3021b7d7eaf0c"
 dependencies = [
- "itoa 1.0.3",
+ "itoa 1.0.4",
  "libc",
  "num_threads",
  "time-macros 0.2.4",
@@ -5459,9 +5459,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-stream"
-version = "0.1.10"
+version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6edf2d6bc038a43d31353570e27270603f4648d18f5ed10c0e179abe43255af"
+checksum = "d660770404473ccd7bc9f8b28494a811bc18542b915c0855c51e8f419d5223ce"
 dependencies = [
  "futures-core",
  "pin-project-lite",
@@ -5523,9 +5523,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.29"
+version = "0.1.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aeea4303076558a00714b823f9ad67d58a3bbda1df83d8827d21193156e22f7"
+checksum = "24eb03ba0eab1fd845050058ce5e616558e8f8d8fca633e6b163fe25c797213a"
 dependencies = [
  "once_cell",
 ]
@@ -5588,9 +5588,9 @@ checksum = "099b7128301d285f79ddd55b9a83d5e6b9e97c92e0ea0daebee7263e932de992"
 
 [[package]]
 name = "unicode-ident"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcc811dc4066ac62f84f11307873c4850cb653bfa9b1719cee2bd2204a4bc5dd"
+checksum = "6ceab39d59e4c9499d4e5a8ee0e2735b891bb7308ac83dfb4e80cad195c9f6f3"
 
 [[package]]
 name = "unicode-normalization"
@@ -5633,7 +5633,7 @@ checksum = "ae605c39dfbdec433798d4a8b03ffbac711dc51cdeb1ba5c725bdcaf24e464cc"
 dependencies = [
  "blob-uuid",
  "lazy_static",
- "uuid 1.1.2",
+ "uuid 1.2.1",
 ]
 
 [[package]]
@@ -5659,9 +5659,9 @@ dependencies = [
 
 [[package]]
 name = "uuid"
-version = "1.1.2"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd6469f4314d5f1ffec476e05f17cc9a78bc7a27a6a857842170bdf8d6f98d2f"
+checksum = "feb41e78f93363bb2df8b0e86a2ca30eed7806ea16ea0c790d757cf93f79be83"
 dependencies = [
  "getrandom 0.2.7",
 ]

@@ -1,15 +1,19 @@
-use crate::{lint::{
-    common_error_literals::{NO_ROOT_PREFIX, },
-    helpers::{catch_single_or_multiple_annotations_which_must_exist, fail_if_has_language_tag},
-    lint_failure, lint_success, Lint, LintResult,
-}, Linter, MultiReaderRdfGraph};
+use crate::{
+    lint::{
+        common_error_literals::NO_ROOT_PREFIX,
+        helpers::{
+            catch_single_or_multiple_annotations_which_must_exist, fail_if_has_language_tag,
+        },
+        lint_failure, lint_success, Lint, LintResult,
+    },
+    Linter, MultiReaderRdfGraph,
+};
 
-
+use field33_rdftk_iri_temporary_fork::IRI as RDFTK_IRI;
 use plow_ontology::constants::REGISTRY_CATEGORY;
 use plow_package_management::metadata::get_root_prefix;
-use field33_rdftk_iri_temporary_fork::IRI as RDFTK_IRI;
-use std::{collections::HashSet, any::Any};
 use std::str::FromStr;
+use std::{any::Any, collections::HashSet};
 
 const RELATED_FIELD: &str = "`registry:category`";
 /// Maximum allowed categories.
@@ -58,16 +62,16 @@ pub struct HasRegistryCategory;
 impl Lint for HasRegistryCategory {
     fn as_any(&self) -> &dyn Any {
         self
-    }     
+    }
     fn short_description(&self) -> &str {
         "Check that the field is annotated with a value for `registry:category`"
     }
     /// Lints for the existence of `registry:category` and its validity.
-    /// Available categories are defined by plow. 
+    /// Available categories are defined by plow.
     /// Maximum 5 categories are allowed.
     /// Categories shouldn't contain language tags.
-    /// 
-    /// Here is a list: 
+    ///
+    /// Here is a list:
     /// ```rust
     /// const CATEGORY_ALLOW_LIST: [&str; 30] = [
     /// "Benchmark",
@@ -101,7 +105,7 @@ impl Lint for HasRegistryCategory {
     /// "Graph Style",
     /// "Interoperability",
     /// ];
-    /// ``` 
+    /// ```
     fn run(
         &self,
         Linter {
@@ -112,39 +116,38 @@ impl Lint for HasRegistryCategory {
     ) -> LintResult {
         let rdf_factory = field33_rdftk_core_temporary_fork::simple::statement::statement_factory();
         if let Some(root_prefix) = get_root_prefix(document) {
-                            let graph_ref = rdf_graph;
+            let graph_ref = rdf_graph;
             let graph = graph_ref.borrow();
-                // We explicitly pass valid data, unwrap is safe here.
-                #[allow(clippy::unwrap_used)]
-                let annotations = graph
-                    .statements()
-                    .filter(|statement| {
-                        statement.subject()
-                            == &rdf_factory
-                                .named_subject(RDFTK_IRI::from_str(root_prefix).unwrap().into())
-                            && statement.predicate()
-                                == &RDFTK_IRI::from_str(REGISTRY_CATEGORY).unwrap().into()
-                    })
-                    .collect::<HashSet<_>>();
+            // We explicitly pass valid data, unwrap is safe here.
+            #[allow(clippy::unwrap_used)]
+            let annotations = graph
+                .statements()
+                .filter(|statement| {
+                    statement.subject()
+                        == &rdf_factory
+                            .named_subject(RDFTK_IRI::from_str(root_prefix).unwrap().into())
+                        && statement.predicate()
+                            == &RDFTK_IRI::from_str(REGISTRY_CATEGORY).unwrap().into()
+                })
+                .collect::<HashSet<_>>();
 
-                if let Some(failure) = catch_single_or_multiple_annotations_which_must_exist(
-                    &annotations,
-                    RELATED_FIELD,
-                ) {
-                    return failure;
-                }
+            if let Some(failure) =
+                catch_single_or_multiple_annotations_which_must_exist(&annotations, RELATED_FIELD)
+            {
+                return failure;
+            }
 
-                let lint_prefix = format!("The value of {RELATED_FIELD},");
-                if annotations.len() > MAX_CATEGORIES {
-                    return lint_failure!(format!(
+            let lint_prefix = format!("The value of {RELATED_FIELD},");
+            if annotations.len() > MAX_CATEGORIES {
+                return lint_failure!(format!(
                         "{lint_prefix} can not contain more than {MAX_CATEGORIES} categories. Please reduce the amount of categories.",
                     ));
-                }
+            }
 
-                // Checking for duplicate categories are actually unnecessary. Because they're checked on parsing level.
-                // But I'm keeping it here if harriet decides to allow for duplicate annotations later.
-                let mut checked_literals: Vec<&str> = vec![];
-                let lint_results = annotations
+            // Checking for duplicate categories are actually unnecessary. Because they're checked on parsing level.
+            // But I'm keeping it here if harriet decides to allow for duplicate annotations later.
+            let mut checked_literals: Vec<&str> = vec![];
+            let lint_results = annotations
                     .iter()
                     .map(|annotation| {
                         annotation.object().as_literal().map_or_else(
@@ -172,20 +175,19 @@ impl Lint for HasRegistryCategory {
                         )
                     })
                     .collect::<Vec<LintResult>>();
-                
-                checked_literals.clear();
-                for result in lint_results {
-                    if let LintResult::Failure(messages) = result {
-                        return lint_failure!(format!(
-                            "Some {RELATED_FIELD} annotations are invalid. More info: {}",
-                            messages.join(", ")
-                        ));
-                    }
-                }
-                lint_success!(format!("All {RELATED_FIELD} annotations are valid."))
-            } else {
-                lint_failure!(NO_ROOT_PREFIX)
-            }
 
+            checked_literals.clear();
+            for result in lint_results {
+                if let LintResult::Failure(messages) = result {
+                    return lint_failure!(format!(
+                        "Some {RELATED_FIELD} annotations are invalid. More info: {}",
+                        messages.join(", ")
+                    ));
+                }
+            }
+            lint_success!(format!("All {RELATED_FIELD} annotations are valid."))
+        } else {
+            lint_failure!(NO_ROOT_PREFIX)
+        }
     }
 }

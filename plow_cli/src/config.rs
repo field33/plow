@@ -6,7 +6,7 @@ use crate::error::LoginError::*;
 use crate::subcommand::login::CredentialsFile;
 use camino::Utf8Path;
 use camino::Utf8PathBuf;
-use std::str::FromStr;
+use core::str::FromStr;
 
 use self::files::workspace_config::WorkspaceConfigFile;
 

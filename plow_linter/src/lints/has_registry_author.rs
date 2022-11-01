@@ -1,15 +1,20 @@
-use crate::{lint::{
-    common_error_literals::{NO_ROOT_PREFIX, },
-    helpers::{catch_single_or_multiple_annotations_which_must_exist, fail_if_contains_inappropriate_word},
-    lint_failure, lint_success, Lint, LintResult,
-}, Linter, MultiReaderRdfGraph};
+use crate::{
+    lint::{
+        common_error_literals::NO_ROOT_PREFIX,
+        helpers::{
+            catch_single_or_multiple_annotations_which_must_exist,
+            fail_if_contains_inappropriate_word,
+        },
+        lint_failure, lint_success, Lint, LintResult,
+    },
+    Linter, MultiReaderRdfGraph,
+};
 
-
+use field33_rdftk_iri_temporary_fork::IRI as RDFTK_IRI;
 use plow_ontology::constants::REGISTRY_AUTHOR;
 use plow_package_management::metadata::get_root_prefix;
-use field33_rdftk_iri_temporary_fork::IRI as RDFTK_IRI;
-use std::{collections::HashSet, any::Any};
 use std::str::FromStr;
+use std::{any::Any, collections::HashSet};
 
 const RELATED_FIELD: &str = "`registry:author`";
 /// A sane character count for a persons name, it is a guess so might be updated later.
@@ -21,7 +26,7 @@ pub struct HasRegistryAuthor;
 impl Lint for HasRegistryAuthor {
     fn as_any(&self) -> &dyn Any {
         self
-    }     
+    }
     fn short_description(&self) -> &str {
         "Check that the field is annotated with a value for `registry:author`"
     }
@@ -37,30 +42,30 @@ impl Lint for HasRegistryAuthor {
     ) -> LintResult {
         let rdf_factory = field33_rdftk_core_temporary_fork::simple::statement::statement_factory();
         if let Some(root_prefix) = get_root_prefix(document) {
-                            let graph_ref = rdf_graph;
+            let graph_ref = rdf_graph;
             let graph = graph_ref.borrow();
-                // We explicitly pass valid data, unwrap is safe here.
-                #[allow(clippy::unwrap_used)]
-                let annotations = graph
-                    .statements()
-                    .filter(|statement| {
-                        statement.subject()
-                            == &rdf_factory
-                                .named_subject(RDFTK_IRI::from_str(root_prefix).unwrap().into())
-                            && statement.predicate()
-                                == &RDFTK_IRI::from_str(REGISTRY_AUTHOR).unwrap().into()
-                    })
-                    .collect::<HashSet<_>>();
+            // We explicitly pass valid data, unwrap is safe here.
+            #[allow(clippy::unwrap_used)]
+            let annotations = graph
+                .statements()
+                .filter(|statement| {
+                    statement.subject()
+                        == &rdf_factory
+                            .named_subject(RDFTK_IRI::from_str(root_prefix).unwrap().into())
+                        && statement.predicate()
+                            == &RDFTK_IRI::from_str(REGISTRY_AUTHOR).unwrap().into()
+                })
+                .collect::<HashSet<_>>();
 
-                if let Some(failure) =
-                    catch_single_or_multiple_annotations_which_must_exist(&annotations, RELATED_FIELD)
-                {
-                    return failure;
-                }
+            if let Some(failure) =
+                catch_single_or_multiple_annotations_which_must_exist(&annotations, RELATED_FIELD)
+            {
+                return failure;
+            }
 
-                let lint_prefix = RELATED_FIELD.to_owned();
+            let lint_prefix = RELATED_FIELD.to_owned();
 
-                let lint_results = annotations.iter().map(|annotation| {
+            let lint_results = annotations.iter().map(|annotation| {
                     annotation.object().as_literal().map_or_else(
                         || lint_failure!(format!("{lint_prefix} is not a literal.")),
                         |literal| {
@@ -109,15 +114,17 @@ impl Lint for HasRegistryAuthor {
                         },
                     )
                 }).collect::<Vec<LintResult>>();
-                for result in  lint_results {
-                    if let LintResult::Failure(messages) = result {
-                       return lint_failure!(format!("Some {lint_prefix} annotations are invalid. More info: {}", messages.join(", ")));
-                    }
+            for result in lint_results {
+                if let LintResult::Failure(messages) = result {
+                    return lint_failure!(format!(
+                        "Some {lint_prefix} annotations are invalid. More info: {}",
+                        messages.join(", ")
+                    ));
                 }
-                lint_success!(format!("All {lint_prefix} annotations are valid."))
-            } else {
-                lint_failure!(NO_ROOT_PREFIX)
             }
-
+            lint_success!(format!("All {lint_prefix} annotations are valid."))
+        } else {
+            lint_failure!(NO_ROOT_PREFIX)
+        }
     }
 }

@@ -223,6 +223,7 @@ impl Linter<'_> {
             if lint_set.id == id {
                 let set_results = lint_set.lints.iter().fold(vec![], |mut set_results, lint| {
                     let result = lint.run(self);
+
                     set_results.push(result);
                     set_results
                 });

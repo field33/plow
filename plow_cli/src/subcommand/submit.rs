@@ -135,10 +135,9 @@ fn send_submission(
     dry_run: bool,
 ) -> Result<RegistryResponse, CliError> {
     let client = reqwest::blocking::Client::new();
-
     let submission_response = client
         .post(submission_url)
-        .header("Authorization", &format!("Basic {token}"))
+        .header(reqwest::header::AUTHORIZATION, &format!("Basic {token}"))
         .multipart(submission)
         .send()
         .map_err(|err| RequestFailed { code: err.status() })?;

@@ -1,7 +1,7 @@
 //! This module is temporary to provide field consumption and dependency resolution functionality for the CLI.
 //! It is an initial implementation to bring the functionality and  most likely to be rewritten very soon.
 
-use std::{convert::TryFrom, str::FromStr};
+use core::{convert::TryFrom, str::FromStr};
 
 use colored::Colorize;
 use plow_package_management::{
@@ -42,17 +42,21 @@ pub struct PrivateIndex {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PrivateIndexes(Vec<PrivateIndex>);
+pub struct PrivateIndexes {
+    owner_org_ids: Vec<String>,
+    indexes: Vec<PrivateIndex>,
+}
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivateIndexResponse {
     status: String,
-    data: Vec<PrivateIndex>,
+    data: PrivateIndexes,
 }
 
 #[allow(clippy::too_many_lines)]
 pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
     let token = config.get_saved_api_token()?;
     let registry_url = config.get_registry_url()?;
+    dbg!(&registry_url);
     let private_index_sync_url = format!("{registry_url}/v1/index/private/sync");
     let client = reqwest::blocking::Client::new();
 
@@ -69,8 +73,8 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
 
     let private_index_sync_response = client
         .post(private_index_sync_url)
-        .header("Authorization", &format!("Basic {token}"))
-        .header("Content-Type", "application/json")
+        .header(reqwest::header::AUTHORIZATION, &format!("Basic {token}"))
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
         .json(&query)
         .send();
 
@@ -88,7 +92,7 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
                     // dbg!(&priv_indexes);
 
                     if let Ok(priv_indexes) = priv_indexes {
-                        let priv_indexes = priv_indexes.data;
+                        let priv_indexes = priv_indexes.data.indexes;
                         for index in priv_indexes {
                             let deps = index
                                 .deps
@@ -132,6 +136,8 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
                             "Private index".green().bold(),
                         );
                     } else {
+                        dbg!("whoos");
+                        dbg!(priv_indexes);
                         println!(
                             "\t{} skipping update ..",
                             "Remote private index fetch failed.".red().bold(),
@@ -160,6 +166,8 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
                 }
             }
             StatusCode::UNAUTHORIZED => {
+                dbg!(&response);
+                dbg!(String::from_utf8(response.bytes().unwrap().to_vec()));
                 println!(
                     "\t{} try authenticating with plow login <api-token>, skipping update ..",
                     "Unauthorized get updates from the private index"
@@ -187,15 +195,22 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
         "Attempting".green().bold(),
     );
 
-    // TODO: Move these somewhere else?
-    let clone_from = "git@github.com:field33/plow-registry-index.git";
-    let public_index_git_repo_path = &config.index_dir.join("plow-registry-index");
-
-    let pull_command = if !config.index_dir.join("plow-registry-index").exists() {
-        "cd ~/.plow/registry/index && git clone https://github.com/field33/plow-registry-index.git && git pull"
-    } else {
-        "cd ~/.plow/registry/index/plow-registry-index && git fetch --all && git reset --hard origin/main && git pull"
+    let public_index_name = match config.get_registry_url()? {
+        url if url.contains("localhost") => "test-public-registry-index",
+        url if url.contains("staging-api") => "staging-public-registry-index",
+        _ => "plow-registry-index",
     };
+
+    // TODO: Move these somewhere else?
+    let clone_from = format!("git@github.com:field33/{public_index_name}.git");
+    let public_index_git_repo_path = &config.index_dir.join(public_index_name);
+
+    let pull_command = if !config.index_dir.join(public_index_name).exists() {
+        format!("cd ~/.plow/registry/index && git clone https://github.com/field33/{public_index_name}.git && git pull")
+    } else {
+        format!("cd ~/.plow/registry/index/{public_index_name} && git fetch --all && git reset --hard origin/main && git pull")
+    };
+
     if let Some(ref user_home) = config.user_home {
         if which::which("git").is_ok() {
             // TODO: Proper error handling
@@ -209,7 +224,7 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
             let repository = PublicIndexRepository::clone_or_open(
                 clone_from,
                 &public_index_git_repo_path,
-                "main",
+                "main".to_owned(),
                 Some(&&ssh_key_path),
                 None,
             )
