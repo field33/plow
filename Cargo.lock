@@ -3731,7 +3731,7 @@ dependencies = [
 
 [[package]]
 name = "plow_cli"
-version = "0.4.6"
+version = "0.4.7"
 dependencies = [
  "anyhow",
  "camino",
@@ -3749,7 +3749,7 @@ dependencies = [
  "memchr",
  "nom",
  "open",
- "plow_linter 0.2.7",
+ "plow_linter 0.2.6",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_package_management 0.3.0",
  "rayon",

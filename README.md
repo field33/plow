@@ -101,9 +101,14 @@ If you have protege installed in your system and if your field does not have par
 To prepare for submitting a new _field_ run the following command:
 
 ```shell
+# Public submission
 plow submit <path-to-your-field> --dry-run
+
+# Private submission
+plow submit --private <path-to-your-field> --dry-run
 ```
 
+The `--dry-run` flag will indicate our backend to go through the submission pipeline and pre-submission checks but not finalize the submission.
 If all checks pass you can omit the `--dry-run` flag and submit your _field_ by running:
 
 ```shell
