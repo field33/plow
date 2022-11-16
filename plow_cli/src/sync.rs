@@ -56,7 +56,6 @@ pub struct PrivateIndexResponse {
 pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
     let token = config.get_saved_api_token()?;
     let registry_url = config.get_registry_url()?;
-    dbg!(&registry_url);
     let private_index_sync_url = format!("{registry_url}/v1/index/private/sync");
     let client = reqwest::blocking::Client::new();
 
@@ -85,11 +84,8 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
             StatusCode::OK => {
                 // Get the response
                 if let Ok(response_body) = response.bytes() {
-                    // dbg!(String::from_utf8(response_body.to_vec()));
                     let priv_indexes: Result<PrivateIndexResponse, _> =
                         serde_json::from_slice(&response_body);
-
-                    // dbg!(&priv_indexes);
 
                     if let Ok(priv_indexes) = priv_indexes {
                         let priv_indexes = priv_indexes.data.indexes;
@@ -130,14 +126,12 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
                                 );
                             }
                         }
-                        // dbg!(&registry.packages_metadata);
+
                         println!(
                             "\t{} is updated successfully.",
                             "Private index".green().bold(),
                         );
                     } else {
-                        dbg!("whoos");
-                        dbg!(priv_indexes);
                         println!(
                             "\t{} skipping update ..",
                             "Remote private index fetch failed.".red().bold(),
@@ -166,8 +160,6 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
                 }
             }
             StatusCode::UNAUTHORIZED => {
-                dbg!(&response);
-                dbg!(String::from_utf8(response.bytes().unwrap().to_vec()));
                 println!(
                     "\t{} try authenticating with plow login <api-token>, skipping update ..",
                     "Unauthorized get updates from the private index"
@@ -282,7 +274,7 @@ pub fn sync(config: &PlowConfig) -> Result<InMemoryRegistry, CliError> {
             registry.packages_metadata.insert(ver, version);
         }
     }
-    // dbg!(&registry);
+
     println!(
         "\t{} is updated successfully.",
         "Public index".green().bold(),
