@@ -58,11 +58,15 @@ pub fn catch_single_or_multiple_annotations_which_must_exist(
 
 #[allow(dead_code)]
 /// An internal helper which checks a literal for an english language tag.
+///
+/// This is currently a no-op as a step of allowing for other languages to be used.
+/// Later on this will be improved to check for arbitrary language tags when rule sets are implemented.
 pub fn literal_has_language_tag_and_it_is_english(literal: &Rc<dyn Literal>) -> bool {
-    if let Some(LanguageTag::Tag(tag)) = literal.language() {
-        return tag.language() == "en";
-    }
-    false
+    // if let Some(LanguageTag::Tag(tag)) = literal.language() {
+    //     return tag.language() == "en";
+    // }
+    // false
+    true
 }
 
 /// An internal helper which returns a lint failure if the literal contains a language tag.

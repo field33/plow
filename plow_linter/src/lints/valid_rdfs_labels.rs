@@ -96,20 +96,20 @@ impl Lint for ValidRdfsLabels {
 
                             // Validate those labels
                             if let Some(literal) = statement.object().as_literal() {
-                                const ENGLISH_LANGUAGE_CODE: &str = "en";
-                                if let Some(language_tag) = literal.language() {
+                                // const ENGLISH_LANGUAGE_CODE: &str = "en";
+                                // if let Some(language_tag) = literal.language() {
 
-                                    if language_tag.to_string() != ENGLISH_LANGUAGE_CODE {
-                                        failures.push(format!(
-                                            "{common_failure_prefix} does not have `@en` as a language tag."
-                                        ));
-                                    }
-                                }
-                                else {
-                                    failures.push(format!(
-                                        "{common_failure_prefix} does not have any language tag."
-                                    ));
-                                }
+                                //     if language_tag.to_string() != ENGLISH_LANGUAGE_CODE {
+                                //         failures.push(format!(
+                                //             "{common_failure_prefix} does not have `@en` as a language tag."
+                                //         ));
+                                //     }
+                                // }
+                                // else {
+                                //     failures.push(format!(
+                                //         "{common_failure_prefix} does not have any language tag."
+                                //     ));
+                                // }
                             } else {
                                 failures.push(format!(
                                     "{common_failure_prefix} is not a literal."
