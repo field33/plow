@@ -3865,7 +3865,7 @@ dependencies = [
  "nom",
  "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.2.5",
  "rayon",
  "regex",
  "rustrict 0.5.1",
@@ -3894,7 +3894,7 @@ dependencies = [
  "nom",
  "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.2.5",
  "rayon",
  "regex",
  "rustrict 0.5.1",
@@ -3980,33 +3980,6 @@ dependencies = [
 [[package]]
 name = "plow_package_management"
 version = "0.2.5"
-dependencies = [
- "anyhow",
- "camino",
- "dirs",
- "fallible-iterator",
- "field33_rdftk_core_temporary_fork",
- "field33_rdftk_iri_temporary_fork",
- "git2",
- "glob",
- "harriet 0.2.3",
- "itertools 0.10.5",
- "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.8",
- "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "pubgrub",
- "semver 1.0.14",
- "serde",
- "serde_json",
- "sha2 0.10.6",
- "tempdir",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "plow_package_management"
-version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8c8b2c89eaad9a24604980218e92d9e34b6f4673b8795bdb0b2d0f59d056433"
 dependencies = [
@@ -4053,6 +4026,33 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.6",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "plow_package_management"
+version = "0.3.1"
+dependencies = [
+ "anyhow",
+ "camino",
+ "dirs",
+ "fallible-iterator",
+ "field33_rdftk_core_temporary_fork",
+ "field33_rdftk_iri_temporary_fork",
+ "git2",
+ "glob",
+ "harriet 0.2.3",
+ "itertools 0.10.5",
+ "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_linter 0.2.8",
+ "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pubgrub",
+ "semver 1.0.14",
+ "serde",
+ "serde_json",
+ "sha2 0.10.6",
+ "tempdir",
  "thiserror",
  "toml",
 ]
