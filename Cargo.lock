@@ -3880,7 +3880,7 @@ dependencies = [
 
 [[package]]
 name = "plow_linter"
-version = "0.2.7"
+version = "0.2.8"
 dependencies = [
  "addr",
  "anyhow",
@@ -3992,7 +3992,7 @@ dependencies = [
  "harriet 0.2.3",
  "itertools 0.10.5",
  "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.7",
+ "plow_linter 0.2.8",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "pubgrub",
  "semver 1.0.14",
