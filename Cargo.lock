@@ -2343,6 +2343,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "harriet"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54a5be22faafbde9e1b96cd39eddc8f98eb015fa8b7cb35de24bf7ee20d7c1c9"
+dependencies = [
+ "anyhow",
+ "cookie-factory",
+ "either",
+ "nom",
+ "oxiri",
+ "snowflake",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3743,7 +3757,7 @@ dependencies = [
  "fallible-iterator",
  "fs_extra",
  "git2",
- "harriet 0.2.3",
+ "harriet 0.3.0",
  "itertools 0.10.5",
  "lazy_static",
  "memchr",
@@ -3782,7 +3796,7 @@ version = "0.2.2"
 dependencies = [
  "field33_rdftk_core_temporary_fork",
  "field33_rdftk_iri_temporary_fork",
- "harriet 0.2.3",
+ "harriet 0.3.0",
  "thiserror",
 ]
 
@@ -3890,7 +3904,7 @@ dependencies = [
  "email_address",
  "field33_rdftk_core_temporary_fork",
  "field33_rdftk_iri_temporary_fork",
- "harriet 0.2.3",
+ "harriet 0.3.0",
  "nom",
  "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3929,7 +3943,6 @@ dependencies = [
  "anyhow",
  "field33_rdftk_core_temporary_fork",
  "field33_rdftk_iri_temporary_fork",
- "harriet 0.2.3",
  "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_linter 0.2.6",
  "serde",
@@ -4042,7 +4055,7 @@ dependencies = [
  "field33_rdftk_iri_temporary_fork",
  "git2",
  "glob",
- "harriet 0.2.3",
+ "harriet 0.3.0",
  "itertools 0.10.5",
  "plow_graphify 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_linter 0.2.8",
