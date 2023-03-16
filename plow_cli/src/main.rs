@@ -81,13 +81,13 @@ pub fn main() {
     let app = App::new("plow")
         .version(env!("CARGO_PKG_VERSION"))
         .about("Plowing the field of knowledge. Package management for ontologies.")
-        // .arg(
-        //     Arg::with_name("registry")
-        //         .value_name("url")
-        //         .long("registry")
-        //         .help("Specifies the target registry for subcommands which interact with it.")
-        //         .takes_value(true),
-        // )
+        .arg(
+            Arg::with_name("registry")
+                .value_name("url")
+                .long("registry")
+                .help("Specifies the target registry for subcommands which interact with it.")
+                .takes_value(true),
+        )
         // .arg(
         //     Arg::with_name("fetch-with-cli")
         //         .long("fetch-with-cli")
@@ -114,8 +114,8 @@ pub fn main() {
     let options = app.clone().get_matches();
 
     let custom_plow_home_path = options.get_one::<String>("config").map(Utf8PathBuf::from);
-    // let custom_registry_url = options.get_one::<String>("registry").cloned();
-    let custom_registry_url = None;
+    let custom_registry_url = options.get_one::<String>("registry").cloned();
+    // let custom_registry_url = None;
     // let fetch_with_cli = options.get_flag("fetch-with-cli");
     // TODO: This option is not read anymore. And will be removed soon.
     let fetch_with_cli = false;
