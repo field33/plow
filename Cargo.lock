@@ -2438,20 +2438,6 @@ dependencies = [
 
 [[package]]
 name = "harriet"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83b0bd0a70cfc001762d3f795f0d86fa0c87211b049c6720944484b76e7c5172"
-dependencies = [
- "anyhow",
- "cookie-factory",
- "either",
- "nom",
- "oxiri",
- "snowflake",
-]
-
-[[package]]
-name = "harriet"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "54a5be22faafbde9e1b96cd39eddc8f98eb015fa8b7cb35de24bf7ee20d7c1c9"
@@ -3889,7 +3875,7 @@ dependencies = [
 
 [[package]]
 name = "plow_cli"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "anyhow",
  "camino",
@@ -3907,7 +3893,7 @@ dependencies = [
  "memchr",
  "nom",
  "open",
- "plow_linter 0.2.8",
+ "plow_linter 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_package_management 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon",
@@ -4007,9 +3993,7 @@ dependencies = [
 
 [[package]]
 name = "plow_linter"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19b670be9eb10040f5854e2f8d21c82cc6201f3bbe854d3951b4de5bafb9cef0"
+version = "0.2.9"
 dependencies = [
  "addr",
  "anyhow",
@@ -4019,11 +4003,11 @@ dependencies = [
  "email_address",
  "field33_rdftk_core_temporary_fork",
  "field33_rdftk_iri_temporary_fork",
- "harriet 0.2.3",
+ "harriet 0.3.0",
  "nom",
  "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.2.6",
+ "plow_package_management 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon",
  "regex",
  "rustrict 0.5.14",
@@ -4039,6 +4023,8 @@ dependencies = [
 [[package]]
 name = "plow_linter"
 version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3185aee2045778613160a7d07d1fdb8abcb55f2b6e48dbbea6ac0d094a54bed4"
 dependencies = [
  "addr",
  "anyhow",
@@ -4088,7 +4074,7 @@ dependencies = [
  "field33_rdftk_core_temporary_fork",
  "field33_rdftk_iri_temporary_fork",
  "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.8",
+ "plow_linter 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
 ]
@@ -4125,33 +4111,6 @@ dependencies = [
  "pubgrub",
  "rdftk_core",
  "rdftk_iri",
- "semver 1.0.17",
- "serde",
- "serde_json",
- "sha2 0.10.6",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "plow_package_management"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0149020a3373bdeadf1fb6e5f498a587104e126c3782227d163f8ba9de834713"
-dependencies = [
- "anyhow",
- "camino",
- "dirs",
- "fallible-iterator",
- "field33_rdftk_core_temporary_fork",
- "field33_rdftk_iri_temporary_fork",
- "git2",
- "glob",
- "harriet 0.2.3",
- "itertools 0.10.5",
- "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "pubgrub",
  "semver 1.0.17",
  "serde",
  "serde_json",
