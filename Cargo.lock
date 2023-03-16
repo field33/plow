@@ -3907,9 +3907,9 @@ dependencies = [
  "memchr",
  "nom",
  "open",
- "plow_linter 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_linter 0.2.8",
  "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.3.1",
+ "plow_package_management 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon",
  "regex",
  "reqwest",
@@ -4008,6 +4008,8 @@ dependencies = [
 [[package]]
 name = "plow_linter"
 version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19b670be9eb10040f5854e2f8d21c82cc6201f3bbe854d3951b4de5bafb9cef0"
 dependencies = [
  "addr",
  "anyhow",
@@ -4017,7 +4019,7 @@ dependencies = [
  "email_address",
  "field33_rdftk_core_temporary_fork",
  "field33_rdftk_iri_temporary_fork",
- "harriet 0.3.0",
+ "harriet 0.2.3",
  "nom",
  "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -4036,9 +4038,7 @@ dependencies = [
 
 [[package]]
 name = "plow_linter"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19b670be9eb10040f5854e2f8d21c82cc6201f3bbe854d3951b4de5bafb9cef0"
+version = "0.2.9"
 dependencies = [
  "addr",
  "anyhow",
@@ -4048,11 +4048,11 @@ dependencies = [
  "email_address",
  "field33_rdftk_core_temporary_fork",
  "field33_rdftk_iri_temporary_fork",
- "harriet 0.2.3",
+ "harriet 0.3.0",
  "nom",
  "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.2.6",
+ "plow_package_management 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon",
  "regex",
  "rustrict 0.5.14",
@@ -4088,7 +4088,7 @@ dependencies = [
  "field33_rdftk_core_temporary_fork",
  "field33_rdftk_iri_temporary_fork",
  "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_linter 0.2.8",
  "serde",
  "serde_json",
 ]
@@ -4162,33 +4162,6 @@ dependencies = [
 
 [[package]]
 name = "plow_package_management"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90794a459e85290077e0b46bc2da9e168b747e88037508968da78bf157aa76a2"
-dependencies = [
- "anyhow",
- "camino",
- "dirs",
- "fallible-iterator",
- "field33_rdftk_core_temporary_fork",
- "field33_rdftk_iri_temporary_fork",
- "git2",
- "glob",
- "harriet 0.2.3",
- "itertools 0.10.5",
- "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "pubgrub",
- "semver 1.0.17",
- "serde",
- "serde_json",
- "sha2 0.10.6",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "plow_package_management"
 version = "0.3.2"
 dependencies = [
  "anyhow",
@@ -4202,7 +4175,7 @@ dependencies = [
  "harriet 0.3.0",
  "itertools 0.10.5",
  "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.8",
+ "plow_linter 0.2.9",
  "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "pubgrub",
  "semver 1.0.17",
@@ -4210,6 +4183,33 @@ dependencies = [
  "serde_json",
  "sha2 0.10.6",
  "tempdir",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "plow_package_management"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "718f13d2078c5240eb1b3ad5358453835686e2b467952f302e7131ec200b4b80"
+dependencies = [
+ "anyhow",
+ "camino",
+ "dirs",
+ "fallible-iterator",
+ "field33_rdftk_core_temporary_fork",
+ "field33_rdftk_iri_temporary_fork",
+ "git2",
+ "glob",
+ "harriet 0.3.0",
+ "itertools 0.10.5",
+ "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pubgrub",
+ "semver 1.0.17",
+ "serde",
+ "serde_json",
+ "sha2 0.10.6",
  "thiserror",
  "toml",
 ]
