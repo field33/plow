@@ -3895,7 +3895,7 @@ dependencies = [
  "open",
  "plow_linter 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.3.2",
  "rayon",
  "regex",
  "reqwest",
@@ -4007,7 +4007,7 @@ dependencies = [
  "nom",
  "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.3.2",
  "rayon",
  "regex",
  "rustrict 0.5.14",
@@ -4038,7 +4038,7 @@ dependencies = [
  "nom",
  "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_package_management 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_package_management 0.3.2",
  "rayon",
  "regex",
  "rustrict 0.5.14",
@@ -4122,33 +4122,6 @@ dependencies = [
 [[package]]
 name = "plow_package_management"
 version = "0.3.2"
-dependencies = [
- "anyhow",
- "camino",
- "dirs",
- "fallible-iterator",
- "field33_rdftk_core_temporary_fork",
- "field33_rdftk_iri_temporary_fork",
- "git2",
- "glob",
- "harriet 0.3.0",
- "itertools 0.10.5",
- "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "plow_linter 0.2.9",
- "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "pubgrub",
- "semver 1.0.17",
- "serde",
- "serde_json",
- "sha2 0.10.6",
- "tempdir",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "plow_package_management"
-version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "718f13d2078c5240eb1b3ad5358453835686e2b467952f302e7131ec200b4b80"
 dependencies = [
@@ -4169,6 +4142,33 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.6",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "plow_package_management"
+version = "0.3.3"
+dependencies = [
+ "anyhow",
+ "camino",
+ "dirs",
+ "fallible-iterator",
+ "field33_rdftk_core_temporary_fork",
+ "field33_rdftk_iri_temporary_fork",
+ "git2",
+ "glob",
+ "harriet 0.3.0",
+ "itertools 0.10.5",
+ "plow_graphify 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "plow_linter 0.2.9",
+ "plow_ontology 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pubgrub",
+ "semver 1.0.17",
+ "serde",
+ "serde_json",
+ "sha2 0.10.6",
+ "tempdir",
  "thiserror",
  "toml",
 ]

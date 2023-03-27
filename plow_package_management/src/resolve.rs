@@ -409,8 +409,6 @@ impl<'req_resolver> DependencyProvider<String, SemanticVersion>
                         .registry
                         .all_available_versions_of_a_package(package.borrow().clone());
 
-                    dbg!(&available_packages);
-
                     // Sort by version, descending.
                     available_packages.sort_by(|a, b| b.version.cmp(&a.version));
 
