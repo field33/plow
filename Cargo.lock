@@ -3875,9 +3875,10 @@ dependencies = [
 
 [[package]]
 name = "plow_cli"
-version = "0.4.9"
+version = "0.5.0"
 dependencies = [
  "anyhow",
+ "base64 0.13.1",
  "camino",
  "chrono",
  "clap",

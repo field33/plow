@@ -105,6 +105,7 @@ pub fn main() {
         .subcommand(subcommand::lint::attach_as_sub_command())
         .subcommand(subcommand::login::attach_as_sub_command())
         .subcommand(subcommand::submit::attach_as_sub_command())
+        .subcommand(subcommand::list::attach_as_sub_command())
         .subcommand(subcommand::init::attach_as_sub_command())
         .subcommand(subcommand::update::attach_as_sub_command())
         .subcommand(subcommand::protege::attach_as_sub_command())
@@ -136,6 +137,10 @@ pub fn main() {
                 }
                 Some(("submit", sub_matches)) => {
                     subcommand::submit::run_command(sub_matches, config).feedback();
+                    Some(())
+                }
+                Some(("list", sub_matches)) => {
+                    subcommand::list::run_command(sub_matches, config).feedback();
                     Some(())
                 }
                 Some(("init", sub_matches)) => {

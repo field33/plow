@@ -11,6 +11,12 @@ pub trait Feedback {
     fn feedback(&self);
 }
 
+pub fn listing_failed(info: &str) {
+    println!("\t{}", "Listing failed".red().bold(),);
+    println!("\t{} {info}", "Info".yellow().bold(),);
+    std::process::exit(0xFF);
+}
+
 pub fn submission_failed(info: &str) {
     println!("\t{}", "Submission failed".red().bold(),);
     println!("\t{} {info}", "Info".yellow().bold(),);
@@ -98,6 +104,12 @@ pub fn info(info: &str) {
 
 pub fn command_not_complete(advice: &str) {
     println!("\t{}", "Command is not complete".red().bold(),);
+    println!("\t{} {advice}", "Advice".yellow().bold(),);
+    std::process::exit(0xFF);
+}
+
+pub fn argument_not_recognized(advice: &str) {
+    println!("\t{}", "Argument not recognized".red().bold(),);
     println!("\t{} {advice}", "Advice".yellow().bold(),);
     std::process::exit(0xFF);
 }
