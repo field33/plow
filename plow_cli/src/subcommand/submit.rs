@@ -32,6 +32,13 @@ pub fn attach_as_sub_command() -> App<'static> {
                 .long("private")
                 .help("Submit the field privately.")
         )
+        .arg(
+            Arg::with_name("org-owned")
+                .value_name("id")
+                .long("org-owned")
+                .help("Submits the field under the ownership of the specified organization.")
+                .takes_value(true),
+        )
         .arg(arg!([FIELD_PATH]))
         .setting(AppSettings::ArgRequiredElseHelp)
 }
@@ -102,13 +109,21 @@ fn run_command_flow(
         // File linted and ready to submit.
         let public = !sub_matches.is_present("private");
         let dry_run = sub_matches.is_present("dry-run");
+        let plo_owned = sub_matches.get_one::<String>("org-owned").cloned();
 
-        let submission = reqwest::blocking::multipart::Form::new()
-            .text("public", if public { "true" } else { "false" })
-            .file("field", &field_file_path)
-            .map_err(|_| FailedToReadFieldAtPath {
-                field_path: field_file_path.clone().into(),
-            })?;
+        let mut submission = reqwest::blocking::multipart::Form::new()
+            .text("public", if public { "true" } else { "false" });
+
+        if let Some(owner_plo_id) = plo_owned {
+            submission = submission.text("owner_plo_id", owner_plo_id);
+        }
+
+        submission =
+            submission
+                .file("field", &field_file_path)
+                .map_err(|_| FailedToReadFieldAtPath {
+                    field_path: field_file_path.clone().into(),
+                })?;
 
         // Read credentials
         let token = config.get_saved_api_token()?;

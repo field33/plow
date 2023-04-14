@@ -6,11 +6,14 @@ mod field_download;
 mod field_init;
 mod index_sync;
 mod lint;
+mod list;
 mod login;
 mod protege;
 mod resolve;
 mod submission;
 mod workspace_init;
+
+use std::f32::consts::E;
 
 pub use config::ConfigError;
 pub use field_access::FieldAccessError;
@@ -18,6 +21,7 @@ pub use field_download::FieldDownloadError;
 pub use field_init::FieldInitializationError;
 pub use index_sync::IndexSyncError;
 pub use lint::LintSubcommandError;
+pub use list::ListError;
 pub use login::LoginError;
 pub use protege::ProtegeSubcommandError;
 pub use resolve::ResolveError;
@@ -51,12 +55,20 @@ pub enum CliError {
     FieldAccess(FieldAccessError),
     #[error("")]
     Protege(ProtegeSubcommandError),
+    #[error("")]
+    List(ListError),
     #[error("The command line option you have provided is not in the list of options. Please run plow --help to see the list of options.")]
     UnknownOption,
     #[error("Do not use when publishing, intended for fast development.")]
     Dummy,
     #[error("The Plow CLI is in alpha state and a work in progress. Probably we didn't yet enough time to handle this error. Please update frequently it is most likely to be handled soon.\n\tDetails: {0}")]
     Wip(String),
+}
+
+impl From<ListError> for CliError {
+    fn from(error: ListError) -> Self {
+        Self::List(error)
+    }
 }
 
 impl From<SubmissionError> for CliError {
@@ -128,6 +140,7 @@ impl Feedback for CliError {
     fn feedback(&self) {
         use CliError::*;
         match self {
+            List(error) => error.feedback(),
             Submission(error) => error.feedback(),
             Login(error) => error.feedback(),
             Config(error) => error.feedback(),

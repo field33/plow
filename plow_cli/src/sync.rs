@@ -43,7 +43,6 @@ pub struct PrivateIndex {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivateIndexes {
-    owner_org_ids: Vec<String>,
     indexes: Vec<PrivateIndex>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]

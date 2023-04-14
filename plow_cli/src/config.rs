@@ -92,6 +92,18 @@ impl PlowConfig {
 
         Ok(credentials.registry.token.to_owned())
     }
+
+    pub fn get_user_id(&self) -> Result<String, CliError> {
+        let token = self.get_saved_api_token()?;
+        let decoded_token = base64::decode(token)
+            .map_err(|_| CliError::Wip("Failed to get user id from token".to_owned()))?;
+        let decoded_token = String::from_utf8(decoded_token)
+            .map_err(|_| CliError::Wip("Failed to get user id from token".to_owned()))?;
+        let (user_id, _) = decoded_token
+            .split_once(':')
+            .ok_or_else(|| CliError::Wip("Failed to get user id from token".to_owned()))?;
+        Ok(user_id.to_owned())
+    }
 }
 
 #[derive(Debug)]
