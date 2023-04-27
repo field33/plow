@@ -4149,7 +4149,7 @@ dependencies = [
 
 [[package]]
 name = "plow_package_management"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "anyhow",
  "camino",

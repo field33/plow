@@ -309,20 +309,24 @@ where
     }
 
     pub fn try_new(dependency_name: &str, version_requirement: &str) -> Result<Self> {
-        let (namespace, name) = dependency_name.split('/').enumerate().fold(
-            (String::default(), String::default()),
-            |mut namespace_and_name, (index, part)| {
-                if index > 0 {
-                    namespace_and_name.1 = part.to_owned();
-                } else {
-                    // TODO: Assuming there is an @ in the start, maybe we should keep it?
-                    let mut namespace = part.to_owned();
-                    namespace.remove(0);
-                    namespace_and_name.0 = namespace;
-                }
-                namespace_and_name
-            },
-        );
+        let (namespace, name) = dependency_name
+            .split_once('/')
+            .ok_or_else(|| anyhow!("Not a valid dependency name."))?;
+        // Old hacky way of splitting the namespace and name. TODO: Remove later
+        // let (namespace, name) = dependency_name.split('/').enumerate().fold(
+        //     (String::default(), String::default()),
+        //     |mut namespace_and_name, (index, part)| {
+        //         if index > 0 {
+        //             namespace_and_name.1 = part.to_owned();
+        //         } else {
+        //             // TODO: Assuming there is an @ in the start, maybe we should keep it?
+        //             let mut namespace = part.to_owned();
+        //             namespace.remove(0);
+        //             namespace_and_name.0 = namespace;
+        //         }
+        //         namespace_and_name
+        //     },
+        // );
         let version_predicates: Vec<String> = if version_requirement.find(',').is_some() {
             // Ignore spaces and split by commas.
             version_requirement
@@ -339,15 +343,15 @@ where
             2 => Ok(Self {
                 full_name: dependency_name.to_owned(),
                 version_requirement: version_requirement.to_owned(),
-                namespace,
-                name,
+                namespace: namespace.to_owned(),
+                name: name.to_owned(),
                 version_range: Self::derive_range_for_version_request_pair(&version_predicates)?,
             }),
             1 => Ok(Self {
                 full_name: dependency_name.to_owned(),
                 version_requirement: version_requirement.to_owned(),
-                namespace,
-                name,
+                namespace: namespace.to_owned(),
+                name: name.to_owned(),
                 version_range: Self::derive_range_for_single_version_request(version_requirement)?,
             }),
             _ => Err(anyhow!(
