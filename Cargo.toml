@@ -1,7 +1,7 @@
 [workspace]
 members = [
   "plow_cli",
-  "plow_gui",
+#  "plow_gui",
   "plow_linter",
   "plow_package_management",
   "plow_graphify",
