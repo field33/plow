@@ -9,9 +9,11 @@ repository = "https://github.com/field33/plow/"
 edition = "2021"
 
 [dependencies]
+# NOTE: plow_gui is out of sync with the rest of the crates and currently in maintenance status
 plow_ontology = "0.1"
 plow_package_management = "0.1"
 plow_linter = "0.1"
+
 harriet = "0.1"
 nom = "7"
 anyhow = { version = "1.0.42", features = ["backtrace"] }

@@ -9,3 +9,9 @@ members = [
 
   "plow_backend_reference"
 ]
+
+[workspace.dependencies]
+plow_graphify = { version = "0.2.3", path = "./plow_graphify" }
+plow_linter = { version = "0.2.9", path = "./plow_linter" }
+plow_ontology = { version = "0.2.2", path = "./plow_ontology" }
+plow_package_management = { version = "0.3.4", path = "./plow_package_management" }

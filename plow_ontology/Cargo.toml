@@ -12,7 +12,8 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
-plow_graphify = "0.2"
+plow_graphify = { workspace = true }
+
 anyhow = { version = "1", features = ["backtrace"] }
 field33_rdftk_core_temporary_fork = "0.3"
 field33_rdftk_iri_temporary_fork = "0.1"
@@ -20,5 +21,5 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 [dev-dependencies]
-plow_linter = "0.2"
+plow_linter = { workspace = true }
 
