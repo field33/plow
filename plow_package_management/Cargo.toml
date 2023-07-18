@@ -31,7 +31,6 @@ toml = "0.5"
 camino = "1"
 
 [dev-dependencies]
-plow_linter = { workspace = true }
 plow_ontology = { workspace = true }
 
 tempdir = "0.3"
