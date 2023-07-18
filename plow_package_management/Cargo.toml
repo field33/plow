@@ -9,8 +9,9 @@ repository = "https://github.com/field33/plow/"
 edition = "2021"
 
 [dependencies]
-plow_ontology = "0.2"
-plow_graphify = "0.2"
+plow_ontology = { workspace = true }
+plow_graphify = { workspace = true }
+
 anyhow = { version = "1", features = ["backtrace"] }
 thiserror = "1"
 harriet = "0.3"
@@ -30,9 +31,10 @@ toml = "0.5"
 camino = "1"
 
 [dev-dependencies]
+plow_linter = { workspace = true }
+plow_ontology = { workspace = true }
+
 tempdir = "0.3"
-plow_linter = { path = "../plow_linter" }
-plow_ontology = "0.2"
 pubgrub = "0.2"
 semver = "1"
 
