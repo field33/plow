@@ -9,3 +9,18 @@ jobs:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo test --all-features
+
+  release:
+    needs: [test]
+    if: ${{ github.ref == 'refs/heads/main' }}
+    name: Release crate versions (if required)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-release
+        uses: taiki-e/install-action@v1
+        with:
+          tool: cargo-release
+      - name: Publish new crate version
+        run: cargo release publish --execute
