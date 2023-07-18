@@ -53,5 +53,5 @@ url = "2"
 fs_extra = "1"
 dotenv = "0.15"
 
-
-
+[package.metadata.release]
+publish = false
