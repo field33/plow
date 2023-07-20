@@ -4,13 +4,19 @@ on: [push, pull_request]
 jobs:
   test:
     name: cargo test
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # For these target platforms
+        include:
+          - os: ubuntu-latest
+          - os: macos-11
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo test --all-features
 
-  release:
+  release_crates:
     needs: [test]
     if: ${{ github.ref == 'refs/heads/main' }}
     name: Release crate versions (if required)
