@@ -35,4 +35,5 @@ jobs:
       - name: Publish new crate version
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo release publish --unpublished --execute --no-confirm
+        # HACK: we are currently just ignoring the failure, as the release command will fail if all packages are already published
+        run: cargo release publish --execute --no-confirm || true
