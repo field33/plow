@@ -1,0 +1,13 @@
+name: CI macOS
+on: [pull_request]
+
+jobs:
+  test:
+    name: cargo test
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup target add aarch64-apple-darwin
+      - run: cargo test --all-features --target aarch64-apple-darwin
+      - run: cargo test --all-features --target x86_64-apple-darwin
