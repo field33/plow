@@ -1,5 +1,5 @@
 name: CI
-on: [push, pull_request]
+on: [push]
 
 jobs:
   test:
@@ -29,4 +29,4 @@ jobs:
       - name: Publish new crate version
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo release publish --execute --no-confirm
+        run: cargo release publish --unpublished --execute --no-confirm
