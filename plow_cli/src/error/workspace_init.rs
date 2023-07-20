@@ -16,11 +16,11 @@ pub enum WorkspaceInitializationError {
     )]
     FailedToWriteWorkspaceManifestFile(String),
     #[error(
-        "Plow couldn't write the fields directory (fields), is your workspace read only?\n\tDetails: {0}"
+        "Plow couldn't write the src directory, is your workspace read only?\n\tDetails: {0}"
     )]
     FailedToCreateFieldsDirectory(String),
     #[error(
-        "Plow couldn't read the fields directory (fields), could there be permission issues?\n\tDetails: {0}"
+        "Plow couldn't read the src directory, could there be permission issues?\n\tDetails: {0}"
     )]
     FailedToReadFieldsDirectory(String),
     #[error(
@@ -32,11 +32,11 @@ pub enum WorkspaceInitializationError {
     )]
     FailedToRemoveWorkspaceManifestFile(String),
     #[error(
-        "Plow couldn't remove the fields directory (fields), is your workspace read only?\n\tDetails: {0}"
+        "Plow couldn't remove the src directory, is your workspace read only?\n\tDetails: {0}"
     )]
     FailedToRemoveFieldsDirectory(String),
     #[error(
-        "Failed to remove temporary fields directory. Please remove it manually.\n\tDetails: {0}"
+        "Failed to remove temporary src directory. Please remove it manually.\n\tDetails: {0}"
     )]
     FailedToRemoveBackupFieldsDirectory(String),
     #[error(

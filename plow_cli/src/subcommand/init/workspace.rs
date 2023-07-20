@@ -1,13 +1,16 @@
 pub mod fields;
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 
+use dialoguer::console::Style;
 use plow_package_management::lock::{LockFile, PackageInLockFile};
 use plow_package_management::registry::Registry;
 
 use self::fields::FieldsDirectory;
 use crate::config::files::workspace_manifest::WorkspaceManifestFile;
 use crate::config::PlowConfig;
+use crate::feedback::info;
 use crate::manifest::FieldManifest;
 use crate::resolve::resolve;
 use crate::{error::CliError, error::FieldAccessError::*, error::WorkspaceInitializationError::*};
@@ -16,9 +19,23 @@ use dialoguer::{theme::ColorfulTheme, Confirm};
 
 #[allow(clippy::too_many_lines)]
 pub fn prepare(config: &PlowConfig) -> Result<(), CliError> {
-    if Confirm::with_theme(&ColorfulTheme::default())
-        .with_prompt("Plow will restructure this folder looking for .ttl files and grouping them to another folder backing up the existing ones, would you like to continue?")
-        .default(true)
+    let theme = ColorfulTheme {
+        values_style: Style::new().yellow(),
+        ..ColorfulTheme::default()
+    };
+    if !PathBuf::from(".").read_dir().map(|mut i| i.next().is_none()).unwrap_or(false) {
+        info("Plow detected files in the current directory.");
+        if !Confirm::with_theme(&theme)
+            .with_prompt("Do you want to continue?")
+            .default(false)
+            .interact().expect("Unable to prompt in user interaction.")
+        {
+            return Err(CliError::Abort("Reason: files found in current directory. Please create an empty folder.".to_owned()))
+        }
+    }
+    if Confirm::with_theme(&theme)
+        .with_prompt("Plow will restructure this folder looking for .ttl files and grouping them to another folder, would you like to continue?")
+        .default(false)
         .interact()
         .unwrap()
     {
@@ -38,7 +55,7 @@ pub fn prepare(config: &PlowConfig) -> Result<(), CliError> {
                 .map_err(|err| FailedToRemoveWorkspaceManifestFile(err.to_string()))?;
         }
 
-        let fields_dir_path = config.working_dir.path.join("fields");
+        let fields_dir_path = config.working_dir.path.join("src");
         let maybe_backed_up_fields_dir_path =
             FieldsDirectory::backup_if_already_exists(&fields_dir_path, config)?;
 
@@ -201,8 +218,8 @@ pub fn prepare(config: &PlowConfig) -> Result<(), CliError> {
 
         // Always update the index with some plow commands.
         Ok(())
-
     } else {
-        std::process::exit(0x00);
+        return Err(CliError::Abort("Reason: folder restructuring aborted. Please choose an empty folder.".to_owned()));
+        // std::process::exit(0x00);
     }
 }

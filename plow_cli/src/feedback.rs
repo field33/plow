@@ -99,7 +99,7 @@ pub fn field_info(local_path: &Utf8Path) -> Result<(), CliError> {
 
 #[allow(dead_code)]
 pub fn info(info: &str) {
-    println!("\t{} {info}", "Info".yellow().bold());
+    println!("\t{} {info}", "Info".yellow().bold(),);
 }
 
 pub fn command_not_complete(advice: &str) {

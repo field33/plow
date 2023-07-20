@@ -13,8 +13,6 @@ mod resolve;
 mod submission;
 mod workspace_init;
 
-use std::f32::consts::E;
-
 pub use config::ConfigError;
 pub use field_access::FieldAccessError;
 pub use field_download::FieldDownloadError;
@@ -57,6 +55,8 @@ pub enum CliError {
     Protege(ProtegeSubcommandError),
     #[error("")]
     List(ListError),
+    #[error("Command aborted.")]
+    Abort(String),
     #[error("The command line option you have provided is not in the list of options. Please run plow --help to see the list of options.")]
     UnknownOption,
     #[error("Do not use when publishing, intended for fast development.")]
@@ -141,6 +141,9 @@ impl Feedback for CliError {
         use CliError::*;
         match self {
             List(error) => error.feedback(),
+            Abort(error) => {
+                command_not_complete(&format!("{self} {error}"));
+            },
             Submission(error) => error.feedback(),
             Login(error) => error.feedback(),
             Config(error) => error.feedback(),
