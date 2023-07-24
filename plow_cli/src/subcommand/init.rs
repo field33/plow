@@ -42,7 +42,7 @@ fn initialize_field(
     #[allow(clippy::unwrap_used)]
     let file_name = format!("{}.ttl", field_name.split('/').last().unwrap());
     let p = if workspace_initialized {
-        workspace_root.join("fields").join(field_name)
+        workspace_root.join("src").join(field_name)
     } else {
         workspace_root.to_path_buf()
     };

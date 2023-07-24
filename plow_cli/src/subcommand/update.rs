@@ -39,7 +39,7 @@ pub fn run_command(sub_matches: &ArgMatches, config: &PlowConfig) -> Box<dyn Fee
 
 pub fn run_command_flow(_: &ArgMatches, config: &PlowConfig) -> Result<impl Feedback, CliError> {
     let workspace_root = config.working_dir.fail_if_not_under_a_workspace()?;
-    let mut fields_dir = FieldsDirectory::fill_from_root(&workspace_root.join("fields"))?;
+    let mut fields_dir = FieldsDirectory::fill_from_root(&workspace_root.join("src"))?;
     if fields_dir.children.is_empty() && !fields_dir.exists_in_filesystem() {
         return Err(NoFieldsInDirectory.into());
     }

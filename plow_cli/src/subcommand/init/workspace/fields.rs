@@ -108,7 +108,7 @@ impl FieldsDirectory {
     pub fn create_empty_at(root: &Utf8Path) -> Self {
         Self {
             children: vec![],
-            path: root.join("fields").to_path_buf(),
+            path: root.join("src").to_path_buf(),
         }
     }
 
@@ -179,7 +179,7 @@ impl FieldsDirectory {
                     .canonicalize_utf8()
                     .unwrap()
                     .components()
-                    .contains(&camino::Utf8Component::Normal("fields"))
+                    .contains(&camino::Utf8Component::Normal("src"))
                     || !path
                         .components()
                         .contains(&camino::Utf8Component::Normal(".plow_backup"))
@@ -246,13 +246,6 @@ impl FieldsDirectory {
         std::fs::create_dir_all(&self.path)
             .map_err(|err| FailedToCreateFieldsDirectory(err.to_string()))?;
 
-        // TODO: Backup business
-        let backup_path = &self.path.parent().unwrap().join(".plow_backup");
-        if !backup_path.exists() {
-            std::fs::create_dir_all(&self.path.parent().unwrap().join(".plow_backup"))
-                .map_err(|err| FailedToCreateFieldsDirectory(err.to_string()))?;
-        }
-
         let mut copy_number = 1;
         for child in &mut self.children {
             // We're safe here, we've linted before.
@@ -284,49 +277,6 @@ impl FieldsDirectory {
                     .map_err(|err| FailedToCreateFieldsDirectory(err.to_string()))?;
 
                 child.update_path(new_field_destination);
-            }
-        }
-
-        let paths = std::fs::read_dir(&self.path.parent().unwrap()).unwrap();
-        for path in paths {
-            let dir = path.unwrap();
-            let path = Utf8PathBuf::from_path_buf(dir.path()).unwrap();
-            if path.is_dir() {
-                if dir
-                    .file_name()
-                    .to_string_lossy()
-                    .as_ref()
-                    .chars()
-                    .next()
-                    .unwrap()
-                    != '.'
-                    && dir.file_name() != "fields"
-                {
-                    let path = Utf8PathBuf::from_path_buf(dir.path()).unwrap();
-                    fs_extra::dir::copy(
-                        &path,
-                        &self.path.parent().unwrap().join(".plow_backup"),
-                        &fs_extra::dir::CopyOptions::default(),
-                    )
-                    .unwrap();
-                    std::fs::remove_dir_all(&path).unwrap();
-                }
-            }
-
-            if path.is_file() {
-                if path.file_name().unwrap() != "LICENSE" {
-                    std::fs::copy(
-                        &path,
-                        &self
-                            .path
-                            .parent()
-                            .unwrap()
-                            .join(".plow_backup")
-                            .join(path.file_name().unwrap()),
-                    )
-                    .map_err(|err| FailedToCreateFieldsDirectory(err.to_string()))?;
-                    std::fs::remove_file(&path).unwrap();
-                }
             }
         }
 

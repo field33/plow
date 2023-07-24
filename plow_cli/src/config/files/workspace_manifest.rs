@@ -137,7 +137,7 @@ impl From<&FieldsDirectory> for WorkspaceManifestFile {
             .path
             .parent()
             // Pretty handle failure here converting to try from.
-            .expect("Fields directory is in os root, probably you didn't want this to happen.")
+            .expect("Src directory is in os root, probably you didn't want this to happen.")
             .to_path_buf()
             .join("Plow.toml");
         Self { workspace, path }
