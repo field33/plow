@@ -1,10 +1,19 @@
 # Unreleased
 
+- Adjust `plow init` command to be less destructive
+
 # 0.5.2 (2023-07-24)
+
+- Switch to vendored deps for `libgit2` and `libopenssl` to make cross-platform builds easier
 
 # 0.5.1 (2023-07-18)
 
+- Align intra-workspace dependencies
+
 # 0.5.0 (2023-04-14)
+
+- Add capability to submit organization-owned fields
+- Add `plow list --organizations` command to list organizations that an authenticated user is a part of
 
 # 0.4.9 (2023-03-16)
 
