@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use harriet::{
     IRIReference, Literal, Object, ObjectList, PredicateObjectList, PrefixedName, RDFLiteral,
     Statement, StringLiteralQuote, Subject, Triples, TurtleDocument, TurtleString, Verb,
-    Whitespace, IRI,
+    IRI,
 };
 use plow_ontology::constants::REGISTRY_DEPENDENCY;
 use std::borrow::Cow;
@@ -31,9 +31,7 @@ impl EditOperation for AddDependency {
             PredicateObjectList {
                 list: vec![
                     (
-                        Whitespace {
-                            whitespace: "".into(),
-                        },
+                        None,
                         harriet::Verb::IRI(IRI::IRIReference(IRIReference {
                             iri: Cow::Borrowed(REGISTRY_DEPENDENCY),
                         })),
@@ -53,9 +51,7 @@ impl EditOperation for AddDependency {
                         None,
                     ),
                     (
-                        Whitespace {
-                            whitespace: "".into(),
-                        },
+                        None,
                         harriet::Verb::IRI(IRI::PrefixedName(PrefixedName {
                             prefix: Some(Cow::Borrowed("owl")),
                             name: Some(Cow::Borrowed("imports")),

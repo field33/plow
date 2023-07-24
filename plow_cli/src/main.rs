@@ -73,7 +73,7 @@ pub mod sync;
 pub mod utils;
 
 use camino::Utf8PathBuf;
-use clap::{App, AppSettings, Arg};
+use clap::{App, AppSettings, Arg, ErrorKind};
 use feedback::{command_failed, Feedback};
 
 #[allow(clippy::missing_panics_doc)]
@@ -112,7 +112,17 @@ pub fn main() {
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .setting(AppSettings::SubcommandPrecedenceOverArg);
 
-    let options = app.clone().get_matches();
+    let options = match app.clone().try_get_matches() {
+        Ok(options) => options,
+        Err(err) => {
+            // Exit with error code 0 instead of a failure code if called without arguments.
+            if err.kind == ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand {
+                err.print().unwrap();
+                std::process::exit(0);
+            }
+            err.exit();
+        }
+    };
 
     let custom_plow_home_path = options.get_one::<String>("config").map(Utf8PathBuf::from);
     let custom_registry_url = options.get_one::<String>("registry").cloned();
