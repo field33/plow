@@ -21,7 +21,7 @@ plow_ontology = { workspace = true }
 dialoguer = "0.10"
 clap = "3"
 nom = "7"
-harriet = "0.3"
+harriet = "0.3.1"
 anyhow = { version = "1", features = ["backtrace"] }
 dirs = "4"
 camino = "1"
@@ -45,3 +45,6 @@ fs_extra = "1"
 which = "4"
 open = "3"
 base64 = "0.13"
+
+[dev-dependencies]
+assert_cmd = "2.0.12"

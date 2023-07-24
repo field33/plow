@@ -551,7 +551,7 @@ impl<'manifest> FieldManifest<'manifest> {
     pub fn create_owl_imports_and_serialize(
         &self,
         new_predicate: (
-            Whitespace<'manifest>,
+            Option<Whitespace<'manifest>>,
             harriet::Verb<'manifest>,
             ObjectList<'manifest>,
             Option<Whitespace<'manifest>>,

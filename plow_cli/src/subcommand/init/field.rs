@@ -131,9 +131,9 @@ pub fn new(name: &str) -> std::string::String {
         PredicateObjectList {
             list: vec![
                 (
-                    Whitespace {
+                    Some(Whitespace {
                         whitespace: " ".into(),
-                    },
+                    }),
                     harriet::Verb::IRI(IRI::PrefixedName(PrefixedName {
                         prefix: Some(Cow::Borrowed("rdf")),
                         name: Some(Cow::Borrowed("type")),
@@ -264,20 +264,20 @@ pub fn make_predicate_stringy_object<'list>(
     comment_out_with_explanation: Option<&'list str>,
     language_tag: Option<&'list str>,
 ) -> (
-    Whitespace<'list>,
+    Option<Whitespace<'list>>,
     harriet::Verb<'list>,
     ObjectList<'list>,
     Option<Whitespace<'list>>,
 ) {
     (
-        comment_out_with_explanation.map_or_else(
+        Some(comment_out_with_explanation.map_or_else(
             || Whitespace {
                 whitespace: "\n".into(),
             },
             |comment_out_with_explanation| Whitespace {
                 whitespace: comment_out_with_explanation.into(),
             },
-        ),
+        )),
         harriet::Verb::IRI(IRI::PrefixedName(PrefixedName {
             prefix: Some(Cow::Borrowed(predicate_prefix)),
             name: Some(Cow::Borrowed(predicate_name)),
@@ -308,15 +308,15 @@ pub fn make_predicate_object<'list>(
     predicate_name: &'list str,
     object_list: ObjectList<'list>,
 ) -> (
-    Whitespace<'list>,
+    Option<Whitespace<'list>>,
     harriet::Verb<'list>,
     ObjectList<'list>,
     Option<Whitespace<'list>>,
 ) {
     (
-        Whitespace {
+        Some(Whitespace {
             whitespace: "\n".into(),
-        },
+        }),
         harriet::Verb::IRI(IRI::PrefixedName(PrefixedName {
             prefix: Some(Cow::Borrowed(predicate_prefix)),
             name: Some(Cow::Borrowed(predicate_name)),
