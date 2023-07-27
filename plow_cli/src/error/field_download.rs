@@ -4,8 +4,8 @@ use crate::feedback::{command_failed, Feedback};
 
 #[derive(Error, Debug)]
 pub enum FieldDownloadError {
-    #[error("Failed to download and cache field.\n\tDetails: {reason:?}")]
-    FailedToDownloadAndCacheField { reason: String },
+    #[error("Failed to download and cache field.\n\tDetails: {reason:?} - Package: {package_name:}")]
+    FailedToDownloadAndCacheField { reason: String, package_name: String },
     #[error("Failed to read the local cache of downloaded fields.\n\tDetails: {reason:?}")]
     FailedToReadFieldCache { reason: String },
 }

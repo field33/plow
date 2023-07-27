@@ -11,9 +11,10 @@ use reqwest::StatusCode;
 use crate::{
     config::PlowConfig,
     error::CliError,
-    error::{FieldDownloadError::*, ResolveError::*},
     manifest::FieldManifest,
 };
+use crate::error::FieldDownloadError::{FailedToDownloadAndCacheField, FailedToReadFieldCache};
+use crate::error::ResolveError::FailedToResolveDependencies;
 
 #[allow(clippy::missing_panics_doc)]
 #[allow(clippy::unwrap_used)]
@@ -79,11 +80,6 @@ pub fn resolve(
             })
             .collect::<Vec<_>>();
 
-        let cksums = metadatas
-            .iter()
-            .filter_map(|metadata| metadata.cksum.clone())
-            .collect::<Vec<_>>();
-
         let paths = crate::utils::list_files(&config.field_cache_dir, "ttl").map_err(|err| {
             CliError::from(FailedToReadFieldCache {
                 reason: err.to_string(),
@@ -96,16 +92,18 @@ pub fn resolve(
             .collect::<Vec<&str>>();
 
         // Cache check.
-        let cksums_to_download = cksums
+        let package_versions_to_download = metadatas
             .iter()
-            .filter(|cksum| !stems.contains(&cksum.as_str()))
+            .filter(|metadata| !stems.contains(&metadata.cksum.clone().expect("Unable to download package with missing checksum").as_str()))
             .collect::<Vec<_>>();
 
         let client = reqwest::blocking::Client::new();
         let registry_url = config.get_registry_url()?;
         let token = config.get_saved_api_token()?;
 
-        for download in cksums_to_download {
+        for package_version_to_download in package_versions_to_download {
+            let download = package_version_to_download.cksum.clone().unwrap();
+            let package_name = &package_version_to_download.package_name;
             println!("\t{} to download field contents ..", "Attempting".bold());
 
             let signed_url_request = format!("{registry_url}/v1/artifact/signed-url/{download}");
@@ -116,6 +114,7 @@ pub fn resolve(
                 .send()
                 .map_err(|err| {
                     CliError::from(FailedToDownloadAndCacheField {
+                        package_name: package_name.clone(),
                         reason: format!(
                             "Attempt of retrieving a download link for the field failed. Error: {err}"
                         ),
@@ -126,10 +125,12 @@ pub fn resolve(
             if !status.is_success() {
                 if status == StatusCode::NOT_FOUND {
                     return Err(CliError::from(FailedToDownloadAndCacheField {
+                        package_name: package_name.clone(),
                         reason: "The field was not found in registry.".to_owned(),
                     }));
                 }
                 return Err(CliError::from(FailedToDownloadAndCacheField {
+                    package_name: package_name.clone(),
                     reason: format!("Download request failed with status code: {status}"),
                 }));
             }
@@ -139,6 +140,7 @@ pub fn resolve(
                     .json::<serde_json::Value>()
                     .map_err(|_| {
                         CliError::from(FailedToDownloadAndCacheField {
+                            package_name: package_name.clone(),
                             reason: "Corrupt download link retrieved.".to_owned(),
                         })
                     })?;
@@ -147,30 +149,35 @@ pub fn resolve(
                 .get("data")
                 .ok_or_else(|| {
                     CliError::from(FailedToDownloadAndCacheField {
+                        package_name: package_name.clone(),
                         reason: "Corrupt download link retrieved.".to_owned(),
                     })
                 })?
                 .as_object()
                 .ok_or_else(|| {
                     CliError::from(FailedToDownloadAndCacheField {
+                        package_name: package_name.clone(),
                         reason: "Corrupt download link retrieved.".to_owned(),
                     })
                 })?
                 .get("url")
                 .ok_or_else(|| {
                     CliError::from(FailedToDownloadAndCacheField {
+                        package_name: package_name.clone(),
                         reason: "Corrupt download link retrieved.".to_owned(),
                     })
                 })?
                 .as_str()
                 .ok_or_else(|| {
                     CliError::from(FailedToDownloadAndCacheField {
+                        package_name: package_name.clone(),
                         reason: "Corrupt download link retrieved.".to_owned(),
                     })
                 })?;
 
             let download_result = client.get(signed_url).send().map_err(|err| {
                 CliError::from(FailedToDownloadAndCacheField {
+                    package_name: package_name.clone(),
                     reason: format!("Download link is invalid. Error: {err}"),
                 })
             })?;
@@ -179,6 +186,7 @@ pub fn resolve(
                 std::fs::File::create(&config.field_cache_dir.join(format!("{download}.ttl")))
                     .map_err(|err| {
                         CliError::from(FailedToDownloadAndCacheField {
+                            package_name: package_name.clone(),
                             reason: format!(
                                 "Couldn't write retrieved field to the filesystem. Error: {err}"
                             ),
@@ -187,6 +195,7 @@ pub fn resolve(
 
             let mut content = Cursor::new(download_result.bytes().map_err(|err| {
                 CliError::from(FailedToDownloadAndCacheField {
+                    package_name: package_name.clone(),
                     reason: format!(
                         "Couldn't write retrieved field to the filesystem. Error: {err}"
                     ),
@@ -195,6 +204,7 @@ pub fn resolve(
 
             std::io::copy(&mut content, &mut file).map_err(|err| {
                 CliError::from(FailedToDownloadAndCacheField {
+                    package_name: package_name.clone(),
                     reason: format!(
                         "Couldn't write retrieved field to the filesystem. Error: {err}"
                     ),
