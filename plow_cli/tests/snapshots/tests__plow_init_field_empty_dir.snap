@@ -1,0 +1,60 @@
+---
+source: plow_cli/tests/tests.rs
+expression: generated_ontology_contents
+---
+
+@base <http://field33.com/ontologies/@test/testname/> .
+@prefix : <http://field33.com/ontologies/@test/testname/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix registry: <http://field33.com/ontologies/REGISTRY/> .
+
+<http://field33.com/ontologies/@test/testname/> rdf:type owl:Ontology ;
+
+# Specifies the field author in a format as in the example.
+#registry:author "John Doe <john@example.com>" ;
+
+# Name of your field in the form of @namespace/name.
+registry:packageName "@test/testname" ;
+
+# A bare semantic version for your field.
+registry:packageVersion "0.1.0" ;
+
+# You may specify a maximum of 5 categories to categorize your field as in the example. Available categories could be viewed in <https://registry.field33.com>
+#registry:category "Communication", "Core", "Design" ;
+
+# You may specify a maximum of 5 keywords to describe your field as in the example.
+#registry:keyword "some", "key", "words" ;
+
+# Specify a short description for your field to be viewed in registry.field33.com. The value requires a language tag "My short description."@en
+#registry:shortDescription "A short description for the field"@en ;
+
+# Specify a description for your field to be viewed in registry.field33.com. The value requires a language tag "My Description"@en
+#rdfs:comment "A description for the field"@en ;
+
+# Specify a title for your field to be viewed in registry.field33.com. The value requires a language tag "My title"@en
+#rdfs:label "A title for the field"@en ;
+
+# If the field has dependencies you may comment the following section out and specify them as in the example.
+# registry:dependency "@namespace/name <version requirement>", "@namespace/name <version requirement>" and so on.." ;
+
+# Specifying a repository url could be helpful to lead the user to your workspace in github, gitlab etc.
+# registry:repository "<a valid domain name>" ;
+
+# Specifying a homepage url could be helpful to give more info about your project to the user.
+# registry:homepage "<a valid domain name>" ;
+
+# Specifying a documentation url could be helpful to for the user to learn more about your field.
+# registry:documentation "<a valid domain name>" ;
+
+# You may specify an additional license description here. 
+# registry:license "<a license description>" ;
+
+# Specify a valid SPDX license for your field, valid licenses could be viewed in <https://spdx.org/licenses>.
+registry:licenseSPDX "MIT" ;
+
+registry:ontologyFormatVersion "v1"  .

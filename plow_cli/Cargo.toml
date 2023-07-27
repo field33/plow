@@ -48,3 +48,6 @@ base64 = "0.13"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
+assert_fs = "1.0.13"
+# Works best with cargo-insta command
+insta = { version = "1.31.0", features = ["yaml"] }
