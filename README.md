@@ -10,7 +10,13 @@ Plow is package management solution for OWL ontologies, with support for specify
 
 The CLI supports basic commands related to consuming and producing ontologies. It is suitable for both manual and automated workflows (e.g. [metadata linting in CI](https://github.com/field33/ontologies/blob/12ede2b557fde94f6a768e8b65c84929a58c05ce/.github/workflows/lint.yml#L33))
 
-To install, run:
+To install our prebuilt binaries (available for Linux and macOS), run:
+
+```sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/field33/plow/releases/download/plow_cli-v0.5.2/plow_cli-installer.sh | sh
+```
+
+You can also install from source via:
 
 ```sh
 cargo install plow_cli
