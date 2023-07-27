@@ -51,3 +51,8 @@ assert_cmd = "2.0.12"
 assert_fs = "1.0.13"
 # Works best with cargo-insta command
 insta = { version = "1.31.0", features = ["yaml"] }
+
+[package.metadata.release]
+pre-release-replacements = [
+    {file="../README.md", search="plow_cli-v.*/plow_cli-installer\\.sh \\| sh", replace="plow_cli-v{{version}}/plow_cli-installer.sh | sh"},
+]
