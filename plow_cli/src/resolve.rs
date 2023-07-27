@@ -7,6 +7,8 @@ use plow_package_management::{
     version::SemanticVersion,
 };
 use reqwest::StatusCode;
+use sha2::{Digest, Sha256};
+use plow_package_management::package::PackageVersionWithRegistryMetadata;
 
 use crate::{
     config::PlowConfig,
@@ -15,6 +17,14 @@ use crate::{
 };
 use crate::error::FieldDownloadError::{FailedToDownloadAndCacheField, FailedToReadFieldCache};
 use crate::error::ResolveError::FailedToResolveDependencies;
+
+/// Generates the "field hash" that is used by the registry backend.
+///
+/// The field hash is the SHA256 hash of the string `<namespace>/<fieldname> <version`.
+fn generate_field_hash(package_metadata: &PackageVersionWithRegistryMetadata) -> String {
+    let string_to_hash = format!("{package_name} {version}", package_name = package_metadata.package_name, version = package_metadata.version);
+    format!("{:x}", Sha256::digest(&string_to_hash))
+}
 
 #[allow(clippy::missing_panics_doc)]
 #[allow(clippy::unwrap_used)]
@@ -106,11 +116,16 @@ pub fn resolve(
             let package_name = &package_version_to_download.package_name;
             println!("\t{} to download field contents ..", "Attempting".bold());
 
-            let signed_url_request = format!("{registry_url}/v1/artifact/signed-url/{download}");
+            let field_hash = generate_field_hash(package_version_to_download);
+            let signed_url_request = format!("{registry_url}/v1/artifact/signed-url-by-field-hash/{field_hash}");
 
-            let signed_url_response = client
-                .get(signed_url_request)
-                .header("Authorization", &format!("Basic {token}"))
+            let mut signed_url_request = client
+                .get(signed_url_request);
+            // Only apply auth header when retrieving private fields
+            if package_version_to_download.private {
+                signed_url_request = signed_url_request.header("Authorization", &format!("Basic {token}"));
+            }
+            let signed_url_response = signed_url_request
                 .send()
                 .map_err(|err| {
                     CliError::from(FailedToDownloadAndCacheField {
